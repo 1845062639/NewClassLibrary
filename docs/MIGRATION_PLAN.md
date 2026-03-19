@@ -18,10 +18,33 @@
 - Test 侧接收并形成试验记录中间态
 
 ## 阶段 3：记录与报告主链路
-- 记录实体
-- 附件模型
+- 记录实体（已补最小聚合骨架）
+- 附件模型（已补独立对象骨架）
 - 报表生成接口
 - 导出链路
+
+### 阶段 3 当前落点
+- 已在 `StandardTestNext.Test/Domain/Records` 建立 `ProductDefinition / TestRecordAggregate / TestRecordItemAggregate / RecordAttachment`
+- Phase-1 决策：`RatedParamsJson`、`DataJson` 继续保留 JSON 负载，先稳定新边界，再逐步结构化
+- 报告输出抽象已补最小接口：`ITestReportRenderer` + `JsonTestReportRenderer`，并新增 `TestReportDocumentMapper` 先把记录聚合收敛为独立报告文档模型，当前可从该文档模型导出 JSON 预览
+- `TestReportDocument` 已补 `Metadata` 与 `AccompanyProduct`，报告层开始摆脱对领域聚合字段命名的直接耦合
+- 当前已补最小报告仓储边界：`ITestReportRepository` + `InMemoryTestReportRepository`，先把“报告文档 + 渲染结果”与记录聚合分开持久化，后续再替换为 SQLite/EF/Dapper 落地实现
+- 当前已补最小报告制品落盘边界：`ITestReportArtifactWriter` + `FileSystemTestReportArtifactWriter`，phase-1 先将 JSON 报告预览直接写入本地 artifacts，后续再替换为 Word/PDF/模板导出
+- 当前已补轻量报告历史摘要：`TestReportPersistenceSummary`，把导出时间、文件名、保存路径、内容长度从完整报告正文中再单独抽出一层，便于后续做导出历史列表、审计与查询
+- 已补最小记录查询边界：`ITestRecordQueryService` + `TestRecordQueryService`，当前先支持按 `RecordCode` 回放与 recent list 摘要，后续可平滑替换为 SQLite/EF/Dapper 查询实现
+- 本小时继续补最小报告查询边界：`ITestReportQueryService` + `TestReportQueryService`，并让 in-memory / SQLite 两套报告仓储都支持 recent summaries 回读，避免“报告历史”继续只是写入而不能查询
+- 已将 `SQLite*Repository` 真正接入 `TestBootstrap` 运行路径，可通过 `STNEXT_TEST_PERSISTENCE=sqlite` 切换到真实 SQLite 闭环，当前默认仍为 memory，降低 demo 启动门槛
+- 本小时继续把“样本映射策略”往前推：`TestRecordItemMapper` 不再只返回匿名分项列表，而是返回 `TestRecordItemMappingResult`（记录分项 + 分区摘要），并补 `TestRecordStatistics` 让报告文档与控制台摘要都能消费同一份统计结果
+- `TestReportDocument` 已补 `Statistics` 区块，当前 JSON 报告预览已能显式带出 item/sample 汇总，后续正式报告模板可直接复用这层摘要而不是重新反推 `DataJson`
+- 已补一版启动参数入口：`--persistence memory|sqlite` 与 `--sqlite-db <path>`，并已真正接入 `StandardTestNext.Test/Program.cs`，当前命令行参数、环境变量两条入口都可驱动 `TestBootstrap`
+- 本小时继续把运行入口往统一配置收口：新增 `TestRuntimeConfiguration` / `TestRuntimeConfigurationLoader` 与 `appsettings.test.json`，当前默认配置文件、环境变量、命令行三层都可驱动 `TestBootstrap`，优先级已明确为“配置文件 < 环境变量 < 命令行参数”
+- 本小时继续把这套 runtime 配置真正平移到 App 侧：新增 `AppRuntimeConfiguration` / `AppRuntimeConfigurationLoader` / `AppStartupOptionsParser` 与 `appsettings.app.json`，并让 `AppBootstrap` / `MockMotorDeviceGateway` / `AppCommandConsumer` 消费 `deviceId`、`productKind`、`samplingMode`，先把双端入口收敛到同一种“配置文件 + 环境变量 + CLI 覆盖”模式
+- 本小时继续把消息桥从具体实现里抽出来：新增 `IMessageBus` / `MessageBusFactory` / `MessageBusOptions`，并让 App/Test 两个 Program 与 Bootstrap 都改为依赖总线抽象；当前默认 provider 为 `inmemory`，同时在 `appsettings.app.json` 中补了 `messageBusProvider` 作为后续接 MQTT 的最小落点
+- 下一步优先补：继续统一 App/Test 配置键名与目录约定说明、把消息总线 provider 扩成连接参数级配置并补 MQTT 实现、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
+- 本小时继续把记录查询边界从“回读聚合”推进到“回读聚合 + 附件明细”：`IRecordAttachmentRepository` 已补 record/item 两级附件查询接口，`ITestRecordQueryService` 已返回 `TestRecordDetail` 组合结果，为后续记录详情页、报告附件清单、审计查询预留稳定边界
+- 本小时继续把“报告摘要/导出制品引用并入查询对象”往前推：`ITestReportRepository` / `ITestReportQueryService` 已补按 `RecordCode` 回读 `TestReportSnapshot`，`TestRecordDetail` 已并入 report snapshots / report summaries，当前记录详情查询不再只能看到聚合与附件，也能看到同记录下的报告正文快照与摘要元信息
+- 本小时继续把 item 级统计显式化：新增 `TestRecordItemDetail`，并将 `ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount` 收敛到 `TestRecordDetail.ItemDetails`，减少后续详情页/API 对 `DataJson` 的直接理解成本
+- 本小时继续把导出制品引用真正并入记录详情查询：`TestReportSnapshot` 已直接携带 `ArtifactFileName / ArtifactSavedPath`，`TestRecordDetail.Reports` 不再只有正文快照，后续详情页可直接落报告文件链接/路径展示
 
 ## 阶段 4：旧系统并行期
 - 新旧系统并行验证
