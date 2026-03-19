@@ -40,6 +40,7 @@
 - 本小时继续把运行入口往统一配置收口：新增 `TestRuntimeConfiguration` / `TestRuntimeConfigurationLoader` 与 `appsettings.test.json`，当前默认配置文件、环境变量、命令行三层都可驱动 `TestBootstrap`，优先级已明确为“配置文件 < 环境变量 < 命令行参数”
 - 本小时继续把这套 runtime 配置真正平移到 App 侧：新增 `AppRuntimeConfiguration` / `AppRuntimeConfigurationLoader` / `AppStartupOptionsParser` 与 `appsettings.app.json`，并让 `AppBootstrap` / `MockMotorDeviceGateway` / `AppCommandConsumer` 消费 `deviceId`、`productKind`、`samplingMode`，先把双端入口收敛到同一种“配置文件 + 环境变量 + CLI 覆盖”模式
 - 本小时继续把消息桥从具体实现里抽出来：新增 `IMessageBus` / `MessageBusFactory` / `MessageBusOptions`，并让 App/Test 两个 Program 与 Bootstrap 都改为依赖总线抽象；当前默认 provider 为 `inmemory`，同时在 `appsettings.app.json` 中补了 `messageBusProvider` 作为后续接 MQTT 的最小落点
+- 本小时继续把消息桥边界再收一层：`AppCommandConsumer` 已从单独依赖 `IMessageSubscriber` 收口为直接依赖 `IMessageBus`，当前 App/Test 运行主干都只认同一套总线入口，避免后续接 MQTT 时还要维护额外注入分叉
 - 下一步优先补：继续统一 App/Test 配置键名与目录约定说明、把消息总线 provider 扩成连接参数级配置并补 MQTT 实现、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
 - 本小时继续把记录查询边界从“回读聚合”推进到“回读聚合 + 附件明细”：`IRecordAttachmentRepository` 已补 record/item 两级附件查询接口，`ITestRecordQueryService` 已返回 `TestRecordDetail` 组合结果，为后续记录详情页、报告附件清单、审计查询预留稳定边界
 - 本小时继续把“报告摘要/导出制品引用并入查询对象”往前推：`ITestReportRepository` / `ITestReportQueryService` 已补按 `RecordCode` 回读 `TestReportSnapshot`，`TestRecordDetail` 已并入 report snapshots / report summaries，当前记录详情查询不再只能看到聚合与附件，也能看到同记录下的报告正文快照与摘要元信息

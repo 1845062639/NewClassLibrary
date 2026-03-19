@@ -18,6 +18,7 @@
 - 报告生成
 - 附件与记录管理
 - 权限与组织能力
+- 将记录聚合映射为报告文档模型，再交给可替换渲染器输出
 
 ### StandardTestNext.Contracts
 职责：
@@ -42,14 +43,15 @@
 
 ## 3. 第一批共享契约
 - MotorRatedParamsContract
-- RealtimeSampleContract（待建）
-- TestCommandContract（待建）
-- DeviceStatusContract（待建）
+- MotorRealtimeSampleContract
+- TestCommandContract
+- DeviceStatusContract
 
 ## 4. 协议原则
 - 禁止以 CLR 类型名作为 MQTT/消息 topic
 - topic 必须显式命名并版本化
 - 建议形式：`stnext/{domain}/{message}/v1`
+- App/Test 运行入口统一依赖 `IMessageBus`，发布/订阅不再在 Bootstrap 层拆成两套注入接口；后续补 MQTT provider 时只扩 `MessageBusFactory` 与 provider 配置
 
 ## 5. 迁移方式
 - 从旧系统抽取规则，不直接复制其耦合结构
