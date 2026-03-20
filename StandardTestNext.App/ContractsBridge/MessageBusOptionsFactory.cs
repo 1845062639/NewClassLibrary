@@ -11,7 +11,9 @@ public static class MessageBusOptionsFactory
             configuration.ClientId,
             configuration.TopicPrefix,
             configuration.Username,
-            configuration.Password);
+            configuration.Password,
+            GetOptionalIntEnv("STNEXT_MESSAGEBUS_PUBLISH_TIMEOUT_SECONDS"),
+            GetOptionalIntEnv("STNEXT_MESSAGEBUS_SUBSCRIBE_TIMEOUT_SECONDS"));
     }
 
     public static MessageBusOptions Create(
@@ -21,7 +23,9 @@ public static class MessageBusOptionsFactory
         string? clientId,
         string? topicPrefix,
         string? username,
-        string? password)
+        string? password,
+        int? publishTimeoutSeconds = null,
+        int? subscribeTimeoutSeconds = null)
     {
         return CreateCore(
             provider,
@@ -30,7 +34,9 @@ public static class MessageBusOptionsFactory
             clientId,
             topicPrefix,
             username,
-            password);
+            password,
+            publishTimeoutSeconds,
+            subscribeTimeoutSeconds);
     }
 
     private static MessageBusOptions CreateCore(
@@ -40,7 +46,9 @@ public static class MessageBusOptionsFactory
         string? clientId,
         string? topicPrefix,
         string? username,
-        string? password)
+        string? password,
+        int? publishTimeoutSeconds,
+        int? subscribeTimeoutSeconds)
     {
         return new MessageBusOptions
         {
@@ -50,8 +58,23 @@ public static class MessageBusOptionsFactory
             ClientId = Normalize(clientId),
             TopicPrefix = Normalize(topicPrefix),
             Username = Normalize(username),
-            Password = Normalize(password)
+            Password = Normalize(password),
+            PublishTimeoutSeconds = publishTimeoutSeconds ?? 5,
+            SubscribeTimeoutSeconds = subscribeTimeoutSeconds ?? 5
         };
+    }
+
+    private static int? GetOptionalIntEnv(string variableName)
+    {
+        var raw = Environment.GetEnvironmentVariable(variableName);
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return null;
+        }
+
+        return int.TryParse(raw.Trim(), out var value)
+            ? value
+            : null;
     }
 
     private static string? Normalize(string? value)

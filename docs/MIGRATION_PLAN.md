@@ -50,7 +50,9 @@
 - 本小时继续把消息总线配置入口从“配置文件 + 环境变量”推进到“配置文件 + 环境变量 + CLI”：`AppStartupOptionsParser` / `TestStartupOptionsParser` 已支持 `--message-bus`、`--message-bus-host`、`--message-bus-port`、`--message-bus-client-id`、`--message-bus-topic-prefix`、`--message-bus-username`、`--message-bus-password`，后续切 MQTT/provider 调试时不用再依赖改部署目录配置文件
 - 本小时继续把此前的假绿缺口补成真实实现：`MessageBusFactory` 已真正接入 `mqtt` provider，当前 validator 与 runtime 行为已对齐，不再出现“配置校验通过、运行直接 `NotSupportedException`”的状态
 - 本小时继续顺手清理共享基础设施技术债：`IMessageBus` 已不再继承 obsolete 的 `IMessageSubscriber` 兼容接口，`Subscribe<T>` 直接并入主总线接口；复验 `dotnet build StandardTestNext.sln --no-restore`、`dotnet run` App/Test 两端均通过，当前主干恢复为 0 warning / 0 error
-- 下一步优先补：在已补连接参数配置骨架、细粒度环境变量入口、公共配置说明、CLI 覆盖入口、已落地的 MQTT 最小实现以及已清理的总线兼容层前提下，继续推进 MQTT 稳定联调、把当前“控制台告警”升级为更严格的连接/权限级自检、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
+- 本小时继续把“连接/目录级自检”落到真实代码：`provider=mqtt` 时 App/Test 启动前会检查 `messageBus.host` 非空，并对 `host:port` 做轻量 TCP 探测；Test 在 `persistenceMode=sqlite` 且显式传入 `sqliteDbPath` 时会预探测目录可写性，优先暴露部署期配置坑
+- 本小时继续把“真实跨进程联调入口”补成可复用脚手架：新增 `scripts/run-mqtt-smoke.sh`，统一启动 App/Test 双进程、透传 `mqtt` provider 与 broker 参数，并默认让 Test 落 SQLite；当前机器未发现本地 broker 可执行文件，因此本轮先把脚本、日志约定与文档落地，待 broker 就位后即可直接验证真实 MQTT 链路
+- 下一步优先补：在已补连接参数配置骨架、细粒度环境变量入口、公共配置说明、CLI 覆盖入口、已落地的 MQTT 最小实现、已清理的总线兼容层、已落地的 host/目录级启动前自检以及已补好的双进程 smoke 脚手架前提下，继续推进 MQTT 稳定联调、把当前“可达性 warning”升级为更严格的认证/权限级自检、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
 - 本小时继续把记录查询边界从“回读聚合”推进到“回读聚合 + 附件明细”：`IRecordAttachmentRepository` 已补 record/item 两级附件查询接口，`ITestRecordQueryService` 已返回 `TestRecordDetail` 组合结果，为后续记录详情页、报告附件清单、审计查询预留稳定边界
 - 本小时继续把“报告摘要/导出制品引用并入查询对象”往前推：`ITestReportRepository` / `ITestReportQueryService` 已补按 `RecordCode` 回读 `TestReportSnapshot`，`TestRecordDetail` 已并入 report snapshots / report summaries，当前记录详情查询不再只能看到聚合与附件，也能看到同记录下的报告正文快照与摘要元信息
 - 本小时继续把 item 级统计显式化：新增 `TestRecordItemDetail`，并将 `ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount` 收敛到 `TestRecordDetail.ItemDetails`，减少后续详情页/API 对 `DataJson` 的直接理解成本

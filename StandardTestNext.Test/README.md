@@ -37,7 +37,7 @@
 - `TestBootstrap` 现已支持通过 `appsettings.test.json` 读取默认运行配置，并允许环境变量与命令行参数覆盖
 - 当前优先级为：配置文件 < 环境变量 < 命令行参数
 - 当前已支持配置项：`persistenceMode`、`sqliteDbPath`、`messageBus.provider|host|port|clientId|topicPrefix|username|password`
-- 当前已支持环境变量：`STNEXT_TEST_PERSISTENCE`、`STNEXT_TEST_SQLITE_DB`、`STNEXT_MESSAGE_BUS`、`STNEXT_MESSAGE_BUS_HOST`、`STNEXT_MESSAGE_BUS_PORT`、`STNEXT_MESSAGE_BUS_CLIENT_ID`、`STNEXT_MESSAGE_BUS_TOPIC_PREFIX`、`STNEXT_MESSAGE_BUS_USERNAME`、`STNEXT_MESSAGE_BUS_PASSWORD`
+- 当前已支持环境变量：`STNEXT_TEST_PERSISTENCE`、`STNEXT_TEST_SQLITE_DB`、`STNEXT_MESSAGE_BUS`、`STNEXT_MESSAGE_BUS_HOST`、`STNEXT_MESSAGE_BUS_PORT`、`STNEXT_MESSAGE_BUS_CLIENT_ID`、`STNEXT_MESSAGE_BUS_TOPIC_PREFIX`、`STNEXT_MESSAGE_BUS_USERNAME`、`STNEXT_MESSAGE_BUS_PASSWORD`、`STNEXT_MESSAGEBUS_PUBLISH_TIMEOUT_SECONDS`、`STNEXT_MESSAGEBUS_SUBSCRIBE_TIMEOUT_SECONDS`
 - 当前已支持命令行参数：`--config`、`--persistence`、`--sqlite-db`、`--message-bus`、`--message-bus-host`、`--message-bus-port`、`--message-bus-client-id`、`--message-bus-topic-prefix`、`--message-bus-username`、`--message-bus-password`
 - 仍支持通过 `--persistence memory|sqlite` 或环境变量 `STNEXT_TEST_PERSISTENCE=memory|sqlite` 切换持久化模式
 - `sqlite` 模式额外支持 `--sqlite-db <path>` / `STNEXT_TEST_SQLITE_DB=<path>`，以及配置文件中的 `sqliteDbPath`
@@ -45,10 +45,13 @@
 - 默认配置文件仍放在程序输出目录，也支持通过 `--config <path>` / `--config=<path>` 指定部署目录中的替代配置
 - Test 入口 `Program.cs` 已修正为只启动 Test 自身，不再误拉 App 侧 Bootstrap/配置；消息总线配置改为直接从 `TestStartupOptions.MessageBus` 透传到 `MessageBusFactory`
 - 已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，启动时会打印 persistence/messageBus 配置摘要，并对 provider、port、clientId、topicPrefix、persistenceMode、sqliteDbPath 做校验；当前已将明显非法配置（如不支持的 provider、空 `clientId` / `topicPrefix`、非法端口、非法 `persistenceMode`）从“仅告警”推进为启动前直接失败，避免配置看起来合法却在运行期再炸
+- 当 `messageBus.provider=mqtt` 时，启动前会额外检查 `messageBus.host` 非空，并对 `host:port` 做一次轻量 TCP reachability probe；当显式指定 `sqliteDbPath` 且 `persistenceMode=sqlite` 时，还会预先探测目录可创建/可写，尽量把部署期权限问题前移到启动前
 - 当使用 `sqlite` 模式时，会自动初始化 `artifacts/test-persistence/standardtest-next.db`（或自定义路径）并走 `SQLite*Repository` 闭环
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
 ## 下一步优先项
 - App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，且消息总线连接参数已补齐 CLI 覆盖入口；本小时进一步清理了共享总线抽象中的 obsolete 兼容层，`dotnet build StandardTestNext.sln --no-restore` 当前已是 0 warning / 0 error，下一步重点转为 MQTT provider 落地与配置校验，而不是继续口头维护键名约定
+- 本小时继续把共享总线诊断补前置：Test 启动摘要已输出 `publishTimeoutSeconds` / `subscribeTimeoutSeconds`，配置非法时会在启动前直接失败，后续做真实 MQTT 联调时更容易定位“配置问题”还是“broker 问题”
+- 新增 `scripts/run-mqtt-smoke.sh`：在本机已有 MQTT broker 的前提下，可一键拉起 App/Test 双进程 smoke run，默认把 Test 侧落到 SQLite 持久化并输出双端日志，方便验证跨进程消息链路而不必手工敲两条长命令。
 - 为报告历史与记录回放补更稳定的查询模型，而不只是控制台摘要
 - 在现有 Markdown 草稿导出之上，继续抽正式报告模板渲染出口，逐步替换当前 JSON 预览

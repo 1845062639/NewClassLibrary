@@ -9,4 +9,6 @@ public sealed class MessageBusOptions
     public string? TopicPrefix { get; init; }
     public string? Username { get; init; }
     public string? Password { get; init; }
+    public int PublishTimeoutSeconds { get; init; } = 5;
+    public int SubscribeTimeoutSeconds { get; init; } = 5;
 }

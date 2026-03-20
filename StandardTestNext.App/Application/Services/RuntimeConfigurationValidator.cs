@@ -1,4 +1,5 @@
 using StandardTestNext.App.ContractsBridge;
+using System.Net.Sockets;
 
 namespace StandardTestNext.App.Application.Services;
 
@@ -51,6 +52,50 @@ public static class RuntimeConfigurationValidator
         if (string.IsNullOrWhiteSpace(messageBus.TopicPrefix))
         {
             result.Errors.Add("messageBus.topicPrefix is empty; keep an explicit shared prefix such as 'stnext'.");
+        }
+
+        if (messageBus.PublishTimeoutSeconds <= 0)
+        {
+            result.Errors.Add($"messageBus.publishTimeoutSeconds '{messageBus.PublishTimeoutSeconds}' must be > 0.");
+        }
+
+        if (messageBus.SubscribeTimeoutSeconds <= 0)
+        {
+            result.Errors.Add($"messageBus.subscribeTimeoutSeconds '{messageBus.SubscribeTimeoutSeconds}' must be > 0.");
+        }
+
+        if (string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
+        {
+            if (string.IsNullOrWhiteSpace(messageBus.Host))
+            {
+                result.Errors.Add("messageBus.host is empty while provider=mqtt.");
+            }
+            else if (!CanConnect(messageBus.Host, messageBus.Port ?? 1883, TimeSpan.FromMilliseconds(800), out var socketError))
+            {
+                result.Warnings.Add($"messageBus endpoint {messageBus.Host}:{messageBus.Port ?? 1883} is not reachable during startup self-check ({socketError}).");
+            }
+        }
+    }
+
+    private static bool CanConnect(string host, int port, TimeSpan timeout, out string? socketError)
+    {
+        try
+        {
+            using var client = new TcpClient();
+            var connectTask = client.ConnectAsync(host, port);
+            if (!connectTask.Wait(timeout))
+            {
+                socketError = "timeout";
+                return false;
+            }
+
+            socketError = null;
+            return client.Connected;
+        }
+        catch (Exception ex)
+        {
+            socketError = ex.GetType().Name + ": " + ex.Message;
+            return false;
         }
     }
 }
