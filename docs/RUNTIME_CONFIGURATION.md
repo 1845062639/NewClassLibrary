@@ -151,13 +151,13 @@ App/Test 双端统一使用同构配置结构：
 - **provider 切换不改变 Bootstrap 主干签名**，只在配置与工厂层扩展
 
 ## 当前限制
-- `MessageBusFactory` 当前已实现 `inmemory` 与 `mqtt`，但 MQTT 仍处于最小可用阶段
+- `MessageBusFactory` 当前已实现 `inmemory` 与 `mqtt`；MQTT provider 本小时已补上连接后自动重订阅、断线后订阅状态清理、重复订阅控制，并关闭 clean session 以便后续做更稳的联调
 - `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位；在 `mqtt` 模式下已进入真实连接参数
 - 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：不支持的 provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
-- 但这仍不是完整部署自检：例如 `host` 可达性、认证有效性、SQLite 目录权限、MQTT 断线重连与 topic ACL 仍未覆盖
+- 但这仍不是完整部署自检：例如 `host` 可达性、认证有效性、SQLite 目录权限、MQTT 主动重连策略与 topic ACL 仍未覆盖
 
 ## 下一步
-- 继续把 `mqtt` provider 从最小可用推进到可稳定联调：补断线重连、重复订阅控制、生命周期释放
+- 继续把 `mqtt` provider 从“最小能连”推进到“可稳定联调”：补主动重连/backoff、连接失败诊断、发布/订阅超时治理
 - 将当前配置校验从“控制台提示”推进到更完整的连接/权限级自检
 - 增加运行配置自检与错误提示
 - 将本文件中的配置约定同步进部署脚本/样例配置模板

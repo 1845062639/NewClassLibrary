@@ -29,4 +29,5 @@
 - 在 `samplingMode` 的最小开关之上，继续补真实采样周期、批次大小、设备连接参数等运行配置
 - 已为消息总线切换补最小抽象：`IMessageBus` + `MessageBusFactory`，当前已落 `inmemory` 与 `mqtt` 两类 provider；后续可在不改 Bootstrap 签名的前提下继续补更完整的生命周期与其他实现
 - 本小时继续清理消息总线兼容层：`IMessageBus` 不再继承已标记 obsolete 的 `IMessageSubscriber` shim，`Subscribe<T>` 已直接收口到总线主接口，当前 `dotnet build StandardTestNext.sln --no-restore` 已恢复为 0 warning / 0 error
+- MQTT provider 本小时进一步补了连接后自动重订阅、断线后订阅状态清理、重复订阅控制，并切到 `clean session = false`，避免后续联调时一断线就把订阅上下文丢干净
 - App/Test 两侧现已都使用独立 `messageBus` 配置节（连接参数级），并已补齐对应 CLI 覆盖参数，下一步重点转为真正 provider 落地与更严格校验，而不是再回头改入口参数结构

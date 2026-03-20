@@ -1,6 +1,7 @@
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace StandardTestNext.App.ContractsBridge;
@@ -10,8 +11,11 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
     private readonly IMqttClient _client;
     private readonly MessageBusOptions _options;
     private readonly string _topicPrefix;
-    private readonly List<Func<CancellationToken, Task>> _subscriptionRestorers = new();
+    private readonly ConcurrentDictionary<string, List<Action<JsonElement>>> _handlersByTopic = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _subscribedTopics = new(StringComparer.Ordinal);
     private readonly object _sync = new();
+    private bool _disposed;
+    private bool _resubscribing;
 
     public MqttMessageBus(MessageBusOptions options)
     {
@@ -21,21 +25,25 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
         var factory = new MqttFactory();
         _client = factory.CreateMqttClient();
         _client.ApplicationMessageReceivedAsync += OnMessageReceivedAsync;
+        _client.DisconnectedAsync += OnDisconnectedAsync;
+        _client.ConnectedAsync += OnConnectedAsync;
     }
 
     public void Publish<T>(string topic, T message)
     {
+        ThrowIfDisposed();
         EnsureConnected();
 
+        var resolvedTopic = BuildTopic(topic);
         var payload = JsonSerializer.Serialize(message);
         var mqttMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(BuildTopic(topic))
+            .WithTopic(resolvedTopic)
             .WithPayload(payload)
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
             .Build();
 
         _client.PublishAsync(mqttMessage, CancellationToken.None).GetAwaiter().GetResult();
-        Console.WriteLine($"[Bus:MQTT] {BuildTopic(topic)}");
+        Console.WriteLine($"[Bus:MQTT] {resolvedTopic}");
         Console.WriteLine(payload);
     }
 
@@ -46,36 +54,45 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
             throw new ArgumentNullException(nameof(handler));
         }
 
+        ThrowIfDisposed();
+
         var resolvedTopic = BuildTopic(topic);
-        _client.ApplicationMessageReceivedAsync += e =>
-        {
-            if (!string.Equals(e.ApplicationMessage.Topic, resolvedTopic, StringComparison.Ordinal))
-            {
-                return Task.CompletedTask;
-            }
-
-            var payload = e.ApplicationMessage.PayloadSegment;
-            if (payload.Array is null || payload.Count == 0)
-            {
-                return Task.CompletedTask;
-            }
-
-            var message = JsonSerializer.Deserialize<T>(payload)!;
-            handler(message);
-            return Task.CompletedTask;
-        };
+        var typedHandler = CreateTypedHandler(handler);
 
         lock (_sync)
         {
-            _subscriptionRestorers.Add(ct => SubscribeCoreAsync(resolvedTopic, ct));
+            if (!_handlersByTopic.TryGetValue(resolvedTopic, out var handlers))
+            {
+                handlers = new List<Action<JsonElement>>();
+                _handlersByTopic[resolvedTopic] = handlers;
+            }
+
+            handlers.Add(typedHandler);
         }
 
         EnsureConnected();
-        SubscribeCoreAsync(resolvedTopic, CancellationToken.None).GetAwaiter().GetResult();
+        EnsureSubscribed(resolvedTopic);
     }
 
     public void Dispose()
     {
+        if (_disposed)
+        {
+            return;
+        }
+
+        lock (_sync)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _handlersByTopic.Clear();
+            _subscribedTopics.Clear();
+        }
+
         if (_client.IsConnected)
         {
             _client.DisconnectAsync().GetAwaiter().GetResult();
@@ -84,18 +101,70 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
         _client.Dispose();
     }
 
-    private async Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs _)
+    private Task OnMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
     {
-        await Task.CompletedTask;
+        List<Action<JsonElement>> handlers;
+        lock (_sync)
+        {
+            if (!_handlersByTopic.TryGetValue(eventArgs.ApplicationMessage.Topic, out var registeredHandlers)
+                || registeredHandlers.Count == 0)
+            {
+                return Task.CompletedTask;
+            }
+
+            handlers = registeredHandlers.ToList();
+        }
+
+        var payload = eventArgs.ApplicationMessage.PayloadSegment;
+        if (payload.Array is null || payload.Count == 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        using var document = JsonDocument.Parse(payload);
+        foreach (var handler in handlers)
+        {
+            handler(document.RootElement.Clone());
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private Task OnConnectedAsync(MqttClientConnectedEventArgs _)
+    {
+        ResubscribeAll();
+        return Task.CompletedTask;
+    }
+
+    private Task OnDisconnectedAsync(MqttClientDisconnectedEventArgs _)
+    {
+        if (_disposed)
+        {
+            return Task.CompletedTask;
+        }
+
+        lock (_sync)
+        {
+            _subscribedTopics.Clear();
+        }
+
+        return Task.CompletedTask;
     }
 
     private void EnsureConnected()
     {
+        ThrowIfDisposed();
+
         if (_client.IsConnected)
         {
             return;
         }
 
+        _client.ConnectAsync(BuildClientOptions(), CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    private MqttClientOptions BuildClientOptions()
+    {
         var host = _options.Host?.Trim();
         if (string.IsNullOrWhiteSpace(host))
         {
@@ -111,25 +180,95 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
         var builder = new MqttClientOptionsBuilder()
             .WithTcpServer(host, _options.Port ?? 1883)
             .WithClientId(clientId)
-            .WithCleanSession();
+            .WithCleanSession(false);
 
         if (!string.IsNullOrWhiteSpace(_options.Username))
         {
             builder.WithCredentials(_options.Username, _options.Password);
         }
 
-        _client.ConnectAsync(builder.Build(), CancellationToken.None).GetAwaiter().GetResult();
+        return builder.Build();
+    }
 
-        List<Func<CancellationToken, Task>> restorers;
+    private void ResubscribeAll()
+    {
         lock (_sync)
         {
-            restorers = _subscriptionRestorers.ToList();
+            if (_resubscribing)
+            {
+                return;
+            }
+
+            _resubscribing = true;
         }
 
-        foreach (var restore in restorers)
+        try
         {
-            restore(CancellationToken.None).GetAwaiter().GetResult();
+            List<string> topics;
+            lock (_sync)
+            {
+                topics = _handlersByTopic.Keys.ToList();
+                _subscribedTopics.Clear();
+            }
+
+            foreach (var topic in topics)
+            {
+                EnsureSubscribed(topic);
+            }
         }
+        finally
+        {
+            lock (_sync)
+            {
+                _resubscribing = false;
+            }
+        }
+    }
+
+    private void EnsureSubscribed(string topic)
+    {
+        var shouldSubscribe = false;
+
+        lock (_sync)
+        {
+            if (_subscribedTopics.Add(topic))
+            {
+                shouldSubscribe = true;
+            }
+        }
+
+        if (!shouldSubscribe)
+        {
+            return;
+        }
+
+        try
+        {
+            SubscribeCoreAsync(topic, CancellationToken.None).GetAwaiter().GetResult();
+        }
+        catch
+        {
+            lock (_sync)
+            {
+                _subscribedTopics.Remove(topic);
+            }
+
+            throw;
+        }
+    }
+
+    private static Action<JsonElement> CreateTypedHandler<T>(Action<T> handler)
+    {
+        return payload =>
+        {
+            var message = payload.Deserialize<T>();
+            if (message is null)
+            {
+                throw new JsonException($"Failed to deserialize MQTT payload to {typeof(T).FullName}.");
+            }
+
+            handler(message);
+        };
     }
 
     private Task SubscribeCoreAsync(string topic, CancellationToken cancellationToken)
@@ -147,6 +286,14 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
         return string.IsNullOrWhiteSpace(_topicPrefix)
             ? trimmed
             : $"{_topicPrefix}/{trimmed}";
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(MqttMessageBus));
+        }
     }
 
     private static string NormalizeTopicPrefix(string? prefix)
