@@ -8,4 +8,6 @@ public sealed class TestReportSnapshot
     public string ArtifactFileName { get; set; } = string.Empty;
     public string ArtifactSavedPath { get; set; } = string.Empty;
     public DateTimeOffset SavedAt { get; set; }
+    public bool IsLightweightEntry { get; set; }
+    public bool IsPrimaryEntry { get; set; }
 }

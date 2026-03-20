@@ -17,7 +17,7 @@
 - `TestRecordItemMapper` + `TestRecordItemMappingResult`：将实时样本映射结果收敛成"记录分项 + 分区摘要"，不再把分桶规则散落在 Builder/Bootstrap
 - `TestRecordStatistics` + `TestRecordBuildResult`：把记录构建结果中的统计摘要单独建模，供控制台输出、报告文档、后续查询模型复用
 - `TestReportDocumentMapper`：记录聚合 -> 独立报告文档模型
-- `ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer`：报告渲染抽象，phase-1 已同时支持 JSON 预览与 Markdown 报告草稿导出；当前 `TestBootstrap` 已把两种格式都真正接入导出与摘要持久化链路，不再只是接口存在
+- `ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer` + `ManifestTestReportRenderer`：报告渲染抽象，phase-1 已同时支持 JSON 预览、Markdown 报告草稿以及更轻量的 manifest 概览导出；当前 `TestBootstrap` 已把三种格式都真正接入导出与摘要持久化链路，不再只是接口存在
 - `ITestReportRepository`：报告文档/渲染结果持久化边界
 - `ITestReportArtifactWriter`：报告制品写出边界
 - `FileSystemTestReportArtifactWriter`：phase-1 将报告预览落到 `artifacts/reports/`
@@ -28,6 +28,7 @@
 - `TestRecordItemPayloadReader`：把 `DataJson -> SampleCount / RecordMode` 的解析逻辑收口成独立读取器，后续 API/报告层如果也需要读取 item payload，不必再各自重写 JSON 解析
 - `ITestReportQueryService` + `TestReportQueryService`：为报告导出历史摘要与按记录码回读报告快照提供独立查询边界，后续列表页/审计页/详情页可直接复用
 - `TestReportSnapshot`：把报告正文回读收敛成轻量查询对象，并直接带出 artifact 文件名/路径，避免详情查询再去二次拼报告摘要
+- `TestReportManifest` + `TestReportManifestMapper`：把“记录聚合/报告文档 -> 轻量报告概览模型”独立出来，先稳定后续正式报告索引页、导出目录页、审计摘要页可复用的边界，而不是让这些场景直接依赖完整报告正文
 - `TestRecordItemDetail`：把 item 级详情摘要（`ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount / IsValid / Remark / HasRemark`）从原始 `DataJson` 中提炼出来，减少后续详情页/API 对 JSON 负载的直接理解成本
 - `SQLiteTestPersistence` + `SQLite*Repository`：补了 SQLite 持久化样板，把产品定义、记录聚合、附件、报告正文、报告摘要落到统一 db 文件，作为后续替换内存仓储的第一步
 - `ITestProductDefinitionService` + `TestProductDefinitionService`：把“按 productKind 复用已有产品定义；额定参数变化时更新快照”的逻辑从 Bootstrap 中抽出，减少后续记录构建对初始化样板代码的依赖

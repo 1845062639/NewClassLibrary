@@ -44,7 +44,9 @@ public sealed class InMemoryTestReportRepository : ITestReportRepository
                     Content = x.Content,
                     ArtifactFileName = summary?.ArtifactFileName ?? string.Empty,
                     ArtifactSavedPath = summary?.ArtifactSavedPath ?? string.Empty,
-                    SavedAt = x.SavedAt
+                    SavedAt = x.SavedAt,
+                    IsLightweightEntry = summary?.IsLightweightEntry ?? false,
+                    IsPrimaryEntry = summary?.IsPrimaryEntry ?? false
                 };
             })
             .ToList();

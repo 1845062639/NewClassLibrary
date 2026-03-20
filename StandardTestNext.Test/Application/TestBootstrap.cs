@@ -107,7 +107,8 @@ public sealed class TestBootstrap
         var reportArtifacts = new[]
         {
             reportExporter.ExportAndWriteAsync(reportDocument, new JsonTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult(),
-            reportExporter.ExportAndWriteAsync(reportDocument, new MarkdownTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult()
+            reportExporter.ExportAndWriteAsync(reportDocument, new MarkdownTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult(),
+            reportExporter.ExportAndWriteAsync(reportDocument, new ManifestTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult()
         };
 
         foreach (var reportArtifact in reportArtifacts)
@@ -121,7 +122,9 @@ public sealed class TestBootstrap
                 ArtifactFileName = reportArtifact.Artifact.FileName,
                 ArtifactSavedPath = reportArtifact.Artifact.SavedPath,
                 ExportedAt = reportArtifact.Artifact.WrittenAt,
-                ContentLength = reportArtifact.Content.Length
+                ContentLength = reportArtifact.Content.Length,
+                IsLightweightEntry = string.Equals(reportArtifact.Format, "manifest.json", StringComparison.OrdinalIgnoreCase),
+                IsPrimaryEntry = string.Equals(reportArtifact.Format, "json", StringComparison.OrdinalIgnoreCase)
             };
             reportRepository.SaveSummaryAsync(reportSummary).GetAwaiter().GetResult();
         }
@@ -134,6 +137,8 @@ public sealed class TestBootstrap
         var recentReportSummaries = reportQueryService.ListRecentSummariesAsync(5).GetAwaiter().GetResult();
         var recentProducts = productDefinitionQueryService.ListRecentAsync(5).GetAwaiter().GetResult();
         var reloadedProductDefinition = productDefinitionQueryService.GetByKindAsync(rated.ProductKind).GetAwaiter().GetResult();
+        var lightweightReport = recordReports.FirstOrDefault(x => x.IsLightweightEntry);
+        var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
 
         Console.WriteLine($"[Test] Product definition resolved: {productDefinition.ProductId} / {productDefinition.ProductKind} / {productDefinition.Model}");
         Console.WriteLine($"[Test] Aggregate persisted: record={aggregate.TestRecordId}, items={aggregate.Items.Count}");
@@ -141,8 +146,10 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Reports persisted: {string.Join(", ", reportArtifacts.Select(x => $"{x.Format}:{x.Artifact.FileName}"))}");
         Console.WriteLine($"[Test] Primary report artifact: {primaryReport.Artifact.FileName} -> {primaryReport.Artifact.SavedPath}");
         Console.WriteLine($"[Test] Recent records: {string.Join(", ", recentRecords.Select(x => $"{x.RecordCode}:{x.ProductModel ?? x.ProductKind}:reused={(x.ReusedProductDefinition ? "Y" : "N")}:reports={x.ReportCount}:artifacts={(x.HasReportArtifacts ? "Y" : "N")}:samples={x.Mapping.TotalSampleCount}:kp={x.Mapping.KeyPointSampleCount}:cont={x.Mapping.ContinuousSampleCount}"))}");
-        Console.WriteLine($"[Test] Record reports: {string.Join(", ", recordReports.Select(x => $"{x.RecordCode}:{x.Format}:{x.ArtifactFileName}"))}");
-        Console.WriteLine($"[Test] Recent report summaries: {string.Join(", ", recentReportSummaries.Select(x => $"{x.RecordCode}:{x.Format}"))}");
+        Console.WriteLine($"[Test] Record reports: {string.Join(", ", recordReports.Select(x => $"{x.RecordCode}:{x.Format}:{x.ArtifactFileName}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
+        Console.WriteLine($"[Test] Lightweight report artifact: {(lightweightReport is null ? "<none>" : $"{lightweightReport.Format}:{lightweightReport.ArtifactFileName}")}");
+        Console.WriteLine($"[Test] Primary record report: {(primaryRecordReport is null ? "<none>" : $"{primaryRecordReport.Format}:{primaryRecordReport.ArtifactFileName}")}");
+        Console.WriteLine($"[Test] Recent report summaries: {string.Join(", ", recentReportSummaries.Select(x => $"{x.RecordCode}:{x.Format}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
         Console.WriteLine($"[Test] Recent products: {string.Join(", ", recentProducts.Select(x => $"{x.ProductKind}:{x.Model}:{x.Code}"))}");
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");

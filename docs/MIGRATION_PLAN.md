@@ -27,7 +27,7 @@
 - 已在 `StandardTestNext.Test/Domain/Records` 建立 `ProductDefinition / TestRecordAggregate / TestRecordItemAggregate / RecordAttachment`
 - 本小时继续把产品定义边界往前推：新增 `ITestProductDefinitionService` + `TestProductDefinitionService`，让 Test 启动链路先按 `productKind` 复用已有 `ProductDefinition`，当额定参数快照变化时再更新，而不是每次构建记录都重新 new 一份产品定义
 - Phase-1 决策：`RatedParamsJson`、`DataJson` 继续保留 JSON 负载，先稳定新边界，再逐步结构化
-- 报告输出抽象已补最小接口：`ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer`，并新增 `TestReportDocumentMapper` 先把记录聚合收敛为独立报告文档模型；当前 `TestBootstrap` 已能从该文档模型同时导出 JSON 预览与 Markdown 草稿，并将两种格式都写入报告仓储/摘要
+- 报告输出抽象已补最小接口：`ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer` + `ManifestTestReportRenderer`，并新增 `TestReportDocumentMapper` 先把记录聚合收敛为独立报告文档模型；当前 `TestBootstrap` 已能从该文档模型同时导出 JSON 预览、Markdown 草稿与 manifest 概览，并将三种格式都写入报告仓储/摘要
 - `TestReportDocument` 已补 `Metadata` 与 `AccompanyProduct`，报告层开始摆脱对领域聚合字段命名的直接耦合
 - 当前已补最小报告仓储边界：`ITestReportRepository` + `InMemoryTestReportRepository`，先把“报告文档 + 渲染结果”与记录聚合分开持久化，后续再替换为 SQLite/EF/Dapper 落地实现
 - 当前已补最小报告制品落盘边界：`ITestReportArtifactWriter` + `FileSystemTestReportArtifactWriter`，phase-1 先将 JSON 报告预览直接写入本地 artifacts，后续再替换为 Word/PDF/模板导出

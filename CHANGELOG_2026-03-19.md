@@ -1,5 +1,6 @@
 # CHANGELOG 2026-03-19
 
+- test: add `TestReportManifest` / `TestReportManifestMapper` / `ManifestTestReportRenderer` and wire manifest export into `TestBootstrap` so the report boundary now also produces a lightweight summary artifact instead of forcing every downstream consumer to read full JSON/Markdown payloads.
 - Test: let `TestBootstrap` export both JSON and Markdown report artifacts, and persist both formats into report history/summaries so report abstraction is exercised by the runtime path rather than only kept as idle interfaces.
 
 ## 05:08
