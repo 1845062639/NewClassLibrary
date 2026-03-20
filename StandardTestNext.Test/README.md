@@ -17,21 +17,23 @@
 - `TestRecordItemMapper` + `TestRecordItemMappingResult`：将实时样本映射结果收敛成"记录分项 + 分区摘要"，不再把分桶规则散落在 Builder/Bootstrap
 - `TestRecordStatistics` + `TestRecordBuildResult`：把记录构建结果中的统计摘要单独建模，供控制台输出、报告文档、后续查询模型复用
 - `TestReportDocumentMapper`：记录聚合 -> 独立报告文档模型
-- `ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer`：报告渲染抽象，phase-1 已同时支持 JSON 预览与 Markdown 报告草稿导出
+- `ITestReportRenderer` + `JsonTestReportRenderer` + `MarkdownTestReportRenderer`：报告渲染抽象，phase-1 已同时支持 JSON 预览与 Markdown 报告草稿导出；当前 `TestBootstrap` 已把两种格式都真正接入导出与摘要持久化链路，不再只是接口存在
 - `ITestReportRepository`：报告文档/渲染结果持久化边界
 - `ITestReportArtifactWriter`：报告制品写出边界
 - `FileSystemTestReportArtifactWriter`：phase-1 将报告预览落到 `artifacts/reports/`
 - `TestReportArtifactDescriptor`：统一描述输出文件名、格式、路径、写出时间，便于后续切到 Word/PDF
-- `ITestRecordQueryService` + `TestRecordQueryService`：为记录回放/查询摘要提供独立边界，不把后续列表页、详情页逻辑直接塞回仓储或 Bootstrap
+- `ITestRecordQueryService` + `TestRecordQueryService`：为记录回放/查询摘要提供独立边界，不把后续列表页、详情页逻辑直接塞回仓储或 Bootstrap；本小时 recent list 视图已补 `ReportCount / HasReportArtifacts / LatestReportSavedAt / ProductCode / ProductModel / ReusedProductDefinition`，减少列表页再二次拼报告状态或产品主数据状态
 - `ITestReportQueryService` + `TestReportQueryService`：为报告导出历史摘要与按记录码回读报告快照提供独立查询边界，后续列表页/审计页/详情页可直接复用
 - `TestReportSnapshot`：把报告正文回读收敛成轻量查询对象，并直接带出 artifact 文件名/路径，避免详情查询再去二次拼报告摘要
 - `TestRecordItemDetail`：把 item 级详情摘要（`ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount / IsValid / Remark / HasRemark`）从原始 `DataJson` 中提炼出来，减少后续详情页/API 对 JSON 负载的直接理解成本
 - `SQLiteTestPersistence` + `SQLite*Repository`：补了 SQLite 持久化样板，把产品定义、记录聚合、附件、报告正文、报告摘要落到统一 db 文件，作为后续替换内存仓储的第一步
+- `ITestProductDefinitionService` + `TestProductDefinitionService`：把“按 productKind 复用已有产品定义；额定参数变化时更新快照”的逻辑从 Bootstrap 中抽出，减少后续记录构建对初始化样板代码的依赖
+- `IProductDefinitionQueryService` + `ProductDefinitionQueryService`：补产品定义查询边界，先提供 `GetByKind` / `ListRecent`，避免后续列表页、主数据对账、记录详情又把产品定义读取逻辑塞回 Bootstrap 或直接扫仓储；当前 demo 启动链路也已实际接入 recent products / by-kind 回读，不再只是接口静态存在
 
 ## 当前 demo 启动链路实际覆盖
 - App 先通过 `IMessageBus` 发布设备 Ready/Running 状态与实时样本；当前默认实现仍为 `InMemoryMessageBus`
 - Test 再发布 `TestCommandContract`，并驱动最小试验会话启动
-- Test 侧基于额定参数与实时样本生成 `TestRecordAggregate`
+- Test 侧先通过 `TestProductDefinitionService` 按 `productKind` 解析/复用产品定义，再基于额定参数与实时样本生成 `TestRecordAggregate`
 - 实时样本已先按 `KeyPointOnly / Continuous` 两类分区映射，并生成独立统计摘要
 - 记录、产品、附件、报告正文、报告摘要都已串到最小持久化接口
 - `TestBootstrap` 现已支持通过 `appsettings.test.json` 读取默认运行配置，并允许环境变量与命令行参数覆盖
@@ -50,7 +52,7 @@
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
 ## 下一步优先项
-- App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，且消息总线连接参数已补齐 CLI 覆盖入口；本小时进一步清理了共享总线抽象中的 obsolete 兼容层，`dotnet build StandardTestNext.sln --no-restore` 当前已是 0 warning / 0 error，下一步重点转为 MQTT provider 落地与配置校验，而不是继续口头维护键名约定
+- App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，且消息总线连接参数已补齐 CLI 覆盖入口；本轮继续把 `provider=mqtt` 的启动前自检从单一可达性 warning 推进到结构化状态诊断，能区分 `reachable / timeout / connection-refused / dns-failed / auth-failed / probe-failed`；`dotnet build StandardTestNext.sln --no-restore` 当前仍是 0 warning / 0 error，下一步重点转为真实 MQTT smoke 验证与更接近协议层的认证/权限级诊断，而不是继续口头维护键名约定
 - 本小时继续把共享总线诊断补前置：Test 启动摘要已输出 `publishTimeoutSeconds` / `subscribeTimeoutSeconds`，配置非法时会在启动前直接失败，后续做真实 MQTT 联调时更容易定位“配置问题”还是“broker 问题”
 - 新增 `scripts/run-mqtt-smoke.sh`：在本机已有 MQTT broker 的前提下，可一键拉起 App/Test 双进程 smoke run，默认把 Test 侧落到 SQLite 持久化并输出双端日志，方便验证跨进程消息链路而不必手工敲两条长命令。
 - 为报告历史与记录回放补更稳定的查询模型，而不只是控制台摘要

@@ -128,6 +128,39 @@ LIMIT 1;";
         };
     }
 
+    public async Task<IReadOnlyList<ProductDefinition>> ListRecentAsync(int take = 20, CancellationToken cancellationToken = default)
+    {
+        await using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        await connection.OpenAsync(cancellationToken);
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT ProductId, ProductKind, Code, Model, Manufacturer, RatedParamsJson, Remark, IsValid
+FROM ProductDefinitions
+ORDER BY rowid DESC
+LIMIT $take;";
+        command.Parameters.AddWithValue("$take", Math.Max(1, take));
+
+        var items = new List<ProductDefinition>();
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            items.Add(new ProductDefinition
+            {
+                ProductId = Guid.Parse(reader.GetString(0)),
+                ProductKind = reader.GetString(1),
+                Code = reader.GetString(2),
+                Model = reader.GetString(3),
+                Manufacturer = reader.GetString(4),
+                RatedParamsJson = reader.GetString(5),
+                Remark = reader.IsDBNull(6) ? null : reader.GetString(6),
+                IsValid = reader.GetInt64(7) == 1
+            });
+        }
+
+        return items;
+    }
+
     public async Task SaveAsync(ProductDefinition product, CancellationToken cancellationToken = default)
     {
         await using var connection = new SqliteConnection($"Data Source={_dbPath}");

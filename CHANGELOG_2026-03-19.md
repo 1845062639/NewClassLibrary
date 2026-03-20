@@ -1,5 +1,30 @@
 # CHANGELOG 2026-03-19
 
+- Test: let `TestBootstrap` export both JSON and Markdown report artifacts, and persist both formats into report history/summaries so report abstraction is exercised by the runtime path rather than only kept as idle interfaces.
+
+## 19:05
+- test: wire product-definition query service into TestBootstrap so the demo path now prints recent products plus by-kind readback instead of leaving product queries as repository-only plumbing
+- docs: align test README / worklog / migration plan with the product-definition query path now being exercised in runtime output
+
+## 18:40
+- test: add IProductDefinitionQueryService + ProductDefinitionQueryService and extend product repositories with ListRecentAsync so product-definition reads stop leaking back into bootstrap paths
+- docs: align test README/worklog with the new product-definition query boundary
+
+## 18:22
+- test: extend TestRecordSummary/TestRecordQueryService so recent record queries also carry product code/model and whether the product definition was already resolved on the record
+- test: update bootstrap recent-record output to print product-definition reuse plus report/artifact state directly
+- docs: align test README / worklog / migration plan with the tightened recent-list query view
+
+## 18:05
+- test: extend TestRecordSummary/TestRecordQueryService so recent record queries now carry report count, artifact availability, and latest report timestamp
+- test: update bootstrap recent-record output to print report/artifact state directly instead of record code only
+- docs: align test README / worklog / migration plan with the tightened recent-list query view
+
+## 17:10
+- test: add ITestProductDefinitionService + TestProductDefinitionService so product definitions are reused by productKind and refreshed only when rated-params snapshots change
+- test: update TestBootstrap/TestRecordAggregateBuilder so record construction consumes a resolved product definition instead of always creating a new inline ProductDefinition
+- docs: align test README / worklog / migration plan with the new product-definition resolution boundary
+
 ## 12:40
 - app/test: fix Program.cs boundaries so each executable now loads only its own runtime config and bootstrap instead of cross-starting the other side
 - app/test: carry messageBus config through startup options and add minimal runtime validation/reporting for provider/port/clientId/topicPrefix plus app/test-specific warnings

@@ -54,10 +54,16 @@ public sealed class InMemoryTestRecordQueryService : ITestRecordQueryService
             {
                 RecordCode = x.RecordCode,
                 ProductKind = x.ProductKind,
+                ProductCode = x.TestProduct?.Code,
+                ProductModel = x.TestProduct?.Model,
+                ReusedProductDefinition = x.TestProduct is not null,
                 TestKindCode = x.TestKindCode,
                 TestTime = x.TestTime,
                 ItemCount = x.Items.Count,
-                RecordAttachmentCount = x.Attachments.Count
+                RecordAttachmentCount = x.Attachments.Count,
+                ReportCount = 0,
+                HasReportArtifacts = false,
+                LatestReportSavedAt = null
             })
             .ToArray();
     }

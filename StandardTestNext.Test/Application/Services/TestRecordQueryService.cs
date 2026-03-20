@@ -64,17 +64,33 @@ public sealed class TestRecordQueryService : ITestRecordQueryService
     public async Task<IReadOnlyList<TestRecordSummary>> ListRecentAsync(int take = 10, CancellationToken cancellationToken = default)
     {
         var records = await _recordRepository.ListRecentAsync(take, cancellationToken);
-        return records
-            .Select(x => new TestRecordSummary
+        var summaries = new List<TestRecordSummary>(records.Count);
+
+        foreach (var record in records)
+        {
+            var reports = await _reportRepository.ListForRecordCodeAsync(record.RecordCode, cancellationToken);
+            var latestReport = reports
+                .OrderByDescending(x => x.SavedAt)
+                .FirstOrDefault();
+
+            summaries.Add(new TestRecordSummary
             {
-                RecordCode = x.RecordCode,
-                ProductKind = x.ProductKind,
-                TestKindCode = x.TestKindCode,
-                TestTime = x.TestTime,
-                ItemCount = x.Items.Count,
-                RecordAttachmentCount = x.Attachments.Count
-            })
-            .ToArray();
+                RecordCode = record.RecordCode,
+                ProductKind = record.ProductKind,
+                ProductCode = record.TestProduct?.Code,
+                ProductModel = record.TestProduct?.Model,
+                ReusedProductDefinition = record.TestProduct is not null,
+                TestKindCode = record.TestKindCode,
+                TestTime = record.TestTime,
+                ItemCount = record.Items.Count,
+                RecordAttachmentCount = record.Attachments.Count,
+                ReportCount = reports.Count,
+                HasReportArtifacts = reports.Any(x => !string.IsNullOrWhiteSpace(x.ArtifactSavedPath)),
+                LatestReportSavedAt = latestReport?.SavedAt
+            });
+        }
+
+        return summaries;
     }
 
     private static TestRecordItemDetail BuildItemDetail(TestRecordItemAggregate item, IReadOnlyList<RecordAttachment> attachments)

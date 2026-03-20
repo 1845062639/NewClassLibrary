@@ -1,4 +1,3 @@
-using System.Text.Json;
 using StandardTestNext.Contracts;
 using StandardTestNext.Test.Domain.Records;
 
@@ -8,7 +7,10 @@ public sealed class TestRecordAggregateBuilder
 {
     private readonly TestRecordItemMapper _itemMapper = new();
 
-    public TestRecordBuildResult BuildDemoRecord(MotorRatedParamsContract rated, IReadOnlyCollection<MotorRealtimeSampleContract> samples)
+    public TestRecordBuildResult BuildDemoRecord(
+        MotorRatedParamsContract rated,
+        IReadOnlyCollection<MotorRealtimeSampleContract> samples,
+        ProductDefinition? productDefinition = null)
     {
         var record = new TestRecordAggregate
         {
@@ -21,15 +23,7 @@ public sealed class TestRecordAggregateBuilder
             Tester = "system-demo",
             Remark = "Demo aggregate built from next-gen contracts.",
             TestTime = DateTimeOffset.Now,
-            TestProduct = new ProductDefinition
-            {
-                ProductKind = rated.ProductKind,
-                Code = rated.StandardCode,
-                Model = rated.Model,
-                Manufacturer = "TBD",
-                RatedParamsJson = JsonSerializer.Serialize(rated),
-                Remark = "Phase-1 keeps rated params as JSON payload."
-            }
+            TestProduct = productDefinition
         };
 
         var mappingResult = _itemMapper.MapRealtimeSamples(samples);

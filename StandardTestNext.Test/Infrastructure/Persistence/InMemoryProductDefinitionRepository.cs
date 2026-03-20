@@ -13,6 +13,15 @@ public sealed class InMemoryProductDefinitionRepository : IProductDefinitionRepo
         return Task.FromResult(product);
     }
 
+    public Task<IReadOnlyList<ProductDefinition>> ListRecentAsync(int take = 20, CancellationToken cancellationToken = default)
+    {
+        var items = _products.Values
+            .OrderByDescending(x => x.ProductId)
+            .Take(Math.Max(1, take))
+            .ToArray();
+        return Task.FromResult<IReadOnlyList<ProductDefinition>>(items);
+    }
+
     public Task SaveAsync(ProductDefinition product, CancellationToken cancellationToken = default)
     {
         _products[product.ProductKind] = product;
