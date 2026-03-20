@@ -44,7 +44,7 @@
 - `messageBus` 配置节已与 App 侧对齐，Test 入口不再借道 `appsettings.app.json` 读取总线配置，后续切 MQTT/其他 provider 时可分别在双端部署目录落各自配置文件
 - 默认配置文件仍放在程序输出目录，也支持通过 `--config <path>` / `--config=<path>` 指定部署目录中的替代配置
 - Test 入口 `Program.cs` 已修正为只启动 Test 自身，不再误拉 App 侧 Bootstrap/配置；消息总线配置改为直接从 `TestStartupOptions.MessageBus` 透传到 `MessageBusFactory`
-- 已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，启动时会打印 persistence/messageBus 配置摘要，并对 provider、port、clientId、topicPrefix、persistenceMode、sqliteDbPath 做校验；当前已将明显非法配置（如未实现的 `mqtt` provider、空 `clientId` / `topicPrefix`、非法端口、非法 `persistenceMode`）从“仅告警”推进为启动前直接失败，避免配置看起来合法却在运行期再炸
+- 已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，启动时会打印 persistence/messageBus 配置摘要，并对 provider、port、clientId、topicPrefix、persistenceMode、sqliteDbPath 做校验；当前已将明显非法配置（如不支持的 provider、空 `clientId` / `topicPrefix`、非法端口、非法 `persistenceMode`）从“仅告警”推进为启动前直接失败，避免配置看起来合法却在运行期再炸
 - 当使用 `sqlite` 模式时，会自动初始化 `artifacts/test-persistence/standardtest-next.db`（或自定义路径）并走 `SQLite*Repository` 闭环
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 

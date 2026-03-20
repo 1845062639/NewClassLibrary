@@ -45,7 +45,7 @@ App/Test 双端统一使用同构配置结构：
 ```
 
 ### 字段约定
-- `provider`：消息总线实现类型；当前已落地 `inmemory`，后续预留 `mqtt`
+- `provider`：消息总线实现类型；当前已落地 `inmemory` 与 `mqtt`
 - `host`：总线服务地址；当前 `inmemory` 模式可忽略，MQTT 模式将使用
 - `port`：总线服务端口；当前 `inmemory` 模式可忽略，MQTT 模式将使用
 - `clientId`：客户端标识；建议 App/Test 分别使用独立值
@@ -151,13 +151,13 @@ App/Test 双端统一使用同构配置结构：
 - **provider 切换不改变 Bootstrap 主干签名**，只在配置与工厂层扩展
 
 ## 当前限制
-- `MessageBusFactory` 目前仅实现 `inmemory`
-- `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位
-- 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：未实现的 `mqtt` provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
-- 但这仍不是完整部署自检：例如 `host` 可达性、认证有效性、SQLite 目录权限、后续 MQTT 握手与 topic ACL 仍未覆盖
+- `MessageBusFactory` 当前已实现 `inmemory` 与 `mqtt`，但 MQTT 仍处于最小可用阶段
+- `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位；在 `mqtt` 模式下已进入真实连接参数
+- 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：不支持的 provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
+- 但这仍不是完整部署自检：例如 `host` 可达性、认证有效性、SQLite 目录权限、MQTT 断线重连与 topic ACL 仍未覆盖
 
 ## 下一步
-- 在 `MessageBusFactory` 中接入 `mqtt` provider
-- 将当前配置校验从“控制台提示”推进到更严格的非法值拒绝/启动失败策略
+- 继续把 `mqtt` provider 从最小可用推进到可稳定联调：补断线重连、重复订阅控制、生命周期释放
+- 将当前配置校验从“控制台提示”推进到更完整的连接/权限级自检
 - 增加运行配置自检与错误提示
 - 将本文件中的配置约定同步进部署脚本/样例配置模板
