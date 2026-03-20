@@ -1,5 +1,4 @@
 using StandardTestNext.App.ContractsBridge;
-using StandardTestNext.Test.Application.Services;
 
 namespace StandardTestNext.App.Application.Services;
 
@@ -12,7 +11,11 @@ public static class RuntimeConfigurationValidator
         if (!string.Equals(messageBus.Provider, "inmemory", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
         {
-            result.Warnings.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory falls back to inmemory only.");
+            result.Warnings.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory only supports inmemory.");
+        }
+        else if (string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
+        {
+            result.Warnings.Add("messageBus.provider=mqtt is recognized in configuration, but MessageBusFactory has not implemented MQTT yet; startup will currently fail unless provider is switched back to inmemory.");
         }
 
         if (string.IsNullOrWhiteSpace(options.DeviceId))
@@ -30,28 +33,9 @@ public static class RuntimeConfigurationValidator
         return result;
     }
 
-    public static RuntimeConfigurationValidationResult ValidateTest(TestStartupOptions options, MessageBusOptions messageBus)
+    public static RuntimeConfigurationValidationResult ValidateSharedMessageBusOnly(MessageBusOptions messageBus)
     {
         var result = new RuntimeConfigurationValidationResult();
-
-        if (!string.Equals(options.PersistenceMode, "memory", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(options.PersistenceMode, "sqlite", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Warnings.Add($"Test persistenceMode '{options.PersistenceMode}' is not one of [memory, sqlite]; bootstrap currently falls back to memory path unless sqlite is matched explicitly.");
-        }
-
-        if (string.Equals(options.PersistenceMode, "sqlite", StringComparison.OrdinalIgnoreCase)
-            && string.IsNullOrWhiteSpace(options.SQLiteDbPath))
-        {
-            result.Warnings.Add("Test persistenceMode=sqlite without explicit sqliteDbPath; bootstrap will use SQLiteTestPersistence.DefaultDbPath.");
-        }
-
-        if (!string.Equals(messageBus.Provider, "inmemory", StringComparison.OrdinalIgnoreCase)
-            && !string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Warnings.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory falls back to inmemory only.");
-        }
-
         ValidateSharedMessageBus(result, messageBus);
         return result;
     }

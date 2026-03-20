@@ -38,17 +38,17 @@
 - 当前优先级为：配置文件 < 环境变量 < 命令行参数
 - 当前已支持配置项：`persistenceMode`、`sqliteDbPath`、`messageBus.provider|host|port|clientId|topicPrefix|username|password`
 - 当前已支持环境变量：`STNEXT_TEST_PERSISTENCE`、`STNEXT_TEST_SQLITE_DB`、`STNEXT_MESSAGE_BUS`、`STNEXT_MESSAGE_BUS_HOST`、`STNEXT_MESSAGE_BUS_PORT`、`STNEXT_MESSAGE_BUS_CLIENT_ID`、`STNEXT_MESSAGE_BUS_TOPIC_PREFIX`、`STNEXT_MESSAGE_BUS_USERNAME`、`STNEXT_MESSAGE_BUS_PASSWORD`
-- 当前已支持命令行参数：`--config`、`--persistence`、`--sqlite-db`
+- 当前已支持命令行参数：`--config`、`--persistence`、`--sqlite-db`、`--message-bus`、`--message-bus-host`、`--message-bus-port`、`--message-bus-client-id`、`--message-bus-topic-prefix`、`--message-bus-username`、`--message-bus-password`
 - 仍支持通过 `--persistence memory|sqlite` 或环境变量 `STNEXT_TEST_PERSISTENCE=memory|sqlite` 切换持久化模式
 - `sqlite` 模式额外支持 `--sqlite-db <path>` / `STNEXT_TEST_SQLITE_DB=<path>`，以及配置文件中的 `sqliteDbPath`
 - `messageBus` 配置节已与 App 侧对齐，Test 入口不再借道 `appsettings.app.json` 读取总线配置，后续切 MQTT/其他 provider 时可分别在双端部署目录落各自配置文件
 - 默认配置文件仍放在程序输出目录，也支持通过 `--config <path>` / `--config=<path>` 指定部署目录中的替代配置
 - Test 入口 `Program.cs` 已修正为只启动 Test 自身，不再误拉 App 侧 Bootstrap/配置；消息总线配置改为直接从 `TestStartupOptions.MessageBus` 透传到 `MessageBusFactory`
-- 已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，启动时会打印 persistence/messageBus 配置摘要，并对 provider、port、clientId、topicPrefix、persistenceMode、sqliteDbPath 做最小告警，先把“配置校验/启动前自检”从待办推进到可运行骨架
+- 已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，启动时会打印 persistence/messageBus 配置摘要，并对 provider、port、clientId、topicPrefix、persistenceMode、sqliteDbPath 做最小告警；本轮进一步修正为：`mqtt` 当前仅完成配置层识别，`MessageBusFactory` 尚未实现 provider，启动阶段会明确给出该限制，避免出现“配置看起来合法但运行直接失败”的误导
 - 当使用 `sqlite` 模式时，会自动初始化 `artifacts/test-persistence/standardtest-next.db`（或自定义路径）并走 `SQLite*Repository` 闭环
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
 ## 下一步优先项
-- App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，下一步重点转为 MQTT provider 落地与配置校验，而不是继续口头维护键名约定
+- App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，且消息总线连接参数已补齐 CLI 覆盖入口；下一步重点转为 MQTT provider 落地与配置校验，而不是继续口头维护键名约定
 - 为报告历史与记录回放补更稳定的查询模型，而不只是控制台摘要
 - 在现有 Markdown 草稿导出之上，继续抽正式报告模板渲染出口，逐步替换当前 JSON 预览
