@@ -1,3 +1,5 @@
+using StandardTestNext.App.ContractsBridge;
+
 namespace StandardTestNext.Test.Application.Services;
 
 public sealed class TestRuntimeConfiguration
@@ -19,7 +21,7 @@ public sealed class TestRuntimeConfiguration
     }
 }
 
-public sealed class MessageBusConfiguration
+public sealed class MessageBusConfiguration : IMessageBusConfiguration
 {
     public string Provider { get; set; } = "inmemory";
     public string? Host { get; set; }

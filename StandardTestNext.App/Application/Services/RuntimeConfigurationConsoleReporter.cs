@@ -1,5 +1,4 @@
 using StandardTestNext.App.ContractsBridge;
-using StandardTestNext.Test.Application.Services;
 
 namespace StandardTestNext.App.Application.Services;
 
@@ -12,12 +11,6 @@ public static class RuntimeConfigurationConsoleReporter
         ReportWarnings(validation);
     }
 
-    public static void ReportTest(TestStartupOptions options, MessageBusOptions messageBus, RuntimeConfigurationValidationResult validation)
-    {
-        Console.WriteLine($"[Test.Config] persistenceMode={options.PersistenceMode}, sqliteDbPath={options.SQLiteDbPath ?? "<default>"}");
-        Console.WriteLine($"[Test.Config] messageBus provider={messageBus.Provider}, host={messageBus.Host ?? "<null>"}, port={messageBus.Port?.ToString() ?? "<null>"}, clientId={messageBus.ClientId ?? "<null>"}, topicPrefix={messageBus.TopicPrefix ?? "<null>"}");
-        ReportWarnings(validation);
-    }
 
     private static void ReportWarnings(RuntimeConfigurationValidationResult validation)
     {
