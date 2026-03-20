@@ -25,5 +25,5 @@
 ## 下一步优先项
 - 将 App/Test 双端配置项进一步抽到统一命名规范与公共说明文档，避免并行演进时键名漂移
 - 在 `samplingMode` 的最小开关之上，继续补真实采样周期、批次大小、设备连接参数等运行配置
-- 已为消息总线切换补最小抽象：`IMessageBus` + `MessageBusFactory` + `messageBusProvider`，当前先落 `inmemory`，后续可在不改 Bootstrap 签名的前提下补 MQTT/其他实现
-- 下一步继续把消息总线配置从当前最小 provider 字段扩成独立配置节（连接串、客户端标识、topic 前缀等），而不是继续混在入口参数里
+- 已为消息总线切换补最小抽象：`IMessageBus` + `MessageBusFactory`，当前先落 `inmemory`，后续可在不改 Bootstrap 签名的前提下补 MQTT/其他实现
+- App/Test 两侧现已都使用独立 `messageBus` 配置节（连接参数级），下一步重点转为统一配置目录约定说明与真正 provider 落地，而不是再回头改入口参数结构

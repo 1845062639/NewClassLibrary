@@ -36,13 +36,17 @@
 - 记录、产品、附件、报告正文、报告摘要都已串到最小持久化接口
 - `TestBootstrap` 现已支持通过 `appsettings.test.json` 读取默认运行配置，并允许环境变量与命令行参数覆盖
 - 当前优先级为：配置文件 < 环境变量 < 命令行参数
+- 当前已支持配置项：`persistenceMode`、`sqliteDbPath`、`messageBus.provider|host|port|clientId|topicPrefix|username|password`
+- 当前已支持环境变量：`STNEXT_TEST_PERSISTENCE`、`STNEXT_TEST_SQLITE_DB`、`STNEXT_MESSAGE_BUS`
+- 当前已支持命令行参数：`--config`、`--persistence`、`--sqlite-db`
 - 仍支持通过 `--persistence memory|sqlite` 或环境变量 `STNEXT_TEST_PERSISTENCE=memory|sqlite` 切换持久化模式
 - `sqlite` 模式额外支持 `--sqlite-db <path>` / `STNEXT_TEST_SQLITE_DB=<path>`，以及配置文件中的 `sqliteDbPath`
-- 额外支持 `--config <path>` / `--config=<path>` 指定非默认配置文件，便于后续接部署目录与多环境配置
+- `messageBus` 配置节已与 App 侧对齐，Test 入口不再借道 `appsettings.app.json` 读取总线配置，后续切 MQTT/其他 provider 时可分别在双端部署目录落各自配置文件
+- 默认配置文件仍放在程序输出目录，也支持通过 `--config <path>` / `--config=<path>` 指定部署目录中的替代配置
 - 当使用 `sqlite` 模式时，会自动初始化 `artifacts/test-persistence/standardtest-next.db`（或自定义路径）并走 `SQLite*Repository` 闭环
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
 ## 下一步优先项
-- 在已接通 `appsettings.test.json` 的基础上，继续把 App/Test 两侧运行参数收敛到统一 runtime 配置模型，避免后续配置键名继续漂移
+- 在双端已对齐 `messageBus` 配置节的基础上，继续整理统一配置键名/目录约定清单，并为 MQTT provider 落真实实现
 - 为报告历史与记录回放补更稳定的查询模型，而不只是控制台摘要
 - 在现有 Markdown 草稿导出之上，继续抽正式报告模板渲染出口，逐步替换当前 JSON 预览

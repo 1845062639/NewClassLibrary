@@ -4,25 +4,25 @@ using StandardTestNext.App.ContractsBridge;
 using StandardTestNext.Test.Application;
 using StandardTestNext.Test.Application.Services;
 
-var appConfiguration = AppRuntimeConfigurationLoader.Load();
+var testConfiguration = TestRuntimeConfigurationLoader.Load();
 var startupOptions = TestStartupOptionsParser.Parse(args);
 var appOptions = AppStartupOptionsParser.Parse(args);
 
 var messageBusProvider = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS")?.Trim();
 if (string.IsNullOrWhiteSpace(messageBusProvider))
 {
-    messageBusProvider = appConfiguration.MessageBusProvider;
+    messageBusProvider = testConfiguration.MessageBusProvider;
 }
 
 var messageBus = MessageBusFactory.Create(new MessageBusOptions
 {
     Provider = messageBusProvider,
-    Host = appConfiguration.MessageBus.Host,
-    Port = appConfiguration.MessageBus.Port,
-    ClientId = appConfiguration.MessageBus.ClientId,
-    TopicPrefix = appConfiguration.MessageBus.TopicPrefix,
-    Username = appConfiguration.MessageBus.Username,
-    Password = appConfiguration.MessageBus.Password
+    Host = testConfiguration.MessageBus.Host,
+    Port = testConfiguration.MessageBus.Port,
+    ClientId = testConfiguration.MessageBus.ClientId,
+    TopicPrefix = testConfiguration.MessageBus.TopicPrefix,
+    Username = testConfiguration.MessageBus.Username,
+    Password = testConfiguration.MessageBus.Password
 });
 
 var app = new AppBootstrap();

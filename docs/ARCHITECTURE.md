@@ -52,6 +52,7 @@
 - topic 必须显式命名并版本化
 - 建议形式：`stnext/{domain}/{message}/v1`
 - App/Test 运行入口统一依赖 `IMessageBus`，发布/订阅不再在 Bootstrap 层拆成两套注入接口；后续补 MQTT provider 时只扩 `MessageBusFactory` 与 provider 配置
+- App/Test 均使用各自的 `appsettings.app.json` / `appsettings.test.json` 维护运行参数，统一遵循“配置文件 < 环境变量 < 命令行参数”；共享键名优先保持同构（如 `messageBus.*`），避免双端部署时再互相借配置
 
 ## 5. 迁移方式
 - 从旧系统抽取规则，不直接复制其耦合结构
