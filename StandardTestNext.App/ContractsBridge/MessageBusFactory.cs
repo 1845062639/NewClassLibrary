@@ -9,6 +9,7 @@ public static class MessageBusFactory
         return provider switch
         {
             "inmemory" => new InMemoryMessageBus(),
+            "mqtt" => new MqttMessageBus(options ?? new MessageBusOptions { Provider = "mqtt" }),
             _ => throw new NotSupportedException($"Message bus provider '{provider}' is not supported yet.")
         };
     }

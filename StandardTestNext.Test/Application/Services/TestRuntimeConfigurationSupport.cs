@@ -38,11 +38,7 @@ public static class TestRuntimeConfigurationSupport
         if (!string.Equals(messageBus.Provider, "inmemory", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
         {
-            result.Errors.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory only supports inmemory.");
-        }
-        else if (string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
-        {
-            result.Errors.Add("messageBus.provider=mqtt is recognized in configuration, but MessageBusFactory has not implemented MQTT yet; switch back to inmemory before startup.");
+            result.Errors.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory only supports inmemory and mqtt.");
         }
 
         return result;
