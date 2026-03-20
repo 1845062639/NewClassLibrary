@@ -33,7 +33,12 @@ public static class RuntimeConfigurationConsoleReporter
             Console.WriteLine($"[Config.Warning] {warning}");
         }
 
-        if (!validation.HasErrors && !validation.HasWarnings)
+        foreach (var info in validation.Infos)
+        {
+            Console.WriteLine($"[Config.Info] {info}");
+        }
+
+        if (!validation.HasErrors && !validation.HasWarnings && !validation.HasInfos)
         {
             Console.WriteLine("[Config.Validation] no warnings");
         }

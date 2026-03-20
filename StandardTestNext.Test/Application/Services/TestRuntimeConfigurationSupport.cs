@@ -1,5 +1,6 @@
 using StandardTestNext.App.ContractsBridge;
 using System.Net.Sockets;
+using System.Security.Authentication;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -64,9 +65,17 @@ public static class TestRuntimeConfigurationSupport
             {
                 result.Errors.Add("messageBus.host is empty while provider=mqtt.");
             }
-            else if (!CanConnect(messageBus.Host, messageBus.Port ?? 1883, TimeSpan.FromMilliseconds(800), out var socketError))
+            else
             {
-                result.Warnings.Add($"messageBus endpoint {messageBus.Host}:{messageBus.Port ?? 1883} is not reachable during startup self-check ({socketError}).");
+                var probe = ProbeEndpoint(messageBus.Host, messageBus.Port ?? 1883, TimeSpan.FromMilliseconds(800));
+                if (probe.Success)
+                {
+                    result.Infos.Add(probe.ToDisplayText($"messageBus endpoint {messageBus.Host}:{messageBus.Port ?? 1883}"));
+                }
+                else
+                {
+                    result.Warnings.Add(probe.ToDisplayText($"messageBus endpoint {messageBus.Host}:{messageBus.Port ?? 1883}"));
+                }
             }
         }
 
@@ -88,7 +97,12 @@ public static class TestRuntimeConfigurationSupport
             Console.WriteLine($"[Config.Warning] {warning}");
         }
 
-        if (!validation.HasErrors && !validation.HasWarnings)
+        foreach (var info in validation.Infos)
+        {
+            Console.WriteLine($"[Config.Info] {info}");
+        }
+
+        if (!validation.HasErrors && !validation.HasWarnings && !validation.HasInfos)
         {
             Console.WriteLine("[Config.Validation] no warnings");
         }
@@ -127,7 +141,7 @@ public static class TestRuntimeConfigurationSupport
         }
     }
 
-    private static bool CanConnect(string host, int port, TimeSpan timeout, out string? socketError)
+    private static ConnectivityProbeResult ProbeEndpoint(string host, int port, TimeSpan timeout)
     {
         try
         {
@@ -135,17 +149,72 @@ public static class TestRuntimeConfigurationSupport
             var connectTask = client.ConnectAsync(host, port);
             if (!connectTask.Wait(timeout))
             {
-                socketError = "timeout";
-                return false;
+                return new ConnectivityProbeResult
+                {
+                    Success = false,
+                    Status = "timeout",
+                    Detail = $"no TCP handshake within {timeout.TotalMilliseconds:0}ms"
+                };
             }
 
-            socketError = null;
-            return client.Connected;
+            return client.Connected
+                ? new ConnectivityProbeResult
+                {
+                    Success = true,
+                    Status = "reachable",
+                    Detail = "tcp handshake succeeded"
+                }
+                : new ConnectivityProbeResult
+                {
+                    Success = false,
+                    Status = "disconnected",
+                    Detail = "connect completed but socket is not connected"
+                };
+        }
+        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.ConnectionRefused)
+        {
+            return new ConnectivityProbeResult
+            {
+                Success = false,
+                Status = "connection-refused",
+                Detail = ex.Message
+            };
+        }
+        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.HostNotFound || ex.SocketErrorCode == SocketError.NoData)
+        {
+            return new ConnectivityProbeResult
+            {
+                Success = false,
+                Status = "dns-failed",
+                Detail = ex.Message
+            };
+        }
+        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut)
+        {
+            return new ConnectivityProbeResult
+            {
+                Success = false,
+                Status = "timeout",
+                Detail = ex.Message
+            };
+        }
+        catch (AuthenticationException ex)
+        {
+            return new ConnectivityProbeResult
+            {
+                Success = false,
+                Status = "auth-failed",
+                Detail = ex.Message
+            };
         }
         catch (Exception ex)
         {
-            socketError = ex.GetType().Name + ": " + ex.Message;
-            return false;
+            return new ConnectivityProbeResult
+            {
+                Success = false,
+                Status = "probe-failed",
+                Detail = ex.GetType().Name + ": " + ex.Message
+            };
         }
     }
 }
