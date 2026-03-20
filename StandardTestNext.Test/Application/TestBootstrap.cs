@@ -150,6 +150,7 @@ public sealed class TestBootstrap
         {
             Console.WriteLine($"[Test] Reloaded record attachments: record={reloadedRecord.RecordAttachments.Count}, itemBuckets={reloadedRecord.ItemAttachments.Count}");
             Console.WriteLine($"[Test] Reloaded item details: {string.Join(", ", reloadedRecord.ItemDetails.Select(x => $"{x.ItemCode}:{x.RecordMode}:{x.SampleCount}:remark={(x.HasRemark ? "Y" : "N")}"))}");
+            Console.WriteLine($"[Test] Reloaded mapping: samples={reloadedRecord.Mapping.TotalSampleCount}:kp={reloadedRecord.Mapping.KeyPointSampleCount}:cont={reloadedRecord.Mapping.ContinuousSampleCount}");
             Console.WriteLine($"[Test] Reloaded reports: snapshots={reloadedRecord.Reports.Count}, summaries={reloadedRecord.ReportSummaries.Count}, hasArtifacts={reloadedRecord.HasReportArtifacts}");
         }
         new TestRecordConsolePresenter().PrintSummary(aggregate, buildResult.Statistics, primaryReport.Format, primaryReport.Content);

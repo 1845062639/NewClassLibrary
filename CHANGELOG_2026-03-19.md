@@ -2,6 +2,11 @@
 
 - Test: let `TestBootstrap` export both JSON and Markdown report artifacts, and persist both formats into report history/summaries so report abstraction is exercised by the runtime path rather than only kept as idle interfaces.
 
+## 05:08
+- test: add `TestRecordQueryViewAssembler` + `TestRecordItemPayloadReader` so recent/detail query DTO assembly and `DataJson` payload parsing stop being duplicated inside `TestRecordQueryService`
+- test: extend `TestRecordDetail` with `Mapping` and update bootstrap reload output to print reloaded `samples/kp/cont` snapshot directly
+- docs: align test README/worklog with the tightened query-assembly boundary
+
 ## 19:05
 - test: wire product-definition query service into TestBootstrap so the demo path now prints recent products plus by-kind readback instead of leaving product queries as repository-only plumbing
 - docs: align test README / worklog / migration plan with the product-definition query path now being exercised in runtime output

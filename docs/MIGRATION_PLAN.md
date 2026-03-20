@@ -62,6 +62,7 @@
 - 本小时继续把 recent list 也收敛成更稳定的查询视图：`TestRecordSummary` 已新增 `ReportCount / HasReportArtifacts / LatestReportSavedAt / ProductCode / ProductModel / ReusedProductDefinition`，`TestRecordQueryService.ListRecentAsync` 会同步拼出最近记录的报告存在性、制品状态以及产品定义复用状态，减少后续列表页/API 再逐条回查报告仓储或产品主数据
 - 本小时继续把产品主数据也从“只写不查”往前推：新增 `IProductDefinitionQueryService` + `ProductDefinitionQueryService`，并为产品仓储补 `ListRecentAsync`，后续无论是主数据列表、记录详情产品信息回查还是主数据对账，都可以先走稳定查询边界而不是继续把读取逻辑散回 Bootstrap
 - 本轮继续把这条边界从“接口存在”推进到“启动链路真实使用”：`TestBootstrap` 已直接补 recent products 与 `GetByKind(productKind)` 回读输出，后续做 API/UI 时可先复用这层查询服务，而不是重新在 demo/控制台里拼仓储读取
+- 本小时继续把记录查询组装逻辑从服务内部往外收口：新增 `TestRecordQueryViewAssembler` 与 `TestRecordItemPayloadReader`，把 recent/detail 两条查询路径共用的 `ItemDetails / Mapping / ReportSummaries` 组装以及 `DataJson -> SampleCount/RecordMode` 解析统一下来；`TestRecordDetail` 也已直接携带 `Mapping`，后续详情页/API 无需再自行扫描 item 列表回算 `samples/kp/cont`
 
 ## 阶段 4：旧系统并行期
 - 新旧系统并行验证
