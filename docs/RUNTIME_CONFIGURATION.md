@@ -153,7 +153,8 @@ App/Test 双端统一使用同构配置结构：
 ## 当前限制
 - `MessageBusFactory` 目前仅实现 `inmemory`
 - `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位
-- 当前已补最小 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，但仍属于控制台告警级别，尚未形成严格失败策略或独立部署自检命令
+- 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：未实现的 `mqtt` provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
+- 但这仍不是完整部署自检：例如 `host` 可达性、认证有效性、SQLite 目录权限、后续 MQTT 握手与 topic ACL 仍未覆盖
 
 ## 下一步
 - 在 `MessageBusFactory` 中接入 `mqtt` provider

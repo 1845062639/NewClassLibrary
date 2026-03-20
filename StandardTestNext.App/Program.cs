@@ -6,6 +6,7 @@ var appOptions = AppStartupOptionsParser.Parse(args);
 var messageBusOptions = MessageBusOptionsFactory.Create(appOptions.MessageBus);
 var validation = RuntimeConfigurationValidator.ValidateApp(appOptions, messageBusOptions);
 RuntimeConfigurationConsoleReporter.ReportApp(appOptions, messageBusOptions, validation);
+RuntimeConfigurationConsoleReporter.ThrowIfInvalid(validation);
 
 var messageBus = MessageBusFactory.Create(messageBusOptions);
 var app = new AppBootstrap();

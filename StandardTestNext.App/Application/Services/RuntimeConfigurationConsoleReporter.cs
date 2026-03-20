@@ -8,21 +8,34 @@ public static class RuntimeConfigurationConsoleReporter
     {
         Console.WriteLine($"[App.Config] deviceId={options.DeviceId}, productKind={options.ProductKind}, samplingMode={options.SamplingMode}");
         Console.WriteLine($"[App.Config] messageBus provider={messageBus.Provider}, host={messageBus.Host ?? "<null>"}, port={messageBus.Port?.ToString() ?? "<null>"}, clientId={messageBus.ClientId ?? "<null>"}, topicPrefix={messageBus.TopicPrefix ?? "<null>"}");
-        ReportWarnings(validation);
+        ReportValidation(validation);
     }
 
-
-    private static void ReportWarnings(RuntimeConfigurationValidationResult validation)
+    public static void ThrowIfInvalid(RuntimeConfigurationValidationResult validation)
     {
-        if (!validation.HasWarnings)
+        if (!validation.HasErrors)
         {
-            Console.WriteLine("[Config.Validation] no warnings");
             return;
+        }
+
+        throw new InvalidOperationException($"Invalid app runtime configuration: {string.Join(" | ", validation.Errors)}");
+    }
+
+    private static void ReportValidation(RuntimeConfigurationValidationResult validation)
+    {
+        foreach (var error in validation.Errors)
+        {
+            Console.WriteLine($"[Config.Error] {error}");
         }
 
         foreach (var warning in validation.Warnings)
         {
             Console.WriteLine($"[Config.Warning] {warning}");
+        }
+
+        if (!validation.HasErrors && !validation.HasWarnings)
+        {
+            Console.WriteLine("[Config.Validation] no warnings");
         }
     }
 }

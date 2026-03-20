@@ -11,11 +11,11 @@ public static class RuntimeConfigurationValidator
         if (!string.Equals(messageBus.Provider, "inmemory", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
         {
-            result.Warnings.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory only supports inmemory.");
+            result.Errors.Add($"Unsupported message bus provider '{messageBus.Provider}'. Current factory only supports inmemory.");
         }
         else if (string.Equals(messageBus.Provider, "mqtt", StringComparison.OrdinalIgnoreCase))
         {
-            result.Warnings.Add("messageBus.provider=mqtt is recognized in configuration, but MessageBusFactory has not implemented MQTT yet; startup will currently fail unless provider is switched back to inmemory.");
+            result.Errors.Add("messageBus.provider=mqtt is recognized in configuration, but MessageBusFactory has not implemented MQTT yet; switch back to inmemory before startup.");
         }
 
         if (string.IsNullOrWhiteSpace(options.DeviceId))
@@ -26,7 +26,7 @@ public static class RuntimeConfigurationValidator
         if (!string.Equals(options.SamplingMode, "single", StringComparison.OrdinalIgnoreCase)
             && !string.Equals(options.SamplingMode, "burst", StringComparison.OrdinalIgnoreCase))
         {
-            result.Warnings.Add($"App samplingMode '{options.SamplingMode}' is not one of [single, burst]; bootstrap currently normalizes unknown values but still runs.");
+            result.Errors.Add($"App samplingMode '{options.SamplingMode}' is not one of [single, burst].");
         }
 
         ValidateSharedMessageBus(result, messageBus);
@@ -44,17 +44,17 @@ public static class RuntimeConfigurationValidator
     {
         if (messageBus.Port is <= 0 or > 65535)
         {
-            result.Warnings.Add($"messageBus.port '{messageBus.Port}' is outside the valid TCP port range; current runtime will ignore it for inmemory, but MQTT should reject it later.");
+            result.Errors.Add($"messageBus.port '{messageBus.Port}' is outside the valid TCP port range.");
         }
 
         if (string.IsNullOrWhiteSpace(messageBus.ClientId))
         {
-            result.Warnings.Add("messageBus.clientId is empty; recommended to set distinct client ids for App/Test before MQTT lands.");
+            result.Errors.Add("messageBus.clientId is empty; set distinct client ids for App/Test.");
         }
 
         if (string.IsNullOrWhiteSpace(messageBus.TopicPrefix))
         {
-            result.Warnings.Add("messageBus.topicPrefix is empty; recommended to keep an explicit shared prefix such as 'stnext'.");
+            result.Errors.Add("messageBus.topicPrefix is empty; keep an explicit shared prefix such as 'stnext'.");
         }
     }
 }

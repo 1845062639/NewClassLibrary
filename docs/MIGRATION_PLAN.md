@@ -45,10 +45,12 @@
 - 本小时继续把“口头约定”落成正式文档：新增 `docs/RUNTIME_CONFIGURATION.md`，统一 App/Test 配置文件名、共享 `messageBus.*` 键名、环境变量/命令行覆盖链路与建议部署目录，后续接 MQTT 与部署脚本时可直接复用
 - 本小时继续把消息总线环境变量覆盖补到连接参数级：新增 `MessageBusOptionsFactory`，App/Test 双端 Program 已统一通过 `STNEXT_MESSAGE_BUS_HOST|PORT|CLIENT_ID|TOPIC_PREFIX|USERNAME|PASSWORD` 覆盖 `messageBus.*` 配置；当前 `PORT` 非法时回退配置文件值，先保证启动路径稳定
 - 本小时继续按待办把“配置校验/启动前自检”推进到真实代码：新增 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，App/Test 双端入口会在启动时打印当前 runtime/messageBus 摘要，并对 provider、port、clientId、topicPrefix、samplingMode、persistenceMode、sqliteDbPath 给出最小告警
+- 本小时继续把这层护栏从“控制台提示”推进到“启动前失败”：`RuntimeConfigurationValidationResult` 已补 `Errors`，App/Test 双端 `Program.cs` 会在报告配置摘要后调用 `ThrowIfInvalid`；当前未实现的 `mqtt` provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode` 会直接阻断启动，先把最容易误配的假绿路径封住
 - 同步修正双端 `Program.cs` 启动边界：App/Test 入口各自只加载自身配置并启动自身 Bootstrap，不再互相串拉对方 Bootstrap/配置，避免后续接 MQTT/部署脚本时继续把 demo 串线状态带进主干
 - 本小时继续把消息总线配置入口从“配置文件 + 环境变量”推进到“配置文件 + 环境变量 + CLI”：`AppStartupOptionsParser` / `TestStartupOptionsParser` 已支持 `--message-bus`、`--message-bus-host`、`--message-bus-port`、`--message-bus-client-id`、`--message-bus-topic-prefix`、`--message-bus-username`、`--message-bus-password`，后续切 MQTT/provider 调试时不用再依赖改部署目录配置文件
 - 本小时顺手实跑校验了这条链路，并暴露出一个真实边界：validator 把 `mqtt` 当作合法 provider，但 `MessageBusFactory` 仍只实现 `inmemory`，此前会出现“配置校验无警告、运行直接抛 `NotSupportedException`”的假绿状态；现已把 App/Test 双端启动告警改为明确提示“mqtt 尚未实现，当前切过去会失败”
-- 下一步优先补：在已补连接参数配置骨架、细粒度环境变量入口、公共配置说明、CLI 覆盖入口与已纠正的最小配置告警前提下接入 MQTT 实现、把当前“控制台告警”升级为更严格的非法配置失败策略、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
+- 本小时继续顺手清理共享基础设施技术债：`IMessageBus` 已不再继承 obsolete 的 `IMessageSubscriber` 兼容接口，`Subscribe<T>` 直接并入主总线接口；复验 `dotnet build StandardTestNext.sln --no-restore`、`dotnet run` App/Test 两端均通过，当前主干恢复为 0 warning / 0 error
+- 下一步优先补：在已补连接参数配置骨架、细粒度环境变量入口、公共配置说明、CLI 覆盖入口、已纠正的最小配置告警以及已清理的总线兼容层前提下接入 MQTT 实现、把当前“控制台告警”升级为更严格的非法配置失败策略、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
 - 本小时继续把记录查询边界从“回读聚合”推进到“回读聚合 + 附件明细”：`IRecordAttachmentRepository` 已补 record/item 两级附件查询接口，`ITestRecordQueryService` 已返回 `TestRecordDetail` 组合结果，为后续记录详情页、报告附件清单、审计查询预留稳定边界
 - 本小时继续把“报告摘要/导出制品引用并入查询对象”往前推：`ITestReportRepository` / `ITestReportQueryService` 已补按 `RecordCode` 回读 `TestReportSnapshot`，`TestRecordDetail` 已并入 report snapshots / report summaries，当前记录详情查询不再只能看到聚合与附件，也能看到同记录下的报告正文快照与摘要元信息
 - 本小时继续把 item 级统计显式化：新增 `TestRecordItemDetail`，并将 `ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount` 收敛到 `TestRecordDetail.ItemDetails`，减少后续详情页/API 对 `DataJson` 的直接理解成本
