@@ -1,8 +1,13 @@
 # CHANGELOG 2026-03-19
 
+## 12:40
+- app/test: fix Program.cs boundaries so each executable now loads only its own runtime config and bootstrap instead of cross-starting the other side
+- app/test: carry messageBus config through startup options and add minimal runtime validation/reporting for provider/port/clientId/topicPrefix plus app/test-specific warnings
+- docs: align runtime configuration, architecture, migration notes, vertical slice, and app/test READMEs with the corrected single-side entrypoint and validation baseline
+
 ## 07:18
 - app/test: add IMessageBus + MessageBusFactory + MessageBusOptions and switch Program/Bootstrap entrypoints from concrete InMemoryMessageBus signatures to the bus abstraction
-- app: expose messageBusProvider in appsettings.app.json as the minimal runtime landing zone for future MQTT/other providers while keeping inmemory as the current default
+- app: expose `messageBus.*` runtime settings in appsettings.app.json as the minimal landing zone for future MQTT/other providers while keeping `inmemory` as the current default
 - docs: align vertical slice / migration plan / app-test readmes and worklog with the new pluggable-bus baseline
 
 

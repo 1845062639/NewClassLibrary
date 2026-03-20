@@ -24,6 +24,9 @@ public static class TestStartupOptionsParser
         var fileConfiguration = TestRuntimeConfigurationLoader.Load(configPath);
         var persistenceMode = fileConfiguration.PersistenceMode?.Trim();
         var sqliteDbPath = fileConfiguration.SQLiteDbPath?.Trim();
+        var messageBus = CloneMessageBusConfiguration(fileConfiguration.MessageBus);
+
+        ApplyMessageBusEnvironmentOverrides(messageBus);
 
         var envPersistenceMode = Environment.GetEnvironmentVariable("STNEXT_TEST_PERSISTENCE")?.Trim();
         if (!string.IsNullOrWhiteSpace(envPersistenceMode))
@@ -67,7 +70,67 @@ public static class TestStartupOptionsParser
         return new TestStartupOptions
         {
             PersistenceMode = string.IsNullOrWhiteSpace(persistenceMode) ? "memory" : persistenceMode,
-            SQLiteDbPath = string.IsNullOrWhiteSpace(sqliteDbPath) ? null : sqliteDbPath
+            SQLiteDbPath = string.IsNullOrWhiteSpace(sqliteDbPath) ? null : sqliteDbPath,
+            MessageBus = messageBus
         };
+    }
+
+    private static MessageBusConfiguration CloneMessageBusConfiguration(MessageBusConfiguration configuration)
+    {
+        return new MessageBusConfiguration
+        {
+            Provider = configuration.Provider,
+            Host = configuration.Host,
+            Port = configuration.Port,
+            ClientId = configuration.ClientId,
+            TopicPrefix = configuration.TopicPrefix,
+            Username = configuration.Username,
+            Password = configuration.Password
+        };
+    }
+
+    private static void ApplyMessageBusEnvironmentOverrides(MessageBusConfiguration messageBus)
+    {
+        var envMessageBusProvider = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusProvider))
+        {
+            messageBus.Provider = envMessageBusProvider;
+        }
+
+        var envMessageBusHost = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_HOST")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusHost))
+        {
+            messageBus.Host = envMessageBusHost;
+        }
+
+        var envMessageBusPort = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_PORT")?.Trim();
+        if (int.TryParse(envMessageBusPort, out var parsedMessageBusPort))
+        {
+            messageBus.Port = parsedMessageBusPort;
+        }
+
+        var envMessageBusClientId = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_CLIENT_ID")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusClientId))
+        {
+            messageBus.ClientId = envMessageBusClientId;
+        }
+
+        var envMessageBusTopicPrefix = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_TOPIC_PREFIX")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusTopicPrefix))
+        {
+            messageBus.TopicPrefix = envMessageBusTopicPrefix;
+        }
+
+        var envMessageBusUsername = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_USERNAME")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusUsername))
+        {
+            messageBus.Username = envMessageBusUsername;
+        }
+
+        var envMessageBusPassword = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_PASSWORD")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envMessageBusPassword))
+        {
+            messageBus.Password = envMessageBusPassword;
+        }
     }
 }

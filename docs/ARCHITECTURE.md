@@ -53,6 +53,9 @@
 - 建议形式：`stnext/{domain}/{message}/v1`
 - App/Test 运行入口统一依赖 `IMessageBus`，发布/订阅不再在 Bootstrap 层拆成两套注入接口；后续补 MQTT provider 时只扩 `MessageBusFactory` 与 provider 配置
 - App/Test 均使用各自的 `appsettings.app.json` / `appsettings.test.json` 维护运行参数，统一遵循“配置文件 < 环境变量 < 命令行参数”；共享键名优先保持同构（如 `messageBus.*`），避免双端部署时再互相借配置
+- 双端 `Program.cs` 当前已收口为“各自只启动自身 Bootstrap”，不再互相串拉另一侧运行链路；后续如果需要端到端 demo，应另建集成宿主而不是继续污染单端入口
+- 运行配置的正式约定已收敛到 `docs/RUNTIME_CONFIGURATION.md`，README/部署脚本/样例配置应以该文件为准，避免 README 各写各的后续漂移
+- 当前已补最小配置校验与启动摘要输出，但仍属于轻量护栏；后续接入 MQTT 与正式部署脚本前，应把非法配置从“警告”提升为更明确的失败策略
 
 ## 5. 迁移方式
 - 从旧系统抽取规则，不直接复制其耦合结构

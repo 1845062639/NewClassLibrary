@@ -39,10 +39,14 @@
 - 已补一版启动参数入口：`--persistence memory|sqlite` 与 `--sqlite-db <path>`，并已真正接入 `StandardTestNext.Test/Program.cs`，当前命令行参数、环境变量两条入口都可驱动 `TestBootstrap`
 - 本小时继续把运行入口往统一配置收口：新增 `TestRuntimeConfiguration` / `TestRuntimeConfigurationLoader` 与 `appsettings.test.json`，当前默认配置文件、环境变量、命令行三层都可驱动 `TestBootstrap`，优先级已明确为“配置文件 < 环境变量 < 命令行参数”
 - 本小时继续把这套 runtime 配置真正平移到 App 侧：新增 `AppRuntimeConfiguration` / `AppRuntimeConfigurationLoader` / `AppStartupOptionsParser` 与 `appsettings.app.json`，并让 `AppBootstrap` / `MockMotorDeviceGateway` / `AppCommandConsumer` 消费 `deviceId`、`productKind`、`samplingMode`，先把双端入口收敛到同一种“配置文件 + 环境变量 + CLI 覆盖”模式
-- 本小时继续把消息桥从具体实现里抽出来：新增 `IMessageBus` / `MessageBusFactory` / `MessageBusOptions`，并让 App/Test 两个 Program 与 Bootstrap 都改为依赖总线抽象；当前默认 provider 为 `inmemory`，同时在 `appsettings.app.json` 中补了 `messageBusProvider` 作为后续接 MQTT 的最小落点
+- 本小时继续把消息桥从具体实现里抽出来：新增 `IMessageBus` / `MessageBusFactory` / `MessageBusOptions`，并让 App/Test 两个 Program 与 Bootstrap 都改为依赖总线抽象；当前默认 provider 为 `inmemory`，双端配置文件均已补齐同构的 `messageBus.*` 连接参数，作为后续接 MQTT 的最小落点
 - 本小时继续把消息桥边界再收一层：`AppCommandConsumer` 已从单独依赖 `IMessageSubscriber` 收口为直接依赖 `IMessageBus`，当前 App/Test 运行主干都只认同一套总线入口，避免后续接 MQTT 时还要维护额外注入分叉
 - 本小时继续把消息总线配置从单一 provider 推到连接参数级：`AppRuntimeConfiguration.MessageBus` / `TestRuntimeConfiguration.MessageBus` / `MessageBusOptions` 已补 `host`、`port`、`clientId`、`topicPrefix`、`username`、`password` 占位，App/Test 两个 Program 已统一透传这组配置；其中 Test 入口已不再借道 App 配置读取总线参数，后续可分别按部署目录维护双端配置文件
-- 下一步优先补：继续统一 App/Test 配置键名与目录约定说明、在已补连接参数配置骨架的前提下接入 MQTT 实现、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
+- 本小时继续把“口头约定”落成正式文档：新增 `docs/RUNTIME_CONFIGURATION.md`，统一 App/Test 配置文件名、共享 `messageBus.*` 键名、环境变量/命令行覆盖链路与建议部署目录，后续接 MQTT 与部署脚本时可直接复用
+- 本小时继续把消息总线环境变量覆盖补到连接参数级：新增 `MessageBusOptionsFactory`，App/Test 双端 Program 已统一通过 `STNEXT_MESSAGE_BUS_HOST|PORT|CLIENT_ID|TOPIC_PREFIX|USERNAME|PASSWORD` 覆盖 `messageBus.*` 配置；当前 `PORT` 非法时回退配置文件值，先保证启动路径稳定
+- 本小时继续按待办把“配置校验/启动前自检”推进到真实代码：新增 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，App/Test 双端入口会在启动时打印当前 runtime/messageBus 摘要，并对 provider、port、clientId、topicPrefix、samplingMode、persistenceMode、sqliteDbPath 给出最小告警
+- 同步修正双端 `Program.cs` 启动边界：App/Test 入口各自只加载自身配置并启动自身 Bootstrap，不再互相串拉对方 Bootstrap/配置，避免后续接 MQTT/部署脚本时继续把 demo 串线状态带进主干
+- 下一步优先补：在已补连接参数配置骨架、细粒度环境变量入口、公共配置说明与最小配置告警的前提下接入 MQTT 实现、把当前“控制台告警”升级为更严格的非法配置失败策略、正式报告模板渲染、在已落地的 SQLite 样板基础上细化表结构/查询模型并评估是否继续引入 EF 或 Dapper、样本映射策略与试验方法编码的对应表
 - 本小时继续把记录查询边界从“回读聚合”推进到“回读聚合 + 附件明细”：`IRecordAttachmentRepository` 已补 record/item 两级附件查询接口，`ITestRecordQueryService` 已返回 `TestRecordDetail` 组合结果，为后续记录详情页、报告附件清单、审计查询预留稳定边界
 - 本小时继续把“报告摘要/导出制品引用并入查询对象”往前推：`ITestReportRepository` / `ITestReportQueryService` 已补按 `RecordCode` 回读 `TestReportSnapshot`，`TestRecordDetail` 已并入 report snapshots / report summaries，当前记录详情查询不再只能看到聚合与附件，也能看到同记录下的报告正文快照与摘要元信息
 - 本小时继续把 item 级统计显式化：新增 `TestRecordItemDetail`，并将 `ItemCode / MethodCode / RecordMode / SampleCount / AttachmentCount` 收敛到 `TestRecordDetail.ItemDetails`，减少后续详情页/API 对 `DataJson` 的直接理解成本

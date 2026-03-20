@@ -13,18 +13,19 @@ public sealed class TestRuntimeConfiguration
         return new TestStartupOptions
         {
             PersistenceMode = PersistenceMode,
-            SQLiteDbPath = SQLiteDbPath
+            SQLiteDbPath = SQLiteDbPath,
+            MessageBus = MessageBus
         };
     }
 }
 
 public sealed class MessageBusConfiguration
 {
-    public string Provider { get; init; } = "inmemory";
-    public string? Host { get; init; }
-    public int? Port { get; init; }
-    public string? ClientId { get; init; }
-    public string? TopicPrefix { get; init; }
-    public string? Username { get; init; }
-    public string? Password { get; init; }
+    public string Provider { get; set; } = "inmemory";
+    public string? Host { get; set; }
+    public int? Port { get; set; }
+    public string? ClientId { get; set; }
+    public string? TopicPrefix { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
 }
