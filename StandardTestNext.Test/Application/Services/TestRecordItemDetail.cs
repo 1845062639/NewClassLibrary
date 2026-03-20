@@ -1,0 +1,14 @@
+namespace StandardTestNext.Test.Application.Services;
+
+public sealed class TestRecordItemDetail
+{
+    public Guid TestRecordItemId { get; init; }
+    public string ItemCode { get; init; } = string.Empty;
+    public string MethodCode { get; init; } = string.Empty;
+    public bool IsValid { get; init; }
+    public string? Remark { get; init; }
+    public bool HasRemark { get; init; }
+    public int AttachmentCount { get; init; }
+    public int SampleCount { get; init; }
+    public string? RecordMode { get; init; }
+}

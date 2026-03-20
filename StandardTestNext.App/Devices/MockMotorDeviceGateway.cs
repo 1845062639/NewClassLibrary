@@ -4,13 +4,22 @@ namespace StandardTestNext.App.Devices;
 
 public sealed class MockMotorDeviceGateway : IMotorDeviceGateway
 {
+    private readonly string _deviceId;
+    private readonly string _productKind;
+
+    public MockMotorDeviceGateway(string deviceId, string productKind)
+    {
+        _deviceId = deviceId;
+        _productKind = productKind;
+    }
+
     public MotorRealtimeSampleContract ReadRealtimeSample()
     {
         return new MotorRealtimeSampleContract
         {
             SampleTime = DateTimeOffset.Now,
-            DeviceId = "mock-motor-device",
-            ProductKind = "Motor_Y",
+            DeviceId = _deviceId,
+            ProductKind = _productKind,
             VoltageAverage = 380,
             CurrentAverage = 12.5,
             Power = 6.8,
