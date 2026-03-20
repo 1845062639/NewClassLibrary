@@ -26,7 +26,7 @@ public static class TestStartupOptionsParser
         var sqliteDbPath = fileConfiguration.SQLiteDbPath?.Trim();
         var messageBus = CloneMessageBusConfiguration(fileConfiguration.MessageBus);
 
-        ApplyMessageBusEnvironmentOverrides(messageBus);
+        MessageBusRuntimeOverrides.ApplyEnvironmentOverrides(messageBus);
 
         var envPersistenceMode = Environment.GetEnvironmentVariable("STNEXT_TEST_PERSISTENCE")?.Trim();
         if (!string.IsNullOrWhiteSpace(envPersistenceMode))
@@ -64,8 +64,12 @@ public static class TestStartupOptionsParser
             if (arg.StartsWith("--sqlite-db=", StringComparison.OrdinalIgnoreCase))
             {
                 sqliteDbPath = arg[("--sqlite-db=".Length)..].Trim();
+                continue;
             }
+
         }
+
+        MessageBusRuntimeOverrides.ApplyCommandLineOverrides(messageBus, args);
 
         return new TestStartupOptions
         {
@@ -87,50 +91,5 @@ public static class TestStartupOptionsParser
             Username = configuration.Username,
             Password = configuration.Password
         };
-    }
-
-    private static void ApplyMessageBusEnvironmentOverrides(MessageBusConfiguration messageBus)
-    {
-        var envMessageBusProvider = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusProvider))
-        {
-            messageBus.Provider = envMessageBusProvider;
-        }
-
-        var envMessageBusHost = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_HOST")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusHost))
-        {
-            messageBus.Host = envMessageBusHost;
-        }
-
-        var envMessageBusPort = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_PORT")?.Trim();
-        if (int.TryParse(envMessageBusPort, out var parsedMessageBusPort))
-        {
-            messageBus.Port = parsedMessageBusPort;
-        }
-
-        var envMessageBusClientId = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_CLIENT_ID")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusClientId))
-        {
-            messageBus.ClientId = envMessageBusClientId;
-        }
-
-        var envMessageBusTopicPrefix = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_TOPIC_PREFIX")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusTopicPrefix))
-        {
-            messageBus.TopicPrefix = envMessageBusTopicPrefix;
-        }
-
-        var envMessageBusUsername = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_USERNAME")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusUsername))
-        {
-            messageBus.Username = envMessageBusUsername;
-        }
-
-        var envMessageBusPassword = Environment.GetEnvironmentVariable("STNEXT_MESSAGE_BUS_PASSWORD")?.Trim();
-        if (!string.IsNullOrWhiteSpace(envMessageBusPassword))
-        {
-            messageBus.Password = envMessageBusPassword;
-        }
     }
 }

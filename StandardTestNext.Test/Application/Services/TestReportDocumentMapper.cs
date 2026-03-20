@@ -112,9 +112,9 @@ public sealed class TestReportDocumentMapper
         {
             AttachmentId = attachment.AttachmentId.ToString(),
             FileName = attachment.FileName,
-            FileType = attachment.FileType,
-            StorageKey = attachment.StorageKey,
-            Remark = attachment.Remark
+            FileType = attachment.FileExt,
+            StorageKey = attachment.StoragePath,
+            Remark = attachment.ExtraInfoJson
         };
     }
 }

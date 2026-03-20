@@ -1,6 +1,5 @@
 using StandardTestNext.Test.Application.Abstractions;
 using StandardTestNext.Test.Application.Services;
-using StandardTestNext.Test.Domain.Records;
 
 namespace StandardTestNext.Test.Infrastructure.Persistence;
 
@@ -13,9 +12,38 @@ public sealed class InMemoryTestRecordQueryService : ITestRecordQueryService
         _repository = repository;
     }
 
-    public Task<TestRecordAggregate?> GetByRecordCodeAsync(string recordCode, CancellationToken cancellationToken = default)
+    public async Task<TestRecordDetail?> GetByRecordCodeAsync(string recordCode, CancellationToken cancellationToken = default)
     {
-        return _repository.FindByRecordCodeAsync(recordCode, cancellationToken);
+        var record = await _repository.FindByRecordCodeAsync(recordCode, cancellationToken);
+        if (record is null)
+        {
+            return null;
+        }
+
+        return new TestRecordDetail
+        {
+            Record = record,
+            RecordAttachments = record.Attachments,
+            ItemAttachments = record.Items.ToDictionary(
+                x => x.TestRecordItemId,
+                x => (IReadOnlyList<Domain.Records.RecordAttachment>)x.Attachments),
+            ItemDetails = record.Items
+                .Select(x => new TestRecordItemDetail
+                {
+                    TestRecordItemId = x.TestRecordItemId,
+                    ItemCode = x.ItemCode,
+                    MethodCode = x.MethodCode,
+                    IsValid = x.IsValid,
+                    Remark = x.Remark,
+                    HasRemark = !string.IsNullOrWhiteSpace(x.Remark),
+                    AttachmentCount = x.Attachments.Count,
+                    SampleCount = 0,
+                    RecordMode = null
+                })
+                .ToArray(),
+            Reports = Array.Empty<TestReportSnapshot>(),
+            ReportSummaries = Array.Empty<TestReportPersistenceSummary>()
+        };
     }
 
     public async Task<IReadOnlyList<TestRecordSummary>> ListRecentAsync(int take = 10, CancellationToken cancellationToken = default)
