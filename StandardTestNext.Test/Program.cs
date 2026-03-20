@@ -16,7 +16,13 @@ if (string.IsNullOrWhiteSpace(messageBusProvider))
 
 var messageBus = MessageBusFactory.Create(new MessageBusOptions
 {
-    Provider = messageBusProvider
+    Provider = messageBusProvider,
+    Host = appConfiguration.MessageBus.Host,
+    Port = appConfiguration.MessageBus.Port,
+    ClientId = appConfiguration.MessageBus.ClientId,
+    TopicPrefix = appConfiguration.MessageBus.TopicPrefix,
+    Username = appConfiguration.MessageBus.Username,
+    Password = appConfiguration.MessageBus.Password
 });
 
 var app = new AppBootstrap();

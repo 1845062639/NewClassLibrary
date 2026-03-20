@@ -10,7 +10,7 @@
 ## 当前已接通的运行配置入口
 - `AppRuntimeConfiguration` + `AppRuntimeConfigurationLoader`：默认从 `appsettings.app.json` 读取 App 侧运行配置
 - `AppStartupOptionsParser`：支持“配置文件 < 环境变量 < 命令行参数”的覆盖链路
-- 当前已支持配置项：`deviceId`、`productKind`、`samplingMode`、`messageBusProvider`
+- 当前已支持配置项：`deviceId`、`productKind`、`samplingMode`、`messageBus.provider|host|port|clientId|topicPrefix|username|password`
 - 当前已支持环境变量：`STNEXT_APP_DEVICE_ID`、`STNEXT_APP_PRODUCT_KIND`、`STNEXT_APP_SAMPLING_MODE`、`STNEXT_MESSAGE_BUS`
 - 当前已支持命令行参数：`--config`、`--device-id`、`--product-kind`、`--sampling-mode`
 - `AppBootstrap` / `MockMotorDeviceGateway` / `AppCommandConsumer` 已真正消费这套配置，避免设备标识、产品型号、采样模式继续写死在 demo 里
