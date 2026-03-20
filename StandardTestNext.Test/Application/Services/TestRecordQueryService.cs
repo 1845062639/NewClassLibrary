@@ -9,6 +9,7 @@ public sealed class TestRecordQueryService : ITestRecordQueryService
     private readonly ITestRecordRepository _recordRepository;
     private readonly IRecordAttachmentRepository _attachmentRepository;
     private readonly ITestReportRepository _reportRepository;
+    private readonly TestRecordMappingSnapshotFactory _mappingSnapshotFactory = new();
 
     public TestRecordQueryService(
         ITestRecordRepository recordRepository,
@@ -73,6 +74,10 @@ public sealed class TestRecordQueryService : ITestRecordQueryService
                 .OrderByDescending(x => x.SavedAt)
                 .FirstOrDefault();
 
+            var itemDetails = record.Items
+                .Select(item => BuildItemDetail(item, Array.Empty<RecordAttachment>()))
+                .ToArray();
+
             summaries.Add(new TestRecordSummary
             {
                 RecordCode = record.RecordCode,
@@ -86,7 +91,8 @@ public sealed class TestRecordQueryService : ITestRecordQueryService
                 RecordAttachmentCount = record.Attachments.Count,
                 ReportCount = reports.Count,
                 HasReportArtifacts = reports.Any(x => !string.IsNullOrWhiteSpace(x.ArtifactSavedPath)),
-                LatestReportSavedAt = latestReport?.SavedAt
+                LatestReportSavedAt = latestReport?.SavedAt,
+                Mapping = _mappingSnapshotFactory.Build(itemDetails)
             });
         }
 
@@ -109,6 +115,7 @@ public sealed class TestRecordQueryService : ITestRecordQueryService
             RecordMode = payload.RecordMode
         };
     }
+
 
     private static (int SampleCount, string? RecordMode) TryParsePayload(string dataJson)
     {

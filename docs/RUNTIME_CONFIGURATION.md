@@ -160,12 +160,12 @@ App/Test 双端统一使用同构配置结构：
 - `MessageBusFactory` 当前已实现 `inmemory` 与 `mqtt`；MQTT provider 本小时已补上连接后自动重订阅、断线后订阅状态清理、重复订阅控制，并关闭 clean session 以便后续做更稳的联调
 - `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位；在 `mqtt` 模式下已进入真实连接参数
 - 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：不支持的 provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
-- 本小时继续把部署坑前移到启动前自检：当 `provider=mqtt` 时会校验 `messageBus.host` 非空，并尝试对 `host:port` 做一次轻量 TCP reachability probe（失败先记 warning，避免离线开发场景被硬拦）；当 `persistenceMode=sqlite` 且显式给出 `sqliteDbPath` 时，会在启动前探测目录可创建/可写
-- 当前仍未覆盖的主要缺口：MQTT 认证有效性、topic ACL、主动重连/backoff、持久化文件锁竞争与更细粒度的 SQLite schema/version 自检
+- 本小时继续把部署坑前移到启动前自检：当 `provider=mqtt` 时会校验 `messageBus.host` 非空，并尝试对 `host:port` 做一次轻量 TCP reachability probe；当前探测结果已结构化区分 `reachable / timeout / connection-refused / dns-failed / auth-failed / probe-failed`，成功时记 `Info`，失败时记带状态的 `Warning`，减少联调时人工翻异常栈的成本；当 `persistenceMode=sqlite` 且显式给出 `sqliteDbPath` 时，会在启动前探测目录可创建/可写
+- 当前仍未覆盖的主要缺口：真正基于 MQTT 协议握手的认证有效性与 topic ACL 判定、主动重连/backoff 的更细粒度观测、持久化文件锁竞争与更细粒度的 SQLite schema/version 自检
 
 ## 下一步
 - 继续把 `mqtt` provider 从“最小能连”推进到“可稳定联调”：补主动重连/backoff、连接失败诊断、发布/订阅超时治理
 - 新增 `scripts/run-mqtt-smoke.sh` 作为真实联调脚手架：约定 `BROKER_HOST/BROKER_PORT/TOPIC_PREFIX/APP_CLIENT_ID/TEST_CLIENT_ID/RUN_SECONDS` 环境变量，统一启动 App/Test 双进程并落日志到 `artifacts/logs/`；当前机器未发现本地 broker 可执行文件，因此本轮先把双进程 smoke 入口脚本与文档补齐，待 broker 就位后即可直接做真实 MQTT 验证。
-- 将当前配置校验从“控制台提示”推进到更完整的连接/权限级自检
+- 将当前 TCP 级结构化探测继续推进到更完整的 MQTT 连接/认证/权限级自检，而不只停在 socket 可达性
 - 增加运行配置自检与错误提示
 - 将本文件中的配置约定同步进部署脚本/样例配置模板

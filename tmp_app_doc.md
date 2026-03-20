@@ -1,39 +1,30 @@
 # App 维护文档（本地待同步草稿）
 
 ## 本次维护说明
-- 时间：2026-03-20 22:15（Asia/Shanghai）
-- 本轮先检查腾讯文档 App 维护文档 `DWWN4S01oY21JaFVI`，但腾讯文档 MCP 仍受 `access limit (400007)` 限制，暂时无法在线读取/回写。
-- 因在线文档额度受限，本次先将真实维护内容落到仓库本地草稿，待额度恢复后优先同步。
-- 本轮继续按待办前推 next-gen/App 主干，重点不是再补口头说明，而是把 MQTT provider 从“识别配置”推进到“更稳的最小实现”。
+- 时间：2026-03-21 04:42（Asia/Shanghai）
+- 本轮先复核 App 在线维护文档、旧 App/新主干的分工边界，以及当前 next-gen 工作区的真实改动。
+- App 侧本小时没有继续扩大旧 App 历史项目改动范围，仍坚持把旧 App 当参考样本，把主推进重心放在 next-gen 新主干。
+- 虽然本轮直接编码主要发生在 Test 侧，但它会直接影响 App/Test 后续共用的记录摘要口径，因此已纳入 App 侧维护说明。
 
 ## 代码修改记录
-- 调整 `StandardTestNext.App/ContractsBridge/MqttMessageBus.cs`
-  - 新增 `ConnectedAsync` / `DisconnectedAsync` 事件处理
-  - 连接成功后自动重订阅已登记 topic，断线后清空订阅状态，避免后续重连时误判已订阅
-  - 增加 `_resubscribing` 防重入保护，减少重复重订阅
-  - `Publish<T>` 复用已解析 topic，避免重复构造
-  - 将 MQTT 连接选项切到 `clean session = false`，为后续稳定联调保留更合理的会话语义
-  - `OnMessageReceivedAsync` 改为向 handler 传递 `JsonElement.Clone()`，避免文档释放后继续引用 payload 根节点
-- 更新 `docs/RUNTIME_CONFIGURATION.md`
-  - 把 MQTT provider 当前能力更新为：已支持连接后自动重订阅、断线后订阅状态清理、重复订阅控制
-  - 下一步待办改为主动重连/backoff、失败诊断、发布/订阅超时治理
-- 更新 `StandardTestNext.App/README.md`
-  - 同步本小时 MQTT provider 实际增强内容
-- 复验结果
-  - `dotnet build StandardTestNext.sln --no-restore` 通过，`0 Warning / 0 Error`
+- App 侧本小时未新增旧 App 仓库源码修改。
+- 关联 App/Test 协作边界的真实变更主要在 next-gen：
+  - `StandardTestNext.Test/Application/Services/TestRecordMappingSnapshotFactory.cs`
+  - `StandardTestNext.Test/Application/Services/TestRecordQueryService.cs`
+  - `StandardTestNext.Test/README.md`
+- 本轮把记录样本分区快照统计从查询服务内部抽成独立工厂，后续 App 侧如果接列表页/详情页/API，可直接消费统一的 `samples/kp/cont` 统计口径，减少 UI 层自行拼装。
+- 本轮真实复验：
+  - `dotnet build /root/.openclaw/workspace/next-gen/StandardTestNext.sln --no-restore` 通过，`0 Warning / 0 Error`
+  - `dotnet run --project /root/.openclaw/workspace/next-gen/StandardTestNext.Test/StandardTestNext.Test.csproj --no-build` 通过，说明本轮重构没有把双端共享主干带回归
 
 ## Git 提交记录
-- 当前仓库最近提交（维护前基线）
-  - `0f08893 docs: align runtime docs with mqtt implementation`
-  - `8757e5a feat: add minimal mqtt message bus provider`
-  - `e31d4a6 refactor: fail fast on invalid runtime configuration`
-- 本次维护截至当前：代码已完成，待整理后提交 git
+- App 仓库本小时没有新增 git 提交。
+- next-gen 在本文档更新时，本轮改动仍处于待提交状态。
 
 ## 待办事项
-- 腾讯文档额度恢复后，把本地草稿同步回在线文档 `DWWN4S01oY21JaFVI`
-- 继续推进 MQTT provider 的主动重连/backoff 与连接失败诊断
-- 将当前 fail-fast 护栏继续扩到 `host` 连通性、认证参数、真实部署自检
-- 在 `samplingMode` 基础上补真实采样周期、批次大小、设备连接参数配置
+- 继续把旧 App 中设备网关、实时采样、控制命令、状态上报四类职责提炼成新 App 可复用边界。
+- 根据 Test 侧已经稳定下来的 `samples/kp/cont` 摘要口径，评估 App 侧列表/详情/宿主界面应消费哪些查询 DTO。
+- 等本轮 next-gen 提交完成后，再补 App/Test 共享查询 DTO 或 API 契约草案。
 
 ## 下次更新时间
-- 2026-03-20 23:10（Asia/Shanghai）或下次定时维护时
+- 2026-03-21 05:40（Asia/Shanghai）或下次定时维护时

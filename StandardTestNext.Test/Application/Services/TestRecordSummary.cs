@@ -14,4 +14,5 @@ public sealed class TestRecordSummary
     public int ReportCount { get; init; }
     public bool HasReportArtifacts { get; init; }
     public DateTimeOffset? LatestReportSavedAt { get; init; }
+    public TestRecordMappingSnapshot Mapping { get; init; } = new();
 }
