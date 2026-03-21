@@ -1,11 +1,13 @@
 using StandardTestNext.Test.Application.Abstractions;
 using StandardTestNext.Test.Application.Services;
+using StandardTestNext.Test.Domain.Records;
 
 namespace StandardTestNext.Test.Infrastructure.Persistence;
 
 public sealed class InMemoryTestRecordQueryService : ITestRecordQueryService
 {
     private readonly InMemoryTestRecordRepository _repository;
+    private readonly TestRecordQueryViewAssembler _viewAssembler = new();
 
     public InMemoryTestRecordQueryService(InMemoryTestRecordRepository repository)
     {
@@ -20,51 +22,23 @@ public sealed class InMemoryTestRecordQueryService : ITestRecordQueryService
             return null;
         }
 
-        return new TestRecordDetail
-        {
-            Record = record,
-            RecordAttachments = record.Attachments,
-            ItemAttachments = record.Items.ToDictionary(
-                x => x.TestRecordItemId,
-                x => (IReadOnlyList<Domain.Records.RecordAttachment>)x.Attachments),
-            ItemDetails = record.Items
-                .Select(x => new TestRecordItemDetail
-                {
-                    TestRecordItemId = x.TestRecordItemId,
-                    ItemCode = x.ItemCode,
-                    MethodCode = x.MethodCode,
-                    IsValid = x.IsValid,
-                    Remark = x.Remark,
-                    HasRemark = !string.IsNullOrWhiteSpace(x.Remark),
-                    AttachmentCount = x.Attachments.Count,
-                    SampleCount = 0,
-                    RecordMode = null
-                })
-                .ToArray(),
-            Reports = Array.Empty<TestReportSnapshot>(),
-            ReportSummaries = Array.Empty<TestReportPersistenceSummary>()
-        };
+        var recordAttachments = record.Attachments;
+        var itemAttachments = record.Items.ToDictionary(
+            x => x.TestRecordItemId,
+            x => (IReadOnlyList<RecordAttachment>)x.Attachments);
+
+        return _viewAssembler.AssembleDetail(
+            record,
+            recordAttachments,
+            itemAttachments,
+            Array.Empty<TestReportSnapshot>());
     }
 
     public async Task<IReadOnlyList<TestRecordSummary>> ListRecentAsync(int take = 10, CancellationToken cancellationToken = default)
     {
         var records = await _repository.ListRecentAsync(take, cancellationToken);
         return records
-            .Select(x => new TestRecordSummary
-            {
-                RecordCode = x.RecordCode,
-                ProductKind = x.ProductKind,
-                ProductCode = x.TestProduct?.Code,
-                ProductModel = x.TestProduct?.Model,
-                ReusedProductDefinition = x.TestProduct is not null,
-                TestKindCode = x.TestKindCode,
-                TestTime = x.TestTime,
-                ItemCount = x.Items.Count,
-                RecordAttachmentCount = x.Attachments.Count,
-                ReportCount = 0,
-                HasReportArtifacts = false,
-                LatestReportSavedAt = null
-            })
+            .Select(x => _viewAssembler.AssembleSummary(x, Array.Empty<TestReportSnapshot>()))
             .ToArray();
     }
 }
