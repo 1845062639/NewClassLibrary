@@ -6,6 +6,13 @@ namespace StandardTestNext.App.Application;
 
 public sealed class AppBootstrap
 {
+    private readonly ITestRecordQueryGateway? _testRecordGateway;
+
+    public AppBootstrap(ITestRecordQueryGateway? testRecordGateway = null)
+    {
+        _testRecordGateway = testRecordGateway;
+    }
+
     public void Run(IMessageBus messageBus, AppStartupOptions? options = null)
     {
         Console.WriteLine("StandardTestNext.App starting...");
@@ -33,7 +40,7 @@ public sealed class AppBootstrap
             sampleService.PublishSample();
         }
 
-        var testRecordGateway = new TestRecordQueryGatewayStub();
+        var testRecordGateway = _testRecordGateway ?? new TestRecordQueryGatewayStub();
         var recentRecords = testRecordGateway.ListRecentAsync(5).GetAwaiter().GetResult();
         var latestRecord = recentRecords.FirstOrDefault();
         if (latestRecord is not null)
