@@ -10,6 +10,20 @@ public static class SQLiteTestPersistence
 {
     public static string DefaultDbPath => Path.Combine(AppContext.BaseDirectory, "artifacts", "test-persistence", "standardtest-next.db");
 
+    private static void EnsureColumn(SqliteConnection connection, string tableName, string columnName, string columnDefinition)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnDefinition};";
+
+        try
+        {
+            command.ExecuteNonQuery();
+        }
+        catch (SqliteException ex) when (ex.SqliteErrorCode == 1 && ex.Message.Contains("duplicate column name", StringComparison.OrdinalIgnoreCase))
+        {
+        }
+    }
+
     public static void EnsureCreated(string? dbPath = null)
     {
         var path = dbPath ?? DefaultDbPath;
@@ -79,10 +93,15 @@ CREATE TABLE IF NOT EXISTS TestReportSummaries (
     ArtifactSavedPath TEXT NOT NULL,
     ExportedAt TEXT NOT NULL,
     ContentLength INTEGER NOT NULL,
+    IsLightweightEntry INTEGER NOT NULL DEFAULT 0,
+    IsPrimaryEntry INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (RecordCode, Format)
 );
 ";
         command.ExecuteNonQuery();
+
+        EnsureColumn(connection, "TestReportSummaries", "IsLightweightEntry", "INTEGER NOT NULL DEFAULT 0");
+        EnsureColumn(connection, "TestReportSummaries", "IsPrimaryEntry", "INTEGER NOT NULL DEFAULT 0");
     }
 }
 
@@ -423,19 +442,27 @@ ON CONFLICT(RecordCode, Format) DO UPDATE SET
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-INSERT INTO TestReportSummaries (RecordCode, Format, ArtifactFileName, ArtifactSavedPath, ExportedAt, ContentLength)
-VALUES ($recordCode, $format, $artifactFileName, $artifactSavedPath, $exportedAt, $contentLength)
+INSERT INTO TestReportSummaries (
+    RecordCode, Format, ArtifactFileName, ArtifactSavedPath, ExportedAt, ContentLength,
+    IsLightweightEntry, IsPrimaryEntry)
+VALUES (
+    $recordCode, $format, $artifactFileName, $artifactSavedPath, $exportedAt, $contentLength,
+    $isLightweightEntry, $isPrimaryEntry)
 ON CONFLICT(RecordCode, Format) DO UPDATE SET
     ArtifactFileName = excluded.ArtifactFileName,
     ArtifactSavedPath = excluded.ArtifactSavedPath,
     ExportedAt = excluded.ExportedAt,
-    ContentLength = excluded.ContentLength;";
+    ContentLength = excluded.ContentLength,
+    IsLightweightEntry = excluded.IsLightweightEntry,
+    IsPrimaryEntry = excluded.IsPrimaryEntry;";
         command.Parameters.AddWithValue("$recordCode", summary.RecordCode);
         command.Parameters.AddWithValue("$format", summary.Format);
         command.Parameters.AddWithValue("$artifactFileName", summary.ArtifactFileName);
         command.Parameters.AddWithValue("$artifactSavedPath", summary.ArtifactSavedPath);
         command.Parameters.AddWithValue("$exportedAt", summary.ExportedAt.ToString("O"));
         command.Parameters.AddWithValue("$contentLength", summary.ContentLength);
+        command.Parameters.AddWithValue("$isLightweightEntry", summary.IsLightweightEntry ? 1 : 0);
+        command.Parameters.AddWithValue("$isPrimaryEntry", summary.IsPrimaryEntry ? 1 : 0);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -448,7 +475,9 @@ ON CONFLICT(RecordCode, Format) DO UPDATE SET
         command.CommandText = @"
 SELECT r.RecordCode, r.Format, r.SavedAt, r.Content,
        COALESCE(s.ArtifactFileName, ''),
-       COALESCE(s.ArtifactSavedPath, '')
+       COALESCE(s.ArtifactSavedPath, ''),
+       COALESCE(s.IsLightweightEntry, 0),
+       COALESCE(s.IsPrimaryEntry, 0)
 FROM TestReports r
 LEFT JOIN TestReportSummaries s
   ON s.RecordCode = r.RecordCode AND s.Format = r.Format
@@ -467,7 +496,9 @@ ORDER BY r.SavedAt DESC;";
                 SavedAt = DateTimeOffset.Parse(reader.GetString(2)),
                 Content = reader.GetString(3),
                 ArtifactFileName = reader.GetString(4),
-                ArtifactSavedPath = reader.GetString(5)
+                ArtifactSavedPath = reader.GetString(5),
+                IsLightweightEntry = reader.GetInt64(6) == 1,
+                IsPrimaryEntry = reader.GetInt64(7) == 1
             });
         }
 
@@ -481,7 +512,8 @@ ORDER BY r.SavedAt DESC;";
 
         var command = connection.CreateCommand();
         command.CommandText = @"
-SELECT RecordCode, Format, ArtifactFileName, ArtifactSavedPath, ExportedAt, ContentLength
+SELECT RecordCode, Format, ArtifactFileName, ArtifactSavedPath, ExportedAt, ContentLength,
+       IsLightweightEntry, IsPrimaryEntry
 FROM TestReportSummaries
 ORDER BY ExportedAt DESC
 LIMIT $take;";
@@ -498,7 +530,9 @@ LIMIT $take;";
                 ArtifactFileName = reader.GetString(2),
                 ArtifactSavedPath = reader.GetString(3),
                 ExportedAt = DateTimeOffset.Parse(reader.GetString(4)),
-                ContentLength = reader.GetInt32(5)
+                ContentLength = reader.GetInt32(5),
+                IsLightweightEntry = reader.GetInt64(6) == 1,
+                IsPrimaryEntry = reader.GetInt64(7) == 1
             });
         }
 
