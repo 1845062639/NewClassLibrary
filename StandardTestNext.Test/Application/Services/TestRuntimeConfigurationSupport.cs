@@ -1,4 +1,4 @@
-using StandardTestNext.App.ContractsBridge;
+using StandardTestNext.Test.RuntimeBridge;
 using System.Net.Sockets;
 using System.Security.Authentication;
 
