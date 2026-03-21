@@ -33,6 +33,14 @@ public sealed class AppBootstrap
             sampleService.PublishSample();
         }
 
+        var testRecordGateway = new TestRecordQueryGatewayStub();
+        var recentRecords = testRecordGateway.ListRecentAsync(5).GetAwaiter().GetResult();
+        var latestRecord = recentRecords.FirstOrDefault();
+        if (latestRecord is not null)
+        {
+            Console.WriteLine($"[App] Test record query gateway preview: {latestRecord.RecordCode}:{latestRecord.ProductDisplayName}:reports={latestRecord.ReportCount}:primary={latestRecord.PrimaryReportArtifactFileName ?? "<none>"}");
+        }
+
         Console.WriteLine("StandardTestNext.App ready.");
     }
 
