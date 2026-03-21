@@ -43,6 +43,10 @@ public static class TestRecordViewMapper
             ContinuousSampleCount = detail.Mapping.ContinuousSampleCount,
             HasReports = detail.HasReports,
             HasReportArtifacts = detail.HasReportArtifacts,
+            PrimaryReportFormat = detail.PrimaryReport?.Format,
+            PrimaryReportArtifactFileName = detail.PrimaryReport?.ArtifactFileName,
+            LightweightReportFormat = detail.LightweightReport?.Format,
+            LightweightReportArtifactFileName = detail.LightweightReport?.ArtifactFileName,
             ItemDetails = detail.ItemDetails,
             ReportSummaries = detail.ReportSummaries
         };

@@ -15,6 +15,10 @@ public sealed class TestRecordDetailView
     public int ContinuousSampleCount { get; init; }
     public bool HasReports { get; init; }
     public bool HasReportArtifacts { get; init; }
+    public string? PrimaryReportFormat { get; init; }
+    public string? PrimaryReportArtifactFileName { get; init; }
+    public string? LightweightReportFormat { get; init; }
+    public string? LightweightReportArtifactFileName { get; init; }
     public IReadOnlyList<TestRecordItemDetail> ItemDetails { get; init; } = Array.Empty<TestRecordItemDetail>();
     public IReadOnlyList<TestReportPersistenceSummary> ReportSummaries { get; init; } = Array.Empty<TestReportPersistenceSummary>();
 }
