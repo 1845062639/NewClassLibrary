@@ -1,6 +1,7 @@
 using MQTTnet;
 using MQTTnet.Client;
 using MQTTnet.Protocol;
+using StandardTestNext.Contracts;
 using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Threading;

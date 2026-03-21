@@ -1,4 +1,6 @@
-namespace StandardTestNext.Test.RuntimeBridge;
+using StandardTestNext.Contracts;
+
+namespace StandardTestNext.Test.Application.RuntimeBridge;
 
 public static class MessageBusFactory
 {

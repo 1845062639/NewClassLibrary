@@ -1,4 +1,4 @@
-using StandardTestNext.Test.RuntimeBridge;
+using StandardTestNext.Contracts;
 
 namespace StandardTestNext.Test.Application.Services;
 

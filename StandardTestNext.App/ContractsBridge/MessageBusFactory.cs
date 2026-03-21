@@ -1,3 +1,5 @@
+using StandardTestNext.Contracts;
+
 namespace StandardTestNext.App.ContractsBridge;
 
 public static class MessageBusFactory

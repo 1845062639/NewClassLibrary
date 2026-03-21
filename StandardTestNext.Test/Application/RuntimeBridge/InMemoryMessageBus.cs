@@ -1,35 +1,52 @@
+using StandardTestNext.Contracts;
 using System.Text.Json;
 
-namespace StandardTestNext.Test.RuntimeBridge;
+namespace StandardTestNext.Test.Application.RuntimeBridge;
 
 public sealed class InMemoryMessageBus : IMessageBus
 {
-    private readonly Dictionary<string, List<Delegate>> _handlers = new();
+    private readonly Dictionary<string, List<Delegate>> _subscriptions = new(StringComparer.Ordinal);
+    private readonly object _gate = new();
 
     public void Publish<T>(string topic, T message)
     {
-        Console.WriteLine($"[Bus] {topic}");
-        Console.WriteLine(JsonSerializer.Serialize(message));
-
-        if (!_handlers.TryGetValue(topic, out var handlers))
+        List<Delegate> handlers;
+        lock (_gate)
         {
-            return;
+            if (!_subscriptions.TryGetValue(topic, out var registeredHandlers) || registeredHandlers.Count == 0)
+            {
+                return;
+            }
+
+            handlers = registeredHandlers.ToList();
         }
+
+        var payload = JsonSerializer.Serialize(message);
+        Console.WriteLine($"[Bus:InMemory] {topic}");
+        Console.WriteLine(payload);
 
         foreach (var handler in handlers.OfType<Action<T>>())
         {
-            handler(message);
+            handler(message!);
         }
     }
 
     public void Subscribe<T>(string topic, Action<T> handler)
     {
-        if (!_handlers.TryGetValue(topic, out var handlers))
+        if (handler is null)
         {
-            handlers = new List<Delegate>();
-            _handlers[topic] = handlers;
+            throw new ArgumentNullException(nameof(handler));
         }
 
-        handlers.Add(handler);
+        lock (_gate)
+        {
+            if (!_subscriptions.TryGetValue(topic, out var handlers))
+            {
+                handlers = new List<Delegate>();
+                _subscriptions[topic] = handlers;
+            }
+
+            handlers.Add(handler);
+        }
     }
 }

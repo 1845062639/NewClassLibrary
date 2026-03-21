@@ -1,4 +1,4 @@
-using StandardTestNext.App.ContractsBridge;
+using StandardTestNext.Contracts;
 
 namespace StandardTestNext.App.Application;
 
