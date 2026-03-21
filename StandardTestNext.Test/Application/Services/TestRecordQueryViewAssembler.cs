@@ -28,7 +28,9 @@ public sealed class TestRecordQueryViewAssembler
                 ExportedAt = x.SavedAt,
                 ContentLength = x.Content.Length,
                 ArtifactFileName = x.ArtifactFileName,
-                ArtifactSavedPath = x.ArtifactSavedPath
+                ArtifactSavedPath = x.ArtifactSavedPath,
+                IsLightweightEntry = x.IsLightweightEntry,
+                IsPrimaryEntry = x.IsPrimaryEntry
             })
             .OrderByDescending(x => x.ExportedAt)
             .ToArray();
@@ -50,6 +52,8 @@ public sealed class TestRecordQueryViewAssembler
         var latestReport = reports
             .OrderByDescending(x => x.SavedAt)
             .FirstOrDefault();
+        var primaryReport = reports.FirstOrDefault(x => x.IsPrimaryEntry);
+        var lightweightReport = reports.FirstOrDefault(x => x.IsLightweightEntry);
 
         var itemDetails = record.Items
             .Select(item => BuildItemDetail(item, Array.Empty<RecordAttachment>()))
@@ -69,6 +73,10 @@ public sealed class TestRecordQueryViewAssembler
             ReportCount = reports.Count,
             HasReportArtifacts = reports.Any(x => !string.IsNullOrWhiteSpace(x.ArtifactSavedPath)),
             LatestReportSavedAt = latestReport?.SavedAt,
+            PrimaryReportFormat = primaryReport?.Format,
+            PrimaryReportArtifactFileName = primaryReport?.ArtifactFileName,
+            LightweightReportFormat = lightweightReport?.Format,
+            LightweightReportArtifactFileName = lightweightReport?.ArtifactFileName,
             Mapping = _mappingSnapshotFactory.Build(itemDetails)
         };
     }
