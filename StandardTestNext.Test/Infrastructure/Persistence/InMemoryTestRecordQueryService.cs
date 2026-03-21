@@ -41,4 +41,18 @@ public sealed class InMemoryTestRecordQueryService : ITestRecordQueryService
             .Select(x => _viewAssembler.AssembleSummary(x, Array.Empty<TestReportSnapshot>()))
             .ToArray();
     }
+
+    public async Task<TestRecordDetailView?> GetDetailViewByRecordCodeAsync(string recordCode, CancellationToken cancellationToken = default)
+    {
+        var detail = await GetByRecordCodeAsync(recordCode, cancellationToken);
+        return detail?.ToDetailView();
+    }
+
+    public async Task<IReadOnlyList<TestRecordListView>> ListRecentViewsAsync(int take = 10, CancellationToken cancellationToken = default)
+    {
+        var summaries = await ListRecentAsync(take, cancellationToken);
+        return summaries
+            .Select(x => x.ToListView())
+            .ToArray();
+    }
 }
