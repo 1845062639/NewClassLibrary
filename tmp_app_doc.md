@@ -1,30 +1,31 @@
-# App 维护文档（本地待同步草稿）
-
 ## 本次维护说明
-- 时间：2026-03-21 04:42（Asia/Shanghai）
-- 本轮先复核 App 在线维护文档、旧 App/新主干的分工边界，以及当前 next-gen 工作区的真实改动。
-- App 侧本小时没有继续扩大旧 App 历史项目改动范围，仍坚持把旧 App 当参考样本，把主推进重心放在 next-gen 新主干。
-- 虽然本轮直接编码主要发生在 Test 侧，但它会直接影响 App/Test 后续共用的记录摘要口径，因此已纳入 App 侧维护说明。
+- 时间：2026-03-21 14:48（Asia/Shanghai）
+- 本轮先尝试检查并更新腾讯文档 App/Test 在线维护文档，但腾讯文档 MCP 继续返回 `400007 access limit`，本小时仍无法在线写回，因此先把维护内容落到本地草稿，待额度恢复后直接同步。
+- App 侧本小时仍未扩散到旧 App 历史仓库改造，继续坚持“旧 App 只作参考样本，新主干在 next-gen 正向建设”的路线。
+- 虽然本轮主要代码变更仍发生在 Test 查询层，但这部分继续直接影响后续 App 列表页/详情页/API 对记录摘要口径的消费，因此已同步纳入 App 维护文档。
+- 这轮继续往前推进了一步：新增 `TestRecordQueryFacade`，把 `ListRecentForApp / GetDetailForApp` 从底层查询服务中显式抬出来，作为面向 App/API 的轻量查询出口，后续 App 接入时不必再同时理解 summary/detail 两套模型与 mapper 细节。
 
 ## 代码修改记录
 - App 侧本小时未新增旧 App 仓库源码修改。
-- 关联 App/Test 协作边界的真实变更主要在 next-gen：
-  - `StandardTestNext.Test/Application/Services/TestRecordMappingSnapshotFactory.cs`
-  - `StandardTestNext.Test/Application/Services/TestRecordQueryService.cs`
-  - `StandardTestNext.Test/README.md`
-- 本轮把记录样本分区快照统计从查询服务内部抽成独立工厂，后续 App 侧如果接列表页/详情页/API，可直接消费统一的 `samples/kp/cont` 统计口径，减少 UI 层自行拼装。
-- 本轮真实复验：
+- 与 App/Test 协作边界直接相关的真实变更位于 `next-gen/StandardTestNext.Test`：
+  - 新增 `Application/Services/TestRecordQueryFacade.cs`
+  - 更新 `Application/TestBootstrap.cs`
+  - 更新 `README.md`
+- 本小时新增修正点：
+  - `TestBootstrap` 改为通过 `TestRecordQueryFacade` 获取 `Recent record views` 与 `Reloaded record view`，不再直接由 demo 启动链路混用底层 query service 与 view mapper 细节。
+  - `README.md` 已同步记录这层“面向 App/API 的轻量查询出口”，避免维护文档与仓库真实边界脱节。
+- 本轮真实验证：
   - `dotnet build /root/.openclaw/workspace/next-gen/StandardTestNext.sln --no-restore` 通过，`0 Warning / 0 Error`
-  - `dotnet run --project /root/.openclaw/workspace/next-gen/StandardTestNext.Test/StandardTestNext.Test.csproj --no-build` 通过，说明本轮重构没有把双端共享主干带回归
+  - `dotnet run --project /root/.openclaw/workspace/next-gen/StandardTestNext.Test/StandardTestNext.Test.csproj --no-build` 通过，运行输出已继续包含 `Recent record views`、`Reloaded record view`、`Primary record report`、`Lightweight report artifact`
 
 ## Git 提交记录
-- App 仓库本小时没有新增 git 提交。
-- next-gen 在本文档更新时，本轮改动仍处于待提交状态。
+- 本轮新增真实 git 提交后再回填；当前先完成代码与文档整理。
+- 提交目标：把 `TestRecordQueryFacade` 与本轮维护文档一并整理成一笔可追踪提交。
 
 ## 待办事项
-- 继续把旧 App 中设备网关、实时采样、控制命令、状态上报四类职责提炼成新 App 可复用边界。
-- 根据 Test 侧已经稳定下来的 `samples/kp/cont` 摘要口径，评估 App 侧列表/详情/宿主界面应消费哪些查询 DTO。
-- 等本轮 next-gen 提交完成后，再补 App/Test 共享查询 DTO 或 API 契约草案。
+- 等腾讯文档额度恢复后，把本地草稿同步回在线 App/Test 维护文档。
+- 让 `StandardTestNext.App` 后续直接接 `TestRecordQueryFacade` 暴露的轻量查询出口，而不是继续依赖底层 summary/detail DTO 与 mapper 细节。
+- 继续把查询 DTO 与宿主 API 草案收口，减少后续 App 接 UI 时再次自行拼摘要字段的风险。
 
 ## 下次更新时间
-- 2026-03-21 05:40（Asia/Shanghai）或下次定时维护时
+- 2026-03-21 15:45（Asia/Shanghai）或下次定时维护时

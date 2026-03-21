@@ -23,6 +23,7 @@
 - `FileSystemTestReportArtifactWriter`：phase-1 将报告预览落到 `artifacts/reports/`
 - `TestReportArtifactDescriptor`：统一描述输出文件名、格式、路径、写出时间，便于后续切到 Word/PDF
 - `ITestRecordQueryService` + `TestRecordQueryService`：为记录回放/查询摘要提供独立边界，不把后续列表页、详情页逻辑直接塞回仓储或 Bootstrap；本小时 recent list 视图已补 `ReportCount / HasReportArtifacts / LatestReportSavedAt / ProductCode / ProductModel / ReusedProductDefinition`，减少列表页再二次拼报告状态或产品主数据状态
+- `TestRecordQueryFacade`：把 `TestRecordListView / TestRecordDetailView` 进一步收口成面向 App/API 的轻量查询出口，先提供 `ListRecentForApp / GetDetailForApp`，避免后续消费层直接混用 detail domain/query summary 两套模型
 - `TestRecordMappingSnapshotFactory`：把 query 侧由 `TestRecordItemDetail` 汇总 `samples/kp/cont` 的快照逻辑单独抽出，避免分区摘要统计继续散落在查询服务内部，方便后续列表页/API/报表页复用同一套口径
 - `TestRecordQueryViewAssembler`：继续把 recent/detail 两条查询路径共用的 DTO 组装逻辑收口到一处，统一回填 `ItemDetails / Mapping / ReportSummaries`，避免查询服务再次沦为拼装脚本
 - `TestRecordItemPayloadReader`：把 `DataJson -> SampleCount / RecordMode` 的解析逻辑收口成独立读取器，后续 API/报告层如果也需要读取 item payload，不必再各自重写 JSON 解析

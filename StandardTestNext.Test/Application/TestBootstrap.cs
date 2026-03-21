@@ -87,6 +87,7 @@ public sealed class TestBootstrap
 
         ITestReportArtifactWriter reportArtifactWriter = new FileSystemTestReportArtifactWriter();
         ITestRecordQueryService recordQueryService = new TestRecordQueryService(recordRepository, attachmentRepository, reportRepository);
+        var appRecordQueryFacade = new TestRecordQueryFacade(recordQueryService);
         ITestReportQueryService reportQueryService = new TestReportQueryService(reportRepository);
         ITestProductDefinitionService productDefinitionService = new TestProductDefinitionService(productRepository);
         IProductDefinitionQueryService productDefinitionQueryService = new ProductDefinitionQueryService(productRepository);
@@ -132,9 +133,9 @@ public sealed class TestBootstrap
         var primaryReport = reportArtifacts.First(x => string.Equals(x.Format, "json", StringComparison.OrdinalIgnoreCase));
 
         var recentRecords = recordQueryService.ListRecentAsync(5).GetAwaiter().GetResult();
-        var recentRecordViews = recentRecords.Select(x => x.ToListView()).ToArray();
+        var recentRecordViews = appRecordQueryFacade.ListRecentForAppAsync(5).GetAwaiter().GetResult();
         var reloadedRecord = recordQueryService.GetByRecordCodeAsync(aggregate.RecordCode).GetAwaiter().GetResult();
-        var reloadedRecordView = reloadedRecord?.ToDetailView();
+        var reloadedRecordView = appRecordQueryFacade.GetDetailForAppAsync(aggregate.RecordCode).GetAwaiter().GetResult();
         var recordReports = reportQueryService.ListForRecordCodeAsync(aggregate.RecordCode).GetAwaiter().GetResult();
         var recentReportSummaries = reportQueryService.ListRecentSummariesAsync(5).GetAwaiter().GetResult();
         var recentProducts = productDefinitionQueryService.ListRecentAsync(5).GetAwaiter().GetResult();
