@@ -1,40 +1,47 @@
 # App维护文档
 
 ## 本次维护说明
-- 维护时间：2026-03-21 17:11 Asia/Shanghai
-- 本小时先按要求检查/更新腾讯文档 App 维护文档 `DWWN4S01oY21JaFVI`，但再次调用腾讯文档 MCP 读取时仍被 `400007 access limit` 拦截，在线文档本小时依旧无法实际回写；因此已继续维护本地草稿，待额度恢复后同步。
-- 本轮继续按待办往前推进，不再停留在“App 不该直接引用 Test”的口头结论，而是实际把 `StandardTestNext.App` 对 `StandardTestNext.Test` 的项目引用拆掉并重新构建验证。
-- 真实验证结果比预期更关键：拆掉 `App -> Test` 之后，solution 构建立刻暴露出更深一层双向耦合——除了 App 仍有 `TestRecordQueryGatewayAdapter` 直接引用 `TestRecordQueryFacade / TestRecordListView / TestRecordDetailView`，Test 侧自身也已经通过 `StandardTestNext.App.ContractsBridge` 与 `StandardTestNext.App.Application` 吃进了 App 类型。这说明当前问题不是单点引用，而是 App/Test 边界整体还没真正抽离。
-- 因为这轮目标是持续推进而不是制造更大破坏，我保留了这次“拆引用即爆出真实双向耦合”的验证结果，先不在本小时硬拆整个消息总线与查询桥接层，避免把主干拉进更大范围半成品重构。
+- 维护时间：2026-03-21 23:41 Asia/Shanghai
+- 本小时先尝试检查并更新腾讯文档 App 维护文档 `DWWN4S01oY21JaFVI`，但腾讯文档 MCP 仍返回 `400007 access limit`，所以本轮继续先把真实维护内容回填到本地草稿，待额度恢复后同步。
+- 本轮没有停在 build 通过，而是继续按待办推进了真实开发验证：检查并确认 `scripts/run-mqtt-smoke.sh` 已落地可用，并实际跑了一次 App/Test 双进程 MQTT smoke。
+- 真实运行结果不是“假成功”：当前机器 `127.0.0.1:1883` 没有可用 broker，App/Test 都在 MQTT 连接阶段报 `Connection refused`。这说明 smoke 脚本和双端 MQTT 接入链路已经真正跑到联网阶段，而不是只停在参数拼装。
+- 当前状态可以明确归纳为：构建链路已稳定通过，MQTT smoke 入口已存在且执行过，下一步瓶颈从“代码结构/编译问题”转到了“真实 broker 环境与连接诊断”。
 
 ## 代码修改记录
-- 本小时真实修改的 App 侧文件：
-  - `next-gen/StandardTestNext.App/StandardTestNext.App.csproj`
-- 真实变更内容：
-  - 删除了 `StandardTestNext.App.csproj` 中对 `..\StandardTestNext.Test\StandardTestNext.Test.csproj` 的 `ProjectReference`，用真实编译来验证 App 是否已经具备独立宿主边界。
-- 真实构建结果：
-  - `dotnet build /root/.openclaw/workspace/next-gen/StandardTestNext.sln --no-restore` 失败
-  - 暴露出的关键耦合点包括：
-    - App 侧 `Application/TestRecordQueryGatewayAdapter.cs` 仍直接依赖 `StandardTestNext.Test.Application.Services`
-    - Test 侧 `Application/TestBootstrap.cs` 仍直接依赖 `StandardTestNext.App.Application`
-    - Test 侧多个运行时配置/编排文件仍依赖 `StandardTestNext.App.ContractsBridge`
-- 这轮没有继续提交更多源码改动到桥接实现层，原因是先确认了真正需要拆的是“共享消息/查询 contract 层”，而不只是删一条项目引用。
+- 本小时检查并确认已存在/纳入维护的脚本与文档：
+  - `next-gen/scripts/run-mqtt-smoke.sh`
+  - `next-gen/docs/RUNTIME_CONFIGURATION.md`
+  - `next-gen/StandardTestNext.App/README.md`
+  - `next-gen/StandardTestNext.Test/README.md`
+- 本小时真实更新的维护文档草稿：
+  - `next-gen/tmp_app_doc.md`
+  - `next-gen/tmp_test_doc.md`
+- 本小时真实验证涉及代码/入口：
+  - `next-gen/StandardTestNext.App/Program.cs`
+  - `next-gen/StandardTestNext.Test/Program.cs`
+  - `next-gen/scripts/run-mqtt-smoke.sh`
+- 真实执行记录：
+  - 运行 `dotnet build /root/.openclaw/workspace/next-gen/StandardTestNext.sln`，结果通过，0 Warning / 0 Error
+  - 运行 `BROKER_HOST=127.0.0.1 BROKER_PORT=1883 RUN_SECONDS=3 bash scripts/run-mqtt-smoke.sh`
+  - 输出日志落地：
+    - `next-gen/artifacts/logs/app-mqtt-smoke.log`
+    - `next-gen/artifacts/logs/test-mqtt-smoke.log`
+- 真实验证结果：
+  - App 侧在 `MqttMessageBus.EnsureConnected()` 阶段连接 `127.0.0.1:1883` 被拒绝
+  - Test 侧在 `MqttMessageBus.EnsureConnected()` 阶段连接 `127.0.0.1:1883` 被拒绝
+  - 说明双端都已实际走到 MQTT 连接动作，当前失败点是 broker 环境缺失，而不是代码未接通
 
 ## Git 提交记录
-- 本小时没有新的 git 提交。
-- 原因：当前工作停在一个真实但未收敛的架构验证点（拆掉 App->Test 后暴露双向耦合），现在提交会把主干留在不可构建状态，不值得硬提。
+- 本小时提交前状态：已存在未提交代码改动，最近提交为 `7b44fbd refactor: remove test project dependency on app runtime bridge`
+- 本轮准备补充一笔提交，用于固化 smoke 验证与维护文档更新结果。
 
 ## 待办事项
-- 新建真正独立的共享桥接层（优先放到 `StandardTestNext.Contracts` 或新增独立共享项目），把以下跨宿主类型从 App/Test 双方各自实现里抽出来：
-  - 消息总线接口与配置契约（当前散落在 `StandardTestNext.App.ContractsBridge`）
-  - Test 查询对外 contract（当前 App 合同对象与 Test view 还未收敛到同一共享边界）
-- App 侧处理顺序：
-  - 先移除/重写 `Application/TestRecordQueryGatewayAdapter.cs` 对 Test 实现层的直接依赖
-  - 再让 App 仅依赖共享 contract + stub/adapter 接口
-- Test 侧处理顺序：
-  - 先把 `StandardTestNext.App.ContractsBridge` 相关依赖迁走
-  - 再让 `TestBootstrap / TestRuntimeOrchestrator / TestRuntimeConfiguration*` 只依赖共享 contract 项目
-- 腾讯文档额度恢复后，把本地草稿同步回 App 维护文档 `DWWN4S01oY21JaFVI`。
+- 腾讯文档额度恢复后，把本地草稿同步到 App 维护文档 `DWWN4S01oY21JaFVI`。
+- 在当前机器补 broker 条件后，再跑一轮真实 MQTT smoke，优先验证：
+  - App 订阅命令是否成功
+  - Test 发布命令与记录链路是否成功
+  - SQLite 持久化产物是否生成
+- 若下一轮仍失败，继续把连接诊断从 TCP/Socket 层推进到更明确的 MQTT 认证、ACL、topic 级诊断。
 
 ## 下次更新时间
-- 2026-03-21 18:11 Asia/Shanghai
+- 2026-03-22 00:41 Asia/Shanghai

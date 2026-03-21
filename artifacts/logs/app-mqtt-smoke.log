@@ -1,0 +1,26 @@
+[App.Config] deviceId=mock-motor-device, productKind=Motor_Y, samplingMode=single
+[App.Config] messageBus provider=mqtt, host=127.0.0.1, port=1883, clientId=stnext-app-smoke, topicPrefix=stnext
+[Config.Warning] messageBus endpoint 127.0.0.1:1883 self-check status=probe-failed (AggregateException: One or more errors occurred. (Connection refused))
+StandardTestNext.App starting...
+[App] Device: mock-motor-device, Product: Motor_Y, SamplingMode: single
+Unhandled exception. [Bus:MQTT] reconnect attempt 1 failed: Error while connecting host 'Unspecified/127.0.0.1:1883'.. Retrying in 2s.
+MQTTnet.Exceptions.MqttCommunicationException: Error while connecting host 'Unspecified/127.0.0.1:1883'.
+ ---> System.Net.Sockets.SocketException (111): Connection refused
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at MQTTnet.Implementations.CrossPlatformSocket.ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at MQTTnet.Implementations.CrossPlatformSocket.ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
+   at MQTTnet.Implementations.MqttTcpChannel.ConnectAsync(CancellationToken cancellationToken)
+   at MQTTnet.Adapter.MqttChannelAdapter.<>c__DisplayClass30_0.<<ConnectAsync>b__1>d.MoveNext()
+--- End of stack trace from previous location ---
+   at MQTTnet.Adapter.MqttChannelAdapter.ConnectAsync(CancellationToken cancellationToken)
+   at MQTTnet.Client.MqttClient.ConnectInternal(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
+   at MQTTnet.Client.MqttClient.ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
+   at MQTTnet.Client.MqttClient.ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
+   at StandardTestNext.App.ContractsBridge.MqttMessageBus.EnsureConnected() in /root/.openclaw/workspace/next-gen/StandardTestNext.App/ContractsBridge/MqttMessageBus.cs:line 199
+   at StandardTestNext.App.ContractsBridge.MqttMessageBus.Subscribe[T](String topic, Action`1 handler) in /root/.openclaw/workspace/next-gen/StandardTestNext.App/ContractsBridge/MqttMessageBus.cs:line 94
+   at StandardTestNext.App.Application.AppCommandConsumer.Start() in /root/.openclaw/workspace/next-gen/StandardTestNext.App/Application/AppCommandConsumer.cs:line 21
+   at StandardTestNext.App.Application.AppBootstrap.Run(IMessageBus messageBus, AppStartupOptions options) in /root/.openclaw/workspace/next-gen/StandardTestNext.App/Application/AppBootstrap.cs:line 30
+   at Program.<Main>$(String[] args) in /root/.openclaw/workspace/next-gen/StandardTestNext.App/Program.cs:line 13
