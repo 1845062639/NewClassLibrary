@@ -1,5 +1,7 @@
 namespace StandardTestNext.Test.Application.Services;
 
+using StandardTestNext.Contracts;
+
 public sealed class TestRecordListView
 {
     public string RecordCode { get; init; } = string.Empty;
@@ -12,6 +14,7 @@ public sealed class TestRecordListView
     public int KeyPointSampleCount { get; init; }
     public int ContinuousSampleCount { get; init; }
     public int RecordAttachmentCount { get; init; }
+    public int ItemAttachmentBucketCount { get; init; }
     public int ReportCount { get; init; }
     public bool HasReportArtifacts { get; init; }
     public bool ReusedProductDefinition { get; init; }
@@ -19,4 +22,5 @@ public sealed class TestRecordListView
     public string? PrimaryReportArtifactFileName { get; init; }
     public string? LightweightReportFormat { get; init; }
     public string? LightweightReportArtifactFileName { get; init; }
+    public IReadOnlyList<TestRecordItemPartitionContract> ItemPartitions { get; init; } = Array.Empty<TestRecordItemPartitionContract>();
 }

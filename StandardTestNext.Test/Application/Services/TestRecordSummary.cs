@@ -11,6 +11,7 @@ public sealed class TestRecordSummary
     public DateTimeOffset TestTime { get; init; }
     public int ItemCount { get; init; }
     public int RecordAttachmentCount { get; init; }
+    public int ItemAttachmentBucketCount { get; init; }
     public int ReportCount { get; init; }
     public bool HasReportArtifacts { get; init; }
     public DateTimeOffset? LatestReportSavedAt { get; init; }

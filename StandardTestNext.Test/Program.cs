@@ -1,5 +1,6 @@
 using StandardTestNext.Contracts;
 using StandardTestNext.Test.Application;
+using StandardTestNext.Test.RuntimeBridge;
 using StandardTestNext.Test.Application.RuntimeBridge;
 using StandardTestNext.Test.Application.Services;
 

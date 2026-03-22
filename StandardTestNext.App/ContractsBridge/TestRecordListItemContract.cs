@@ -1,1 +1,0 @@
-using TestRecordListItemContract = StandardTestNext.Contracts.TestRecordListItemContract;

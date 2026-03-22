@@ -1,5 +1,4 @@
-using StandardTestNext.App.Application;
-using StandardTestNext.App.ContractsBridge;
+using StandardTestNext.Contracts;
 using StandardTestNext.Test.Application.Services;
 
 namespace StandardTestNext.Test.Application.AppSide;
@@ -38,13 +37,16 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             SampleCount = view.SampleCount,
             KeyPointSampleCount = view.KeyPointSampleCount,
             ContinuousSampleCount = view.ContinuousSampleCount,
+            RecordAttachmentCount = view.RecordAttachmentCount,
+            ItemAttachmentBucketCount = view.ItemAttachmentBucketCount,
             ReportCount = view.ReportCount,
             HasReportArtifacts = view.HasReportArtifacts,
             ReusedProductDefinition = view.ReusedProductDefinition,
             PrimaryReportFormat = view.PrimaryReportFormat,
             PrimaryReportArtifactFileName = view.PrimaryReportArtifactFileName,
             LightweightReportFormat = view.LightweightReportFormat,
-            LightweightReportArtifactFileName = view.LightweightReportArtifactFileName
+            LightweightReportArtifactFileName = view.LightweightReportArtifactFileName,
+            ItemPartitions = view.ItemPartitions
         };
     }
 
@@ -68,7 +70,31 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             PrimaryReportFormat = view.PrimaryReportFormat,
             PrimaryReportArtifactFileName = view.PrimaryReportArtifactFileName,
             LightweightReportFormat = view.LightweightReportFormat,
-            LightweightReportArtifactFileName = view.LightweightReportArtifactFileName
+            LightweightReportArtifactFileName = view.LightweightReportArtifactFileName,
+            ItemDetails = view.ItemDetails.Select(item => new TestRecordItemDetailContract
+            {
+                ItemCode = item.ItemCode,
+                DisplayName = item.DisplayName,
+                SortOrder = item.SortOrder,
+                MethodCode = item.MethodCode,
+                RecordMode = item.RecordMode ?? string.Empty,
+                SampleCount = item.SampleCount,
+                AttachmentCount = item.AttachmentCount,
+                IsValid = item.IsValid,
+                HasRemark = item.HasRemark,
+                Remark = item.Remark ?? string.Empty
+            }).ToArray(),
+            ReportSummaries = view.ReportSummaries.Select(summary => new TestReportSummaryContract
+            {
+                RecordCode = summary.RecordCode,
+                Format = summary.Format,
+                ExportedAt = summary.ExportedAt,
+                ContentLength = summary.ContentLength,
+                ArtifactFileName = summary.ArtifactFileName,
+                ArtifactSavedPath = summary.ArtifactSavedPath,
+                IsLightweightEntry = summary.IsLightweightEntry,
+                IsPrimaryEntry = summary.IsPrimaryEntry
+            }).ToArray()
         };
     }
 }

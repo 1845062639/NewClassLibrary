@@ -36,8 +36,8 @@ public sealed class TestRecordAggregateBuilder
         {
             ItemCount = mappingResult.Items.Count,
             TotalSampleCount = mappingResult.Partitions.Sum(x => x.SampleCount),
-            KeyPointSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == "KeyPointOnly").Sum(x => x.SampleCount),
-            ContinuousSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == "Continuous").Sum(x => x.SampleCount),
+            KeyPointSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == TestRecordSampleModes.KeyPointOnly).Sum(x => x.SampleCount),
+            ContinuousSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == TestRecordSampleModes.Continuous).Sum(x => x.SampleCount),
             ItemCodes = mappingResult.Items.Select(x => x.ItemCode).ToArray()
         };
 

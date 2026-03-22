@@ -6,67 +6,50 @@ namespace StandardTestNext.Test.Application.Services;
 
 public sealed class TestRecordItemMapper
 {
+    private readonly TestRecordSamplePartitioner _partitioner = new();
+
     public TestRecordItemMappingResult MapRealtimeSamples(IReadOnlyCollection<MotorRealtimeSampleContract> samples)
     {
-        var items = new List<TestRecordItemAggregate>();
-        var partitions = new List<TestRecordSamplePartitionSummary>();
-
-        AppendPartition(
-            samples.Where(x => x.IsRecordPoint).ToArray(),
-            itemCode: "RealtimeKeyPoints",
-            recordMode: "KeyPointOnly",
-            remark: "Key-point samples extracted from realtime stream.",
-            items,
-            partitions);
-
-        AppendPartition(
-            samples.Where(x => !x.IsRecordPoint).ToArray(),
-            itemCode: "RealtimeContinuous",
-            recordMode: "Continuous",
-            remark: "Continuous samples kept as raw JSON in phase-1.",
-            items,
-            partitions);
+        var partitions = _partitioner.Partition(samples);
+        if (partitions.Count == 0)
+        {
+            return new TestRecordItemMappingResult();
+        }
 
         return new TestRecordItemMappingResult
         {
-            Partitions = partitions,
-            Items = items
+            Partitions = partitions.Select(MapPartitionSummary).ToArray(),
+            Items = partitions.Select(MapItem).ToArray()
         };
     }
 
-    private static void AppendPartition(
-        IReadOnlyCollection<MotorRealtimeSampleContract> samples,
-        string itemCode,
-        string recordMode,
-        string remark,
-        ICollection<TestRecordItemAggregate> items,
-        ICollection<TestRecordSamplePartitionSummary> partitions)
+    private static TestRecordItemAggregate MapItem(TestRecordSamplePartition partition)
     {
-        if (samples.Count == 0)
+        return new TestRecordItemAggregate
         {
-            return;
-        }
-
-        items.Add(new TestRecordItemAggregate
-        {
-            ItemCode = itemCode,
-            MethodCode = "MotorRealtimeSampling",
+            ItemCode = partition.Descriptor.ItemCode,
+            MethodCode = partition.Descriptor.MethodCode,
             DataJson = JsonSerializer.Serialize(new
             {
-                RecordMode = recordMode,
-                SampleCount = samples.Count,
-                Samples = samples
+                RecordMode = partition.Descriptor.RecordMode,
+                SampleCount = partition.Samples.Count,
+                Samples = partition.Samples
             }),
-            Remark = remark
-        });
+            Remark = partition.Descriptor.Remark
+        };
+    }
 
-        partitions.Add(new TestRecordSamplePartitionSummary
+    private static TestRecordSamplePartitionSummary MapPartitionSummary(TestRecordSamplePartition partition)
+    {
+        return new TestRecordSamplePartitionSummary
         {
-            ItemCode = itemCode,
-            RecordMode = recordMode,
-            SampleCount = samples.Count,
-            MethodCode = "MotorRealtimeSampling",
-            Remark = remark
-        });
+            ItemCode = partition.Descriptor.ItemCode,
+            DisplayName = partition.Descriptor.DisplayName,
+            RecordMode = partition.Descriptor.RecordMode,
+            SampleCount = partition.Samples.Count,
+            MethodCode = partition.Descriptor.MethodCode,
+            Remark = partition.Descriptor.Remark,
+            SortOrder = partition.Descriptor.SortOrder
+        };
     }
 }

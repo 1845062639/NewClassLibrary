@@ -1,3 +1,5 @@
+using StandardTestNext.Contracts;
+
 namespace StandardTestNext.Test.Application.Services;
 
 public static class TestRecordViewMapper
@@ -16,13 +18,29 @@ public static class TestRecordViewMapper
             KeyPointSampleCount = summary.Mapping.KeyPointSampleCount,
             ContinuousSampleCount = summary.Mapping.ContinuousSampleCount,
             RecordAttachmentCount = summary.RecordAttachmentCount,
+            ItemAttachmentBucketCount = summary.ItemAttachmentBucketCount,
             ReportCount = summary.ReportCount,
             HasReportArtifacts = summary.HasReportArtifacts,
             ReusedProductDefinition = summary.ReusedProductDefinition,
             PrimaryReportFormat = summary.PrimaryReportFormat,
             PrimaryReportArtifactFileName = summary.PrimaryReportArtifactFileName,
             LightweightReportFormat = summary.LightweightReportFormat,
-            LightweightReportArtifactFileName = summary.LightweightReportArtifactFileName
+            LightweightReportArtifactFileName = summary.LightweightReportArtifactFileName,
+            ItemPartitions = summary.Mapping.Partitions
+                .OrderBy(x => x.SortOrder)
+                .ThenBy(x => x.ItemCode, StringComparer.Ordinal)
+                .Select(x => new TestRecordItemPartitionContract
+                {
+                    ItemCode = x.ItemCode,
+                    DisplayName = x.DisplayName,
+                    SortOrder = x.SortOrder,
+                    MethodCode = x.MethodCode,
+                    RecordMode = x.RecordMode,
+                    SampleCount = x.SampleCount,
+                    HasRemark = !string.IsNullOrWhiteSpace(x.Remark),
+                    Remark = x.Remark
+                })
+                .ToArray()
         };
     }
 

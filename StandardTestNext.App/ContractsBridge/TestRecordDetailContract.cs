@@ -1,1 +1,0 @@
-using TestRecordDetailContract = StandardTestNext.Contracts.TestRecordDetailContract;

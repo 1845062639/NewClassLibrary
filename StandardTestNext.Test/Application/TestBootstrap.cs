@@ -1,6 +1,6 @@
 
 using StandardTestNext.Contracts;
-using StandardTestNext.Test.Application.RuntimeBridge;
+using StandardTestNext.Test.RuntimeBridge;
 using StandardTestNext.Test.Application.Abstractions;
 using StandardTestNext.Test.Application.AppSide;
 using StandardTestNext.Test.Application.Services;
@@ -107,31 +107,14 @@ public sealed class TestBootstrap
         }
 
         var reportExporter = new TestReportExportService();
+        var reportPersistenceService = new TestReportPersistenceService();
         var reportDocument = reportExporter.BuildDocument(aggregate, buildResult.Statistics);
         var reportArtifacts = new[]
         {
-            reportExporter.ExportAndWriteAsync(reportDocument, new JsonTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult(),
-            reportExporter.ExportAndWriteAsync(reportDocument, new MarkdownTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult(),
-            reportExporter.ExportAndWriteAsync(reportDocument, new ManifestTestReportRenderer(), reportArtifactWriter).GetAwaiter().GetResult()
+            reportPersistenceService.ExportWriteAndSaveAsync(reportDocument, new JsonTestReportRenderer(), reportArtifactWriter, reportRepository, isPrimary: true, isLightweight: false).GetAwaiter().GetResult(),
+            reportPersistenceService.ExportWriteAndSaveAsync(reportDocument, new MarkdownTestReportRenderer(), reportArtifactWriter, reportRepository, isPrimary: false, isLightweight: false).GetAwaiter().GetResult(),
+            reportPersistenceService.ExportWriteAndSaveAsync(reportDocument, new ManifestTestReportRenderer(), reportArtifactWriter, reportRepository, isPrimary: false, isLightweight: true).GetAwaiter().GetResult()
         };
-
-        foreach (var reportArtifact in reportArtifacts)
-        {
-            reportRepository.SaveAsync(reportDocument, reportArtifact.Format, reportArtifact.Content).GetAwaiter().GetResult();
-
-            var reportSummary = new TestReportPersistenceSummary
-            {
-                RecordCode = reportDocument.RecordCode,
-                Format = reportArtifact.Format,
-                ArtifactFileName = reportArtifact.Artifact.FileName,
-                ArtifactSavedPath = reportArtifact.Artifact.SavedPath,
-                ExportedAt = reportArtifact.Artifact.WrittenAt,
-                ContentLength = reportArtifact.Content.Length,
-                IsLightweightEntry = string.Equals(reportArtifact.Format, "manifest.json", StringComparison.OrdinalIgnoreCase),
-                IsPrimaryEntry = string.Equals(reportArtifact.Format, "json", StringComparison.OrdinalIgnoreCase)
-            };
-            reportRepository.SaveSummaryAsync(reportSummary).GetAwaiter().GetResult();
-        }
 
         var primaryReport = reportArtifacts.First(x => string.Equals(x.Format, "json", StringComparison.OrdinalIgnoreCase));
 
@@ -155,8 +138,8 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Reports persisted: {string.Join(", ", reportArtifacts.Select(x => $"{x.Format}:{x.Artifact.FileName}"))}");
         Console.WriteLine($"[Test] Primary report artifact: {primaryReport.Artifact.FileName} -> {primaryReport.Artifact.SavedPath}");
         Console.WriteLine($"[Test] Recent records: {string.Join(", ", recentRecords.Select(x => $"{x.RecordCode}:{x.ProductModel ?? x.ProductKind}:reused={(x.ReusedProductDefinition ? "Y" : "N")}:reports={x.ReportCount}:artifacts={(x.HasReportArtifacts ? "Y" : "N")}:primary={x.PrimaryReportFormat ?? "<none>"}:{x.PrimaryReportArtifactFileName ?? "<none>"}:light={x.LightweightReportFormat ?? "<none>"}:{x.LightweightReportArtifactFileName ?? "<none>"}:samples={x.Mapping.TotalSampleCount}:kp={x.Mapping.KeyPointSampleCount}:cont={x.Mapping.ContinuousSampleCount}"))}");
-        Console.WriteLine($"[Test] Recent record views: {string.Join(", ", recentRecordViews.Select(x => $"{x.RecordCode}:{x.ProductDisplayName}:items={x.ItemCount}:samples={x.SampleCount}:reports={x.ReportCount}:primary={x.PrimaryReportFormat ?? "<none>"}:{x.PrimaryReportArtifactFileName ?? "<none>"}:light={x.LightweightReportFormat ?? "<none>"}:{x.LightweightReportArtifactFileName ?? "<none>"}"))}");
-        Console.WriteLine($"[Test] App query gateway list: {string.Join(", ", appRecentRecords.Select(x => $"{x.RecordCode}:{x.ProductDisplayName}:items={x.ItemCount}:samples={x.SampleCount}:reports={x.ReportCount}:primary={x.PrimaryReportFormat ?? "<none>"}:{x.PrimaryReportArtifactFileName ?? "<none>"}"))}");
+        Console.WriteLine($"[Test] Recent record views: {string.Join(", ", recentRecordViews.Select(x => $"{x.RecordCode}:{x.ProductDisplayName}:items={x.ItemCount}:samples={x.SampleCount}:attachments={x.RecordAttachmentCount}/{x.ItemAttachmentBucketCount}:reports={x.ReportCount}:primary={x.PrimaryReportFormat ?? "<none>"}:{x.PrimaryReportArtifactFileName ?? "<none>"}:light={x.LightweightReportFormat ?? "<none>"}:{x.LightweightReportArtifactFileName ?? "<none>"}"))}");
+        Console.WriteLine($"[Test] App query gateway list: {string.Join(", ", appRecentRecords.Select(x => $"{x.RecordCode}:{x.ProductDisplayName}:items={x.ItemCount}:samples={x.SampleCount}:attachments={x.RecordAttachmentCount}/{x.ItemAttachmentBucketCount}:reports={x.ReportCount}:primary={x.PrimaryReportFormat ?? "<none>"}:{x.PrimaryReportArtifactFileName ?? "<none>"}:light={x.LightweightReportFormat ?? "<none>"}:{x.LightweightReportArtifactFileName ?? "<none>"}:partitions={string.Join("|", x.ItemPartitions.Select(p => $"{p.ItemCode}:{p.SampleCount}"))}"))}");
         Console.WriteLine($"[Test] App query gateway detail found: {appRecordDetail is not null}");
         Console.WriteLine($"[Test] Record reports: {string.Join(", ", recordReports.Select(x => $"{x.RecordCode}:{x.Format}:{x.ArtifactFileName}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
         Console.WriteLine($"[Test] Lightweight report artifact: {(lightweightReport is null ? "<none>" : $"{lightweightReport.Format}:{lightweightReport.ArtifactFileName}")}");
