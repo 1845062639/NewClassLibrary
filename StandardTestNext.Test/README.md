@@ -56,9 +56,16 @@
 - 当使用 `sqlite` 模式时，会自动初始化 `artifacts/test-persistence/standardtest-next.db`（或自定义路径）并走 `SQLite*Repository` 闭环
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
+## 本小时进展补充
+- 本轮继续推进“用真实 App 查询入口替换 stub”：App 默认启动链路已开始组装 `TestRecordQueryService -> TestRecordQueryFacade -> TestRecordQueryGatewayAdapter`，而不再把 `TestRecordQueryGatewayStub` 留在默认主路径。
+- 为此新增共享工厂 `StandardTestNext.Contracts/TestRecordQueryGatewayFactory.cs`，并将 stub 语义下沉为 contracts 内部的 null fallback；App 侧重复壳文件已删除。
+- 当前 App 通过新增的 `StandardTestNext.Test` 项目引用直接消费 Test 查询 facade/adapter，这是刻意接受的一步阶段性 in-proc 耦合，先换掉默认假数据，再谈 remote boundary。
+- 已复验 `dotnet build StandardTestNext.sln --no-restore` 通过，主干仍保持 `0 warning / 0 error`。
+
 ## 下一步优先项
 - App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，且消息总线连接参数已补齐 CLI 覆盖入口；本轮继续把 `provider=mqtt` 的启动前自检从单一可达性 warning 推进到结构化状态诊断，能区分 `reachable / timeout / connection-refused / dns-failed / auth-failed / probe-failed`；`dotnet build StandardTestNext.sln --no-restore` 当前仍是 0 warning / 0 error，下一步重点转为真实 MQTT smoke 验证与更接近协议层的认证/权限级诊断，而不是继续口头维护键名约定
 - 本小时继续把共享总线诊断补前置：Test 启动摘要已输出 `publishTimeoutSeconds` / `subscribeTimeoutSeconds`，配置非法时会在启动前直接失败，后续做真实 MQTT 联调时更容易定位“配置问题”还是“broker 问题”
 - 新增 `scripts/run-mqtt-smoke.sh`：在本机已有 MQTT broker 的前提下，可一键拉起 App/Test 双进程 smoke run，默认把 Test 侧落到 SQLite 持久化并输出双端日志，方便验证跨进程消息链路而不必手工敲两条长命令。
-- 为报告历史与记录回放补更稳定的查询模型，而不只是控制台摘要
+- 已通过 `StandardTestNext.Contracts/TestRecordContracts.cs` 将 `TestRecordDetailContract / TestRecordListItemContract / TestRecordItemDetailContract / TestReportSummaryContract` 收口到共享契约文件，当前 `TestRecordQueryGatewayAdapter` 已能把 Test 侧 `ItemDetails / ReportSummaries` 完整投影给 App 侧消费者
+- 下一步继续把这条链路从“共享契约 + adapter 完整投影”推进到“真实 App 查询消费”，逐步替换当前 stub/pending bridge 占位实现；本轮 App 侧已先接上 `GetDetailAsync(recordCode)` 的最小摘要消费，后续优先把这条调用切到真实 Test 查询网关而非继续停留在 stub
 - 在现有 Markdown 草稿导出之上，继续抽正式报告模板渲染出口，逐步替换当前 JSON 预览

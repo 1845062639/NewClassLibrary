@@ -63,6 +63,20 @@
 - 本小时继续把产品主数据也从“只写不查”往前推：新增 `IProductDefinitionQueryService` + `ProductDefinitionQueryService`，并为产品仓储补 `ListRecentAsync`，后续无论是主数据列表、记录详情产品信息回查还是主数据对账，都可以先走稳定查询边界而不是继续把读取逻辑散回 Bootstrap
 - 本轮继续把这条边界从“接口存在”推进到“启动链路真实使用”：`TestBootstrap` 已直接补 recent products 与 `GetByKind(productKind)` 回读输出，后续做 API/UI 时可先复用这层查询服务，而不是重新在 demo/控制台里拼仓储读取
 - 本小时继续把记录查询组装逻辑从服务内部往外收口：新增 `TestRecordQueryViewAssembler` 与 `TestRecordItemPayloadReader`，把 recent/detail 两条查询路径共用的 `ItemDetails / Mapping / ReportSummaries` 组装以及 `DataJson -> SampleCount/RecordMode` 解析统一下来；`TestRecordDetail` 也已直接携带 `Mapping`，后续详情页/API 无需再自行扫描 item 列表回算 `samples/kp/cont`
+- 本小时继续把“样本映射策略”从纯统计结果推进到带展示语义的稳定元数据：`TestRecordSamplePartitionDescriptor` 已补 `DisplayName / SortOrder`，`TestRecordSamplePartitioner`、`TestRecordSamplePartitionSummary`、`TestRecordItemDetail`、`TestRecordMappingSnapshotFactory` 现会统一传递和保序这层信息，后续 App 详情页、轻量报告、正式模板都可直接复用，不必再把 `ItemCode -> 展示名/顺序` 的映射散落在多个消费端
+- 本小时继续把这条查询边界往 App 侧推一小步：当前共享 `TestRecordContracts.cs` 已统一承载 `detail/list/item/report-summary` 契约，Test 侧 `TestRecordQueryGatewayAdapter` 已能完整投影 `ItemDetails / ReportSummaries`，App 侧 `TestRecordQueryGatewayStub` 也已补齐同结构占位返回；本轮又把 `AppBootstrap` 从“只看 recent list”推进到“继续读取 detail 并打印 item/sample/report artifact 摘要”，让 App 主干先真正消费一遍 detail 合同；下一步不再是继续扩 Contract 字段，而是让真实 App 查询消费路径替换掉 stub
+
+
+## 2026-03-22 10:11 App 默认查询主路径改走真实 in-proc adapter
+- 本小时继续按待办推进“让 App 默认查询入口替换 stub”，这次不再只是加工厂切换点，而是把默认主路径真正切到了可工作的 Test 查询 adapter。
+- 新增 `StandardTestNext.Contracts/TestRecordQueryGatewayFactory.cs`，将默认工厂与 null fallback 下沉到共享 contracts；stub 不再作为 App 项目内主路径实现存在，而是退为 resolver 缺席时的共享兜底。
+- `StandardTestNext.App/Program.cs` 已开始实际组装 `InMemoryTestRecordRepository + InMemoryRecordAttachmentRepository + InMemoryTestReportRepository + TestRecordQueryService + TestRecordQueryFacade + TestRecordQueryGatewayAdapter`，并把该 gateway 注入 `AppBootstrap`。
+- 同步删除 App 侧重复壳文件：
+  - `StandardTestNext.App/Application/TestRecordQueryGatewayFactory.cs`
+  - `StandardTestNext.App/Application/TestRecordQueryGatewayStub.cs`
+- `StandardTestNext.App/StandardTestNext.App.csproj` 已新增对 `StandardTestNext.Test` 的项目引用；当前这是阶段性接受的 in-proc 耦合，目的是优先结束“App 默认查询只能消费假数据”的状态。
+- 已执行 `dotnet build StandardTestNext.sln --no-restore` 复验通过，结果仍为 `0 warning / 0 error`。
+- 下一步应继续把这条默认 in-proc adapter 提升为可配置策略（in-proc / remote / null fallback），并开始让 App 可选择接真实 Test 持久化数据源，而不是继续停留在“空 in-memory 仓储 + 真 adapter”这层半步状态。
 
 ## 阶段 4：旧系统并行期
 - 新旧系统并行验证
@@ -72,3 +86,39 @@
 ## 当前决策
 - 重点转向新项目，不再以大规模修正旧 App 为主要路径
 - 旧项目继续作为领域参考和迁移素材
+
+## 2026-03-22 04:41 App/Test recent list 契约继续收口
+- 本小时继续顺着 App/Test 查询契约待办往前推：`StandardTestNext.Contracts/TestRecordContracts.cs` 的 recent list 契约新增 `RecordAttachmentCount / ItemAttachmentBucketCount`，不再只暴露样本数和报告数。
+- `TestRecordSummary`、`TestRecordListView`、`TestRecordQueryViewAssembler`、`TestRecordViewMapper` 已同步把记录级附件数、分项附件桶数、primary artifact、lightweight artifact 收敛到 recent list 视图里；其中 summary 组装不再用空附件集合占位，而是直接消费 `item.Attachments`。
+- `TestRecordQueryGatewayAdapter`、`TestRecordQueryGatewayStub`、`AppBootstrap`、`TestBootstrap` 已一并改为消费这组 richer list 契约，当前 App 侧 recent list 预览与 Test 侧运行输出都能直接看到 `attachments + primary/lightweight report artifact` 摘要。
+- 这一步的真实目标不是继续堆 contract 字段，而是把 App 侧列表查询先收敛到与 Test 侧 detail/query 相同的语义平面上；下一步应开始用真实 App 查询入口替换 stub，而不是继续扩一次性占位结构。
+
+## 2026-03-22 05:11 App 合同镜像壳文件清理
+- 本小时先复核 `next-gen/` 当前真实状态：`dotnet build StandardTestNext.sln --no-restore` 通过，主干仍保持 `0 warning / 0 error`。
+- 继续按上轮待办里“清理 Contracts 目录/消费端残留镜像壳文件”的方向推进：已删除 App 侧遗留的合同镜像文件：
+  - `StandardTestNext.App/ContractsBridge/TestRecordDetailContract.cs`
+  - `StandardTestNext.App/ContractsBridge/TestRecordListItemContract.cs`
+- 这两个文件本质上只是指向 `StandardTestNext.Contracts` 的单行 alias 壳；在共享 contracts 已集中到 `StandardTestNext.Contracts/TestRecordContracts.cs` 后，继续把它们留在 App 项目里，只会让“共享合同是否已经真正集中”这件事看起来比实际更模糊。
+- 删除后重新执行 `dotnet build StandardTestNext.sln --no-restore` 复验通过，说明当前 App 侧已可直接消费共享 contracts，不再依赖这层历史镜像文件。
+- 下一步不再优先制造新的占位合同文件，而是继续把 App 的真实查询消费入口从 stub 切到 Test 查询网关/真实进程边界。
+
+## 2026-03-22 00:11 RuntimeBridge alias 收口尝试与回退
+- 本小时尝试把 `StandardTestNext.Test/Application/RuntimeBridge` 下 4 个接口文件收口为对 `StandardTestNext.Contracts` 的 alias，以减少 Test 侧重复定义：
+  - `IMessageBus.cs`
+  - `IMessageBusConfiguration.cs`
+  - `IMessagePublisher.cs`
+  - `IMessageSubscriber.cs`
+- 但实际执行 `dotnet build StandardTestNext.sln --no-restore` 后确认该做法会直接触发 `CS8914`（`global using` 不能置于命名空间内），并导致 Test 侧 `IMessageBus` / `IMessageBusConfiguration` 无法解析。
+- 因此本轮已立即回退到原始可编译接口定义，避免把未完成的 alias 收口错误留在主干。
+- 真实结论：后续若要把 RuntimeBridge 接口统一到 Contracts，不能用“文件内 namespace + global using alias”这种写法；需要改为直接替换引用命名空间、或改用普通 `using`/类型转发方案后再统一迁移。
+
+## 2026-03-22 07:41 App 查询默认网关切换点收口
+- 本小时继续按上一轮待办推进“用真实 App 查询入口替换 stub”的前置收口：`AppBootstrap` 已不再直接依赖 `new TestRecordQueryGatewayStub()`，而是统一经由 `TestRecordQueryGatewayDefaults.Create()` 解析默认网关。
+- 当前默认返回值仍是 stub，这一步并没有假装“真实查询已经接通”；它的真实意义是先把切换点收成单一入口，避免后续接进程内 adapter / 跨进程网关时还要回头修改 App 主流程。
+- 下一步应在这个默认工厂背后引入可配置/可替换实现（例如进程内 adapter 或跨边界查询客户端），而不是继续向 stub 本体堆更多占位细节。
+
+## 2026-03-22 09:11 报告主次选择规则收口
+- 本小时继续把 Test 查询/报告边界往前推了一小步：新增 `StandardTestNext.Test/Application/Services/TestReportSelection.cs`，统一封装 `primary report` 与 `lightweight report` 的挑选规则。
+- `TestRecordQueryViewAssembler` 不再直接依赖 `reports.FirstOrDefault(x => x.IsPrimaryEntry)` 这类散落判断，而是改成显式规则：主报告优先 `IsPrimaryEntry`，再回退 `json`，再回退最新一条；轻量报告优先 `IsLightweightEntry`，再回退 `manifest`，再兜底其他报告。
+- 这一步的目标不是新增功能，而是降低后续 App recent list、报告历史页、查询网关适配器在“主报告/轻量报告到底选哪条”上的重复实现成本。
+- 下一步仍应优先把 App 侧默认查询网关从 stub 切成真实实现，而不是继续扩占位查询结构。

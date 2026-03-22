@@ -25,11 +25,20 @@
 - `ContractsBridge/`：消息收发
 - `UI/`：界面层
 
+## 本小时进展补充
+- App 默认查询主路径已不再直接回退到 `TestRecordQueryGatewayStub`：`Program.cs` 现会实际组装 `TestRecordQueryService + TestRecordQueryFacade + TestRecordQueryGatewayAdapter`，并把该 gateway 注入 `AppBootstrap`。
+- 新增共享工厂 `StandardTestNext.Contracts/TestRecordQueryGatewayFactory.cs`，把 null fallback 下沉到 contracts；App 侧历史重复文件 `Application/TestRecordQueryGatewayFactory.cs`、`Application/TestRecordQueryGatewayStub.cs` 已删除。
+- `StandardTestNext.App/StandardTestNext.App.csproj` 已新增对 `StandardTestNext.Test` 的项目引用；这是阶段性的 in-proc 收口，目标是先让 App 主流程停止消费私有假数据结构。
+- 已复验 `dotnet build StandardTestNext.sln --no-restore` 通过，当前仍为 `0 warning / 0 error`。
+
 ## 下一步优先项
 - App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，后续新增运行参数优先补这份公共说明，再分别落到双端 README 与样例配置
 - 在 `samplingMode` 的最小开关之上，继续补真实采样周期、批次大小、设备连接参数等运行配置
 - 已为消息总线切换补最小抽象：`IMessageBus` + `MessageBusFactory`，当前已落 `inmemory` 与 `mqtt` 两类 provider；后续可在不改 Bootstrap 签名的前提下继续补更完整的生命周期与其他实现
 - 本小时继续清理消息总线兼容层：`IMessageBus` 不再继承已标记 obsolete 的 `IMessageSubscriber` shim，`Subscribe<T>` 已直接收口到总线主接口，当前 `dotnet build StandardTestNext.sln --no-restore` 已恢复为 0 warning / 0 error
+- App 侧 `TestRecordQueryGatewayStub` 已同步补齐 `ItemDetails / ReportSummaries / Primary/Lightweight report` 占位输出，避免 Contracts 已扩展而 App stub 仍停留在旧版 detail 结构；后续接入真实 Test 查询网关时，App UI/API 可直接按新契约消费记录详情与轻量报告摘要
+- 本小时继续把 App 消费路径从“只打 recent list 预览”前推到“真实读取 detail 契约摘要”：`AppBootstrap` 在打印 recent record 之后，会继续拉取 `GetDetailAsync(recordCode)` 并输出 `items / samples / keyPoints / continuous / report artifact` 摘要，先把 App 侧读取 detail 合同的最小消费面接上，为后续替换掉 stub、接入真实 Test 查询桥接铺路
+- 本小时继续把默认查询入口从“主流程里直接 new stub”收口成独立工厂：新增 `Application/TestRecordQueryGatewayFactory.cs`，`AppBootstrap` 统一经由 `TestRecordQueryGatewayFactory.Create(() => _testRecordGateway)` 解析默认网关；当前仍默认回退到 `TestRecordQueryGatewayStub`，但后续接入进程内 adapter / 真实跨边界查询时，只需替换工厂解析逻辑，不必再回头改 App 主流程
 - MQTT provider 本小时进一步补了连接后自动重订阅、断线后订阅状态清理、重复订阅控制，并切到 `clean session = false`，避免后续联调时一断线就把订阅上下文丢干净
 - 新增 `scripts/run-mqtt-smoke.sh`：在本机已有 MQTT broker 的前提下，可一键拉起 App/Test 双进程 smoke run，统一透传 `mqtt` provider、broker 地址、topicPrefix、clientId，并把日志落到 `artifacts/logs/`，作为真实跨进程联调入口。
 - 本小时继续补了发布/订阅超时治理：`MessageBusOptions` 新增 `PublishTimeoutSeconds` / `SubscribeTimeoutSeconds`，当前通过环境变量 `STNEXT_MESSAGEBUS_PUBLISH_TIMEOUT_SECONDS`、`STNEXT_MESSAGEBUS_SUBSCRIBE_TIMEOUT_SECONDS` 注入；MQTT 发布/订阅超时会抛出明确的 `TimeoutException` 并补发重连调度

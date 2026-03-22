@@ -1,6 +1,7 @@
 using StandardTestNext.App.ContractsBridge;
 using StandardTestNext.App.Devices;
 using StandardTestNext.App.Application.Services;
+using StandardTestNext.Contracts;
 
 namespace StandardTestNext.App.Application;
 
@@ -40,12 +41,28 @@ public sealed class AppBootstrap
             sampleService.PublishSample();
         }
 
-        var testRecordGateway = _testRecordGateway ?? new TestRecordQueryGatewayStub();
+        var testRecordGateway = TestRecordQueryGatewayFactory.Create(() => _testRecordGateway);
         var recentRecords = testRecordGateway.ListRecentAsync(5).GetAwaiter().GetResult();
         var latestRecord = recentRecords.FirstOrDefault();
         if (latestRecord is not null)
         {
-            Console.WriteLine($"[App] Test record query gateway preview: {latestRecord.RecordCode}:{latestRecord.ProductDisplayName}:reports={latestRecord.ReportCount}:primary={latestRecord.PrimaryReportArtifactFileName ?? "<none>"}");
+            Console.WriteLine($"[App] Test record query gateway preview: {latestRecord.RecordCode}:{latestRecord.ProductDisplayName}:attachments={latestRecord.RecordAttachmentCount}/{latestRecord.ItemAttachmentBucketCount}:reports={latestRecord.ReportCount}:primary={latestRecord.PrimaryReportArtifactFileName ?? "<none>"}:light={latestRecord.LightweightReportArtifactFileName ?? "<none>"}");
+            if (latestRecord.ItemPartitions.Count > 0)
+            {
+                Console.WriteLine($"[App] List partitions: {string.Join(", ", latestRecord.ItemPartitions.Select(x => $"{x.DisplayName}:{x.RecordMode}:{x.SampleCount}"))}");
+            }
+
+            var detail = testRecordGateway.GetDetailAsync(latestRecord.RecordCode).GetAwaiter().GetResult();
+            if (detail is not null)
+            {
+                Console.WriteLine($"[App] Detail preview: items={detail.ItemCount}, samples={detail.SampleCount}, keyPoints={detail.KeyPointSampleCount}, continuous={detail.ContinuousSampleCount}, reports={detail.ReportSummaries.Count}");
+
+                var primaryReport = detail.ReportSummaries.FirstOrDefault(x => x.IsPrimaryEntry);
+                if (primaryReport is not null)
+                {
+                    Console.WriteLine($"[App] Primary report artifact: {primaryReport.ArtifactFileName ?? "<none>"} @ {primaryReport.ArtifactSavedPath ?? "<none>"}");
+                }
+            }
         }
 
         Console.WriteLine("StandardTestNext.App ready.");
