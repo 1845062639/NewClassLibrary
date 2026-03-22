@@ -8,11 +8,9 @@ var validation = RuntimeConfigurationValidator.ValidateApp(appOptions, messageBu
 RuntimeConfigurationConsoleReporter.ReportApp(appOptions, messageBusOptions, validation);
 RuntimeConfigurationConsoleReporter.ThrowIfInvalid(validation);
 
-var messageBus = MessageBusFactory.Create(messageBusOptions);
-var app = new AppBootstrap(BuildDefaultQueryGateway());
-app.Run(messageBus, appOptions);
+var defaultQueryGateway = InProcAppQueryGatewayFactory.ResolveDefaultGateway();
+Console.WriteLine($"[App.Config] queryGateway={(defaultQueryGateway.ResolutionKind == DefaultQueryGatewayResolutionKind.SeededInProc ? "seeded-inproc" : "null-fallback")}");
 
-static StandardTestNext.Contracts.ITestRecordQueryGateway BuildDefaultQueryGateway()
-{
-    return InProcAppQueryGatewayFactory.CreateDefaultGateway();
-}
+var messageBus = MessageBusFactory.Create(messageBusOptions);
+var app = new AppBootstrap(defaultQueryGateway.Gateway);
+app.Run(messageBus, appOptions);

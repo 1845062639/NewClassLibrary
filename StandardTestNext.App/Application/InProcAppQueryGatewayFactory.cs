@@ -5,9 +5,16 @@ namespace StandardTestNext.App.Application;
 
 public static class InProcAppQueryGatewayFactory
 {
-    public static ITestRecordQueryGateway CreateDefaultGateway()
+    public static DefaultQueryGatewayResolution ResolveDefaultGateway()
     {
-        return TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway);
+        var gateway = TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway);
+        return new DefaultQueryGatewayResolution
+        {
+            Gateway = gateway,
+            ResolutionKind = TestRecordQueryGatewayFactory.IsNullGateway(gateway)
+                ? DefaultQueryGatewayResolutionKind.NullFallback
+                : DefaultQueryGatewayResolutionKind.SeededInProc
+        };
     }
 
     private static ITestRecordQueryGateway? TryCreateSeededGateway()
@@ -23,4 +30,16 @@ public static class InProcAppQueryGatewayFactory
 
         return createMethod?.Invoke(null, null) as ITestRecordQueryGateway;
     }
+}
+
+public sealed class DefaultQueryGatewayResolution
+{
+    public ITestRecordQueryGateway Gateway { get; init; } = TestRecordQueryGatewayFactory.Create();
+    public DefaultQueryGatewayResolutionKind ResolutionKind { get; init; }
+}
+
+public enum DefaultQueryGatewayResolutionKind
+{
+    SeededInProc,
+    NullFallback
 }

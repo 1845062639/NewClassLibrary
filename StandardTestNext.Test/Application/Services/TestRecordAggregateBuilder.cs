@@ -10,6 +10,7 @@ public sealed class TestRecordAggregateBuilder
     public TestRecordBuildResult BuildDemoRecord(
         MotorRatedParamsContract rated,
         IReadOnlyCollection<MotorRealtimeSampleContract> samples,
+        IReadOnlyCollection<LegacyMotorRealtimeEnvelopeContract>? legacySamples = null,
         ProductDefinition? productDefinition = null)
     {
         var record = new TestRecordAggregate
@@ -26,7 +27,7 @@ public sealed class TestRecordAggregateBuilder
             TestProduct = productDefinition
         };
 
-        var mappingResult = _itemMapper.MapRealtimeSamples(samples);
+        var mappingResult = _itemMapper.MapRealtimeSamples(samples, legacySamples);
         foreach (var item in mappingResult.Items)
         {
             record.Items.Add(item);

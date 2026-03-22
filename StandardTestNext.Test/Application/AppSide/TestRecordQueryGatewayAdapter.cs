@@ -79,6 +79,18 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 MethodCode = item.MethodCode,
                 RecordMode = item.RecordMode ?? string.Empty,
                 SampleCount = item.SampleCount,
+                LegacySampleCount = item.LegacySampleCount,
+                HasLegacyPayload = item.HasLegacyPayload,
+                LegacyPayload = new TestRecordLegacyPayloadContract
+                {
+                    LegacySampleCount = item.LegacyPayload.LegacySampleCount,
+                    HasLegacyPayload = item.LegacyPayload.HasLegacyPayload,
+                    PowerCurveImageCount = item.LegacyPayload.PowerCurveImageCount,
+                    TempCurveImageCount = item.LegacyPayload.TempCurveImageCount,
+                    VibrationCurveImageCount = item.LegacyPayload.VibrationCurveImageCount,
+                    HasIncomingPowerMetrics = item.LegacyPayload.HasIncomingPowerMetrics,
+                    HasWindingTemperatureMetrics = item.LegacyPayload.HasWindingTemperatureMetrics
+                },
                 AttachmentCount = item.AttachmentCount,
                 IsValid = item.IsValid,
                 HasRemark = item.HasRemark,

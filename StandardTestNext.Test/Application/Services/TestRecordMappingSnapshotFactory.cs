@@ -12,6 +12,8 @@ public sealed class TestRecordMappingSnapshotFactory
                 DisplayName = x.DisplayName,
                 RecordMode = x.RecordMode ?? TestRecordSampleModes.Unknown,
                 SampleCount = x.SampleCount,
+                LegacySampleCount = x.LegacySampleCount,
+                HasLegacyPayload = x.HasLegacyPayload,
                 MethodCode = x.MethodCode,
                 Remark = x.Remark ?? string.Empty,
                 SortOrder = x.SortOrder

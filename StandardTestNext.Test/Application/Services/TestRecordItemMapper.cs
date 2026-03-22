@@ -8,7 +8,9 @@ public sealed class TestRecordItemMapper
 {
     private readonly TestRecordSamplePartitioner _partitioner = new();
 
-    public TestRecordItemMappingResult MapRealtimeSamples(IReadOnlyCollection<MotorRealtimeSampleContract> samples)
+    public TestRecordItemMappingResult MapRealtimeSamples(
+        IReadOnlyCollection<MotorRealtimeSampleContract> samples,
+        IReadOnlyCollection<LegacyMotorRealtimeEnvelopeContract>? legacySamples = null)
     {
         var partitions = _partitioner.Partition(samples);
         if (partitions.Count == 0)
@@ -16,40 +18,71 @@ public sealed class TestRecordItemMapper
             return new TestRecordItemMappingResult();
         }
 
+        var legacySamplesBySampleTime = legacySamples?
+            .GroupBy(sample => sample.SampleTime)
+            .ToDictionary(group => group.Key, group => (IReadOnlyList<LegacyMotorRealtimeEnvelopeContract>)group.ToArray());
+
+        var mappedPartitions = partitions
+            .Select(partition => MapPartition(partition, legacySamplesBySampleTime))
+            .ToArray();
+
         return new TestRecordItemMappingResult
         {
-            Partitions = partitions.Select(MapPartitionSummary).ToArray(),
-            Items = partitions.Select(MapItem).ToArray()
+            Partitions = mappedPartitions.Select(x => x.Summary).ToArray(),
+            Items = mappedPartitions.Select(x => x.Item).ToArray()
         };
     }
 
-    private static TestRecordItemAggregate MapItem(TestRecordSamplePartition partition)
+    private static MappedPartitionResult MapPartition(
+        TestRecordSamplePartition partition,
+        IReadOnlyDictionary<DateTimeOffset, IReadOnlyList<LegacyMotorRealtimeEnvelopeContract>>? legacySamplesBySampleTime)
     {
-        return new TestRecordItemAggregate
-        {
-            ItemCode = partition.Descriptor.ItemCode,
-            MethodCode = partition.Descriptor.MethodCode,
-            DataJson = JsonSerializer.Serialize(new
+        var matchedLegacySamples = partition.Samples
+            .SelectMany(sample => TryGetLegacySamples(sample.SampleTime, legacySamplesBySampleTime))
+            .ToArray();
+
+        return new MappedPartitionResult(
+            new TestRecordSamplePartitionSummary
             {
+                ItemCode = partition.Descriptor.ItemCode,
+                DisplayName = partition.Descriptor.DisplayName,
                 RecordMode = partition.Descriptor.RecordMode,
                 SampleCount = partition.Samples.Count,
-                Samples = partition.Samples
-            }),
-            Remark = partition.Descriptor.Remark
-        };
+                LegacySampleCount = matchedLegacySamples.Length,
+                HasLegacyPayload = matchedLegacySamples.Length > 0,
+                MethodCode = partition.Descriptor.MethodCode,
+                Remark = partition.Descriptor.Remark,
+                SortOrder = partition.Descriptor.SortOrder
+            },
+            new TestRecordItemAggregate
+            {
+                ItemCode = partition.Descriptor.ItemCode,
+                MethodCode = partition.Descriptor.MethodCode,
+                DataJson = JsonSerializer.Serialize(new
+                {
+                    RecordMode = partition.Descriptor.RecordMode,
+                    SampleCount = partition.Samples.Count,
+                    Samples = partition.Samples,
+                    LegacySampleCount = matchedLegacySamples.Length,
+                    LegacySamples = matchedLegacySamples
+                }),
+                Remark = partition.Descriptor.Remark
+            });
     }
 
-    private static TestRecordSamplePartitionSummary MapPartitionSummary(TestRecordSamplePartition partition)
+    private static IReadOnlyList<LegacyMotorRealtimeEnvelopeContract> TryGetLegacySamples(
+        DateTimeOffset sampleTime,
+        IReadOnlyDictionary<DateTimeOffset, IReadOnlyList<LegacyMotorRealtimeEnvelopeContract>>? legacySamplesBySampleTime)
     {
-        return new TestRecordSamplePartitionSummary
+        if (legacySamplesBySampleTime is null || !legacySamplesBySampleTime.TryGetValue(sampleTime, out var matchedLegacySamples))
         {
-            ItemCode = partition.Descriptor.ItemCode,
-            DisplayName = partition.Descriptor.DisplayName,
-            RecordMode = partition.Descriptor.RecordMode,
-            SampleCount = partition.Samples.Count,
-            MethodCode = partition.Descriptor.MethodCode,
-            Remark = partition.Descriptor.Remark,
-            SortOrder = partition.Descriptor.SortOrder
-        };
+            return Array.Empty<LegacyMotorRealtimeEnvelopeContract>();
+        }
+
+        return matchedLegacySamples;
     }
+
+    private sealed record MappedPartitionResult(
+        TestRecordSamplePartitionSummary Summary,
+        TestRecordItemAggregate Item);
 }

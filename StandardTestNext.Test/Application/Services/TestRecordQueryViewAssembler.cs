@@ -98,6 +98,9 @@ public sealed class TestRecordQueryViewAssembler
             HasRemark = !string.IsNullOrWhiteSpace(item.Remark),
             AttachmentCount = attachments.Count,
             SampleCount = payload.SampleCount,
+            LegacySampleCount = payload.LegacySampleCount,
+            HasLegacyPayload = payload.HasLegacyPayload,
+            LegacyPayload = payload.LegacyPayload,
             RecordMode = payload.RecordMode,
             SortOrder = TestRecordItemDescriptorResolver.ResolveSortOrder(item.ItemCode, payload.RecordMode)
         };

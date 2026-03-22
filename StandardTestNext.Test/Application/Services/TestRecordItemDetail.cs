@@ -11,6 +11,9 @@ public sealed class TestRecordItemDetail
     public bool HasRemark { get; init; }
     public int AttachmentCount { get; init; }
     public int SampleCount { get; init; }
+    public int LegacySampleCount { get; init; }
+    public bool HasLegacyPayload { get; init; }
+    public TestRecordLegacyPayloadSummary LegacyPayload { get; init; } = new();
     public string? RecordMode { get; init; }
     public int SortOrder { get; init; }
 }

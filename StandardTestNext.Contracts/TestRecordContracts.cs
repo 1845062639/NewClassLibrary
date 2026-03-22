@@ -54,6 +54,9 @@ public sealed class TestRecordItemDetailContract
     public string MethodCode { get; init; } = string.Empty;
     public string RecordMode { get; init; } = string.Empty;
     public int SampleCount { get; init; }
+    public int LegacySampleCount { get; init; }
+    public bool HasLegacyPayload { get; init; }
+    public TestRecordLegacyPayloadContract LegacyPayload { get; init; } = new();
     public int AttachmentCount { get; init; }
     public bool IsValid { get; init; }
     public bool HasRemark { get; init; }
@@ -68,6 +71,8 @@ public sealed class TestRecordItemPartitionContract
     public string MethodCode { get; init; } = string.Empty;
     public string RecordMode { get; init; } = string.Empty;
     public int SampleCount { get; init; }
+    public int LegacySampleCount { get; init; }
+    public bool HasLegacyPayload { get; init; }
     public bool HasRemark { get; init; }
     public string? Remark { get; init; }
 }
@@ -82,4 +87,15 @@ public sealed class TestReportSummaryContract
     public string? ArtifactSavedPath { get; init; }
     public bool IsLightweightEntry { get; init; }
     public bool IsPrimaryEntry { get; init; }
+}
+
+public sealed class TestRecordLegacyPayloadContract
+{
+    public int LegacySampleCount { get; init; }
+    public bool HasLegacyPayload { get; init; }
+    public int PowerCurveImageCount { get; init; }
+    public int TempCurveImageCount { get; init; }
+    public int VibrationCurveImageCount { get; init; }
+    public bool HasIncomingPowerMetrics { get; init; }
+    public bool HasWindingTemperatureMetrics { get; init; }
 }

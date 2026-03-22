@@ -37,6 +37,8 @@ public static class TestRecordViewMapper
                     MethodCode = x.MethodCode,
                     RecordMode = x.RecordMode,
                     SampleCount = x.SampleCount,
+                    LegacySampleCount = x.LegacySampleCount,
+                    HasLegacyPayload = x.HasLegacyPayload,
                     HasRemark = !string.IsNullOrWhiteSpace(x.Remark),
                     Remark = x.Remark
                 })

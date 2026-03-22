@@ -49,13 +49,17 @@ public sealed class AppBootstrap
             Console.WriteLine($"[App] Test record query gateway preview: {latestRecord.RecordCode}:{latestRecord.ProductDisplayName}:attachments={latestRecord.RecordAttachmentCount}/{latestRecord.ItemAttachmentBucketCount}:reports={latestRecord.ReportCount}:primary={latestRecord.PrimaryReportArtifactFileName ?? "<none>"}:light={latestRecord.LightweightReportArtifactFileName ?? "<none>"}");
             if (latestRecord.ItemPartitions.Count > 0)
             {
-                Console.WriteLine($"[App] List partitions: {string.Join(", ", latestRecord.ItemPartitions.Select(x => $"{x.DisplayName}:{x.RecordMode}:{x.SampleCount}"))}");
+                Console.WriteLine($"[App] List partitions: {string.Join(", ", latestRecord.ItemPartitions.Select(x => $"{x.DisplayName}:{x.RecordMode}:{x.SampleCount}:legacy={x.LegacySampleCount}:payload={(x.HasLegacyPayload ? "Y" : "N")}"))}");
             }
 
             var detail = testRecordGateway.GetDetailAsync(latestRecord.RecordCode).GetAwaiter().GetResult();
             if (detail is not null)
             {
                 Console.WriteLine($"[App] Detail preview: items={detail.ItemCount}, samples={detail.SampleCount}, keyPoints={detail.KeyPointSampleCount}, continuous={detail.ContinuousSampleCount}, reports={detail.ReportSummaries.Count}");
+                if (detail.ItemDetails.Count > 0)
+                {
+                    Console.WriteLine($"[App] Detail items: {string.Join(", ", detail.ItemDetails.Select(x => $"{x.DisplayName}:{x.RecordMode}:{x.SampleCount}:legacy={x.LegacySampleCount}:payload={(x.HasLegacyPayload ? "Y" : "N")}:attachments={x.AttachmentCount}"))}");
+                }
 
                 var primaryReport = detail.ReportSummaries.FirstOrDefault(x => x.IsPrimaryEntry);
                 if (primaryReport is not null)

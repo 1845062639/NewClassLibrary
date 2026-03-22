@@ -8,6 +8,11 @@ public static class TestRecordQueryGatewayFactory
         return resolvedGateway ?? new NullTestRecordQueryGateway();
     }
 
+    public static bool IsNullGateway(ITestRecordQueryGateway? gateway)
+    {
+        return gateway is NullTestRecordQueryGateway;
+    }
+
     private sealed class NullTestRecordQueryGateway : ITestRecordQueryGateway
     {
         public Task<IReadOnlyList<TestRecordListItemContract>> ListRecentAsync(int take = 10, CancellationToken cancellationToken = default)

@@ -96,7 +96,7 @@ public sealed class TestBootstrap
         IProductDefinitionQueryService productDefinitionQueryService = new ProductDefinitionQueryService(productRepository);
 
         var productDefinition = productDefinitionService.GetOrCreateAsync(rated).GetAwaiter().GetResult();
-        var buildResult = aggregateBuilder.BuildDemoRecord(rated, samples, productDefinition);
+        var buildResult = aggregateBuilder.BuildDemoRecord(rated, samples, legacySamples: null, productDefinition);
         var aggregate = buildResult.Record;
 
         recordRepository.SaveAsync(aggregate).GetAwaiter().GetResult();
