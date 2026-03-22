@@ -54,8 +54,8 @@ public sealed class TestRecordQueryViewAssembler
         var latestReport = reports
             .OrderByDescending(x => x.SavedAt)
             .FirstOrDefault();
-        var primaryReport = reports.FirstOrDefault(x => x.IsPrimaryEntry);
-        var lightweightReport = reports.FirstOrDefault(x => x.IsLightweightEntry);
+        var primaryReport = TestReportSelection.SelectPrimary(reports);
+        var lightweightReport = TestReportSelection.SelectLightweight(reports);
 
         var itemDetails = record.Items
             .Select(item => BuildItemDetail(item, item.Attachments))

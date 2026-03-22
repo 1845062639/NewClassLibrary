@@ -57,9 +57,10 @@
 - 启动输出已覆盖 recent records / record reports / recent report summaries / record reload / reloaded item details，说明 phase-1 不再只是“能写不能查"
 
 ## 本小时进展补充
-- 本轮继续推进“用真实 App 查询入口替换 stub”：App 默认启动链路已开始组装 `TestRecordQueryService -> TestRecordQueryFacade -> TestRecordQueryGatewayAdapter`，而不再把 `TestRecordQueryGatewayStub` 留在默认主路径。
-- 为此新增共享工厂 `StandardTestNext.Contracts/TestRecordQueryGatewayFactory.cs`，并将 stub 语义下沉为 contracts 内部的 null fallback；App 侧重复壳文件已删除。
-- 当前 App 通过新增的 `StandardTestNext.Test` 项目引用直接消费 Test 查询 facade/adapter，这是刻意接受的一步阶段性 in-proc 耦合，先换掉默认假数据，再谈 remote boundary。
+- 本轮继续推进“用真实 App 查询入口替换 stub”：App 默认启动链路当前通过 `InProcAppQueryGatewayFactory -> InProcAppQueryGatewaySeedFactory` 反射装配 seeded in-proc query gateway，默认 recent/detail/report summaries 预览已走 `TestRecordQueryService -> TestRecordQueryFacade -> TestRecordQueryGatewayAdapter` 的真实查询链，而不是空仓储 adapter 或纯 stub。
+- 新增 `StandardTestNext.Contracts/TestRecordQuerySeedContracts.cs`，把默认 seeded rated params + realtime samples 收成共享种子契约，避免 App 默认入口、Test demo、后续 smoke host 再散落多份演示样本。
+- 当前 App 已去掉对 `StandardTestNext.Test` 的编译期项目引用；这次先接受“运行期反射装配 Test 查询实现”的阶段性 in-proc 边界，目的是先让默认查询主路径吃到真实数据，再逐步演进到可配置 remote/sqlite-backed gateway。
+- `TestReportSelection` 已把 primary/lightweight 报告选择收成显式规则，`TestRecordQueryViewAssembler` 不再直接依赖 `FirstOrDefault` 或仓储偶然顺序挑选 recent/detail 中的主报告与轻量报告。
 - 已复验 `dotnet build StandardTestNext.sln --no-restore` 通过，主干仍保持 `0 warning / 0 error`。
 
 ## 下一步优先项

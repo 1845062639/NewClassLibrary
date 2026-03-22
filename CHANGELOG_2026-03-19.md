@@ -1,5 +1,41 @@
+## 2026-03-22 16:41
+- app/contracts/test: keep App's default query path on a real seeded in-proc gateway, but remove the compile-time `StandardTestNext.App -> StandardTestNext.Test` project reference; `StandardTestNext.App/Application/InProcAppQueryGatewayFactory.cs` now reflects into `StandardTestNext.Test.Application.AppSide.InProcAppQueryGatewaySeedFactory` at runtime so App still only explicitly depends on `StandardTestNext.Contracts`.
+- contracts/test: add `TestRecordQuerySeedContracts.cs` and centralize the default seeded rated params + realtime samples behind `TestRecordQuerySeedFactory`, so the App preview path and later smoke/demo hosts can reuse one stable seed contract instead of hand-rolling duplicate fake data.
+- test: route `TestRecordQueryViewAssembler` through `TestReportSelection.SelectPrimary/SelectLightweight`, keeping recent/detail report picking on explicit rules instead of repository ordering; lightweight fallback now prefers `manifest` before oldest-entry fallback.
+- build/docs: re-run `dotnet build StandardTestNext.sln --no-restore` and keep the solution green at 0 warning / 0 error; sync App/Test READMEs and worklog to the reflected seeded-gateway baseline.
+
+## 2026-03-22 11:41
+- app/test: add `InProcAppQueryGatewaySeedFactory` so App default record-query path now resolves to a seeded in-proc gateway instead of a real adapter backed by empty in-memory repositories.
+- app: switch `StandardTestNext.App/Program.cs` to build its default query dependency through the seeded gateway factory, making recent-list/detail/report-summary preview exercise a real query chain with actual seeded data.
+- docs: sync worklog with the new seeded gateway baseline so the next step can move from `seeded in-proc` to configurable `remote/sqlite-backed/null-fallback` strategies.
+
+## 2026-03-22 09:11
+- test: add `TestReportSelection` and move primary/lightweight report picking out of `TestRecordQueryViewAssembler`, so both recent-list and detail assembly stop depending on incidental repository ordering.
+- test: make summary/detail assembly choose reports through explicit fallback rules (`IsPrimaryEntry` / `json` / latest and `IsLightweightEntry` / `manifest` / oldest fallback), leaving one reuse point for later App/API/report-history consumers.
+- docs: sync worklog with the tightened report-selection boundary so the next step stays focused on replacing the App query stub with a real gateway.
+
+## 2026-03-22 07:41
+- app: route the default test-record query dependency through `TestRecordQueryGatewayDefaults.Create()` instead of constructing `TestRecordQueryGatewayStub` inline inside `AppBootstrap`, so the App runtime now has a single swap point for future real query gateways.
+- app: add `TestRecordQueryGatewayDefaults` as the current default gateway factory while keeping the stub as the fallback implementation, reducing the amount of query-bridge wiring embedded in the App bootstrap path.
+- docs: sync worklog/migration notes so the next step stays focused on replacing the default factory target with a real gateway instead of adding more placeholder query shape.
+
 # CHANGELOG 2026-03-19
 
+## 2026-03-22 05:11
+- app: remove legacy `ContractsBridge/TestRecordDetailContract.cs` and `ContractsBridge/TestRecordListItemContract.cs` alias-shell files so App now consumes shared record query contracts directly from `StandardTestNext.Contracts` instead of keeping local mirror wrappers.
+- build: re-run `dotnet build StandardTestNext.sln --no-restore` after the cleanup and keep the mainline green at 0 warning / 0 error.
+- docs: sync migration/worklog notes with the contract-shell cleanup so the next step stays focused on replacing the App stub with a real query path.
+
+## 2026-03-22 04:41
+- contracts/app/test: extend `TestRecordListItemContract` / `TestRecordSummary` / `TestRecordListView` with `ItemAttachmentBucketCount` so recent-list consumers can see both record-level attachments and item attachment buckets without forcing a second detail query.
+- test: update `TestRecordQueryViewAssembler` to build recent-list item details from actual item attachments and carry `record attachments + item attachment buckets + primary/lightweight artifact` state into the shared list view.
+- app/test: align `TestRecordQueryGatewayAdapter`, `TestRecordQueryGatewayStub`, `AppBootstrap`, and `TestBootstrap` with the richer recent-list contract so App-side preview output now exercises the same attachment/report summary shape as Test-side runtime output.
+- docs: sync worklog and migration plan with the tightened App/Test query-contract boundary so the next step is replacing the stub with a real App query path rather than inventing more placeholder fields.
+
+## 2026-03-22 02:11
+- test: enrich realtime sample partition descriptors with `DisplayName` + `SortOrder` and make `TestRecordSamplePartitioner` return deterministic partition order, so later report/detail consumers stop inferring semantics from `ItemCode` or insertion order.
+- test: propagate partition metadata into `TestRecordSamplePartitionSummary`, `TestRecordItemDetail`, and `TestRecordMappingSnapshotFactory`, so mapping snapshots and detail views now carry stable presentation metadata alongside counts.
+- test: update `TestRecordQueryViewAssembler` to emit ordered item details with explicit display names for `RealtimeKeyPoints` / `RealtimeContinuous`, reducing downstream App/API guesswork before formal report templates arrive.
 - test: add `TestReportManifest` / `TestReportManifestMapper` / `ManifestTestReportRenderer` and wire manifest export into `TestBootstrap` so the report boundary now also produces a lightweight summary artifact instead of forcing every downstream consumer to read full JSON/Markdown payloads.
 - Test: let `TestBootstrap` export both JSON and Markdown report artifacts, and persist both formats into report history/summaries so report abstraction is exercised by the runtime path rather than only kept as idle interfaces.
 
@@ -241,3 +277,5 @@
 
 ## 五、说明
 旧仓库中的部分改动仍保留在工作区，当前主方向已经转为 `next-gen/` 新项目主干建设。后续检查时，可优先查看 `next-gen/` 下文件。 
+
+- runtime bridge: attempted to collapse Test-side message-bus interfaces onto Contracts aliases, but reverted after `dotnet build StandardTestNext.sln --no-restore` exposed CS8914 and unresolved interface types; follow-up should migrate namespace usage properly instead of placing `global using` inside namespace-scoped files

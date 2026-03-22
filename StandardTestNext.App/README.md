@@ -26,10 +26,11 @@
 - `UI/`：界面层
 
 ## 本小时进展补充
-- App 默认查询主路径已不再直接回退到 `TestRecordQueryGatewayStub`：`Program.cs` 现会实际组装 `TestRecordQueryService + TestRecordQueryFacade + TestRecordQueryGatewayAdapter`，并把该 gateway 注入 `AppBootstrap`。
-- 新增共享工厂 `StandardTestNext.Contracts/TestRecordQueryGatewayFactory.cs`，把 null fallback 下沉到 contracts；App 侧历史重复文件 `Application/TestRecordQueryGatewayFactory.cs`、`Application/TestRecordQueryGatewayStub.cs` 已删除。
-- `StandardTestNext.App/StandardTestNext.App.csproj` 已新增对 `StandardTestNext.Test` 的项目引用；这是阶段性的 in-proc 收口，目标是先让 App 主流程停止消费私有假数据结构。
-- 已复验 `dotnet build StandardTestNext.sln --no-restore` 通过，当前仍为 `0 warning / 0 error`。
+- App 默认查询主路径已不再把 in-proc adapter 组装逻辑硬编码在 `Program.cs`：当前统一经 `InProcAppQueryGatewayFactory` 进入默认 gateway 创建入口，主流程只保留一个共享接线点。
+- 当前这条入口不再依赖编译期 `StandardTestNext.App -> StandardTestNext.Test` 直接项目引用，而是通过反射装配 `StandardTestNext.Test.Application.AppSide.InProcAppQueryGatewaySeedFactory`；这样 App 主项目仍只显式依赖 `StandardTestNext.Contracts`，但默认 recent/detail 查询预览已经能吃到 seeded in-proc 的真实记录/报告数据，而不是空仓储或纯 stub。
+- Test 侧新增 `TestRecordQuerySeedFactory`，把默认 seeded rated params + realtime samples 收成共享种子契约；App 默认查询入口与后续 smoke/demo 宿主都可以复用同一套最小样本，不必再在多个入口各自手搓假数据。
+- `TestReportSelection.SelectLightweight(...)` 已收口成显式 fallback：优先 `IsLightweightEntry`，再退 `manifest`，最后退到最早保存的一条报告；recent/detail 查询组装不再依赖仓储偶然顺序。
+- `dotnet build StandardTestNext.sln --no-restore` 已再次复验通过，当前仍为 `0 warning / 0 error`。
 
 ## 下一步优先项
 - App/Test 双端统一配置约定已整理到 `docs/RUNTIME_CONFIGURATION.md`，后续新增运行参数优先补这份公共说明，再分别落到双端 README 与样例配置
