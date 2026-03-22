@@ -18,6 +18,8 @@ public sealed class TestRecordQueryViewAssembler
                 itemAttachments.TryGetValue(item.TestRecordItemId, out var attachments);
                 return BuildItemDetail(item, attachments ?? Array.Empty<RecordAttachment>());
             })
+            .OrderBy(x => x.SortOrder)
+            .ThenBy(x => x.ItemCode, StringComparer.Ordinal)
             .ToArray();
 
         var reportSummaries = reportSnapshots
@@ -56,7 +58,7 @@ public sealed class TestRecordQueryViewAssembler
         var lightweightReport = reports.FirstOrDefault(x => x.IsLightweightEntry);
 
         var itemDetails = record.Items
-            .Select(item => BuildItemDetail(item, Array.Empty<RecordAttachment>()))
+            .Select(item => BuildItemDetail(item, item.Attachments))
             .ToArray();
 
         return new TestRecordSummary
@@ -70,6 +72,7 @@ public sealed class TestRecordQueryViewAssembler
             TestTime = record.TestTime,
             ItemCount = record.Items.Count,
             RecordAttachmentCount = record.Attachments.Count,
+            ItemAttachmentBucketCount = record.Items.Count(item => item.Attachments.Count > 0),
             ReportCount = reports.Count,
             HasReportArtifacts = reports.Any(x => !string.IsNullOrWhiteSpace(x.ArtifactSavedPath)),
             LatestReportSavedAt = latestReport?.SavedAt,
@@ -88,13 +91,15 @@ public sealed class TestRecordQueryViewAssembler
         {
             TestRecordItemId = item.TestRecordItemId,
             ItemCode = item.ItemCode,
+            DisplayName = TestRecordItemDescriptorResolver.ResolveDisplayName(item.ItemCode, payload.RecordMode),
             MethodCode = item.MethodCode,
             IsValid = item.IsValid,
             Remark = item.Remark,
             HasRemark = !string.IsNullOrWhiteSpace(item.Remark),
             AttachmentCount = attachments.Count,
             SampleCount = payload.SampleCount,
-            RecordMode = payload.RecordMode
+            RecordMode = payload.RecordMode,
+            SortOrder = TestRecordItemDescriptorResolver.ResolveSortOrder(item.ItemCode, payload.RecordMode)
         };
     }
 }
