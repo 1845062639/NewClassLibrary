@@ -14,5 +14,5 @@ app.Run(messageBus, appOptions);
 
 static StandardTestNext.Contracts.ITestRecordQueryGateway BuildDefaultQueryGateway()
 {
-    return InProcAppQueryGatewayFactory.CreateSeededGateway();
+    return InProcAppQueryGatewayFactory.CreateDefaultGateway();
 }

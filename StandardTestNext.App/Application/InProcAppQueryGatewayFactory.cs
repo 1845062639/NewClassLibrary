@@ -5,7 +5,12 @@ namespace StandardTestNext.App.Application;
 
 public static class InProcAppQueryGatewayFactory
 {
-    public static ITestRecordQueryGateway CreateSeededGateway()
+    public static ITestRecordQueryGateway CreateDefaultGateway()
+    {
+        return TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway);
+    }
+
+    private static ITestRecordQueryGateway? TryCreateSeededGateway()
     {
         var typeName = "StandardTestNext.Test.Application.AppSide.InProcAppQueryGatewaySeedFactory, StandardTestNext.Test";
         var factoryType = Type.GetType(typeName, throwOnError: false);
@@ -16,12 +21,6 @@ public static class InProcAppQueryGatewayFactory
             types: Type.EmptyTypes,
             modifiers: null);
 
-        if (createMethod?.Invoke(null, null) is ITestRecordQueryGateway gateway)
-        {
-            return gateway;
-        }
-
-        throw new InvalidOperationException(
-            $"Unable to create seeded test record query gateway via '{typeName}'.");
+        return createMethod?.Invoke(null, null) as ITestRecordQueryGateway;
     }
 }
