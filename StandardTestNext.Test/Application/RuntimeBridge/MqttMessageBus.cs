@@ -269,60 +269,211 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
 
     private void EnsureSubscribed(string topic)
     {
+        var shouldSubscribe = false;
+
         lock (_sync)
         {
-            if (_subscribedTopics.Contains(topic))
+            if (_subscribedTopics.Add(topic))
             {
-                return;
+                shouldSubscribe = true;
             }
+        }
+
+        if (!shouldSubscribe)
+        {
+            return;
         }
 
         using var timeoutCts = CreateTimeoutCts(_options.SubscribeTimeoutSeconds);
 
         try
         {
-            _client.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic(topic).Build(), timeoutCts.Token).GetAwaiter().GetResult();
+            SubscribeCoreAsync(topic, timeoutCts.Token).GetAwaiter().GetResult();
         }
         catch (Exception ex) when (TryWrapTimeout(ex, timeoutCts, $"Subscribe to '{topic}' timed out after {_options.SubscribeTimeoutSeconds}s.", out var timeoutException))
         {
+            lock (_sync)
+            {
+                _subscribedTopics.Remove(topic);
+            }
+
             ScheduleReconnect();
             throw timeoutException;
         }
         catch
         {
+            lock (_sync)
+            {
+                _subscribedTopics.Remove(topic);
+            }
+
             ScheduleReconnect();
             throw;
         }
-
-        lock (_sync)
-        {
-            _subscribedTopics.Add(topic);
-        }
     }
 
-    private Action<JsonElement> CreateTypedHandler<T>(Action<T> handler)
+    private static Action<JsonElement> CreateTypedHandler<T>(Action<T> handler)
     {
         return payload =>
         {
             var message = payload.Deserialize<T>();
-            if (message is not null)
+            if (message is null)
             {
-                handler(message);
+                throw new JsonException($"Failed to deserialize MQTT payload to {typeof(T).FullName}.");
             }
+
+            handler(message);
         };
+    }
+
+    private void ScheduleReconnect()
+    {
+        CancellationTokenSource? reconnectCts = null;
+        var shouldStartLoop = false;
+
+        lock (_sync)
+        {
+            if (_disposed || _client.IsConnected || _reconnectScheduled)
+            {
+                return;
+            }
+
+            _reconnectScheduled = true;
+
+            if (_reconnectCts is null || _reconnectCts.IsCancellationRequested)
+            {
+                _reconnectCts?.Dispose();
+                _reconnectCts = new CancellationTokenSource();
+                reconnectCts = _reconnectCts;
+                shouldStartLoop = true;
+            }
+            else
+            {
+                reconnectCts = _reconnectCts;
+                shouldStartLoop = _reconnectLoopTask is null || _reconnectLoopTask.IsCompleted;
+            }
+
+            if (shouldStartLoop)
+            {
+                _reconnectLoopTask = Task.Run(() => ReconnectLoopAsync(reconnectCts!.Token));
+            }
+        }
+    }
+
+    private async Task ReconnectLoopAsync(CancellationToken cancellationToken)
+    {
+        var attempt = 0;
+
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            if (_disposed || _client.IsConnected)
+            {
+                break;
+            }
+
+            attempt++;
+
+            try
+            {
+                await _client.ConnectAsync(BuildClientOptions(), cancellationToken).ConfigureAwait(false);
+                break;
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                var delay = GetReconnectDelay(attempt);
+                Console.WriteLine($"[Bus:MQTT] reconnect attempt {attempt} failed: {ex.Message}. Retrying in {delay.TotalSeconds:0.#}s.");
+
+                try
+                {
+                    await Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
+        }
+
+        lock (_sync)
+        {
+            _reconnectScheduled = false;
+            if (_reconnectLoopTask?.IsCompleted ?? false)
+            {
+                _reconnectLoopTask = null;
+            }
+        }
+    }
+
+    private static TimeSpan GetReconnectDelay(int attempt)
+    {
+        var seconds = Math.Min(30, Math.Max(1, attempt * 2));
+        return TimeSpan.FromSeconds(seconds);
+    }
+
+    private static CancellationTokenSource CreateTimeoutCts(int timeoutSeconds)
+    {
+        var normalizedTimeout = timeoutSeconds <= 0 ? 5 : timeoutSeconds;
+        return new CancellationTokenSource(TimeSpan.FromSeconds(normalizedTimeout));
+    }
+
+    private static bool TryWrapTimeout(Exception exception, CancellationTokenSource timeoutCts, string message, out TimeoutException timeoutException)
+    {
+        if (timeoutCts.IsCancellationRequested && exception is OperationCanceledException)
+        {
+            timeoutException = new TimeoutException(message, exception);
+            return true;
+        }
+
+        timeoutException = null!;
+        return false;
+    }
+
+    private static void TryWaitReconnectLoop(Task? reconnectLoopTask)
+    {
+        if (reconnectLoopTask is null)
+        {
+            return;
+        }
+
+        try
+        {
+            reconnectLoopTask.Wait(TimeSpan.FromSeconds(2));
+        }
+        catch (AggregateException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private Task SubscribeCoreAsync(string topic, CancellationToken cancellationToken)
+    {
+        var options = new MqttClientSubscribeOptionsBuilder()
+            .WithTopicFilter(f => f.WithTopic(topic).WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce))
+            .Build();
+
+        return _client.SubscribeAsync(options, cancellationToken);
     }
 
     private string BuildTopic(string topic)
     {
-        var normalized = topic?.Trim();
-        if (string.IsNullOrWhiteSpace(normalized))
-        {
-            throw new ArgumentException("Message topic cannot be empty.", nameof(topic));
-        }
-
+        var trimmed = topic.Trim().Trim('/');
         return string.IsNullOrWhiteSpace(_topicPrefix)
-            ? normalized
-            : $"{_topicPrefix}/{normalized}";
+            ? trimmed
+            : $"{_topicPrefix}/{trimmed}";
+    }
+
+    private void ThrowIfDisposed()
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(MqttMessageBus));
+        }
     }
 
     private static string NormalizeTopicPrefix(string? prefix)
@@ -330,92 +481,5 @@ public sealed class MqttMessageBus : IMessageBus, IDisposable
         return string.IsNullOrWhiteSpace(prefix)
             ? string.Empty
             : prefix.Trim().Trim('/');
-    }
-
-    private static CancellationTokenSource CreateTimeoutCts(int seconds)
-    {
-        var effectiveSeconds = seconds <= 0 ? 5 : seconds;
-        return new CancellationTokenSource(TimeSpan.FromSeconds(effectiveSeconds));
-    }
-
-    private static bool TryWrapTimeout(Exception exception, CancellationTokenSource timeoutCts, string message, out TimeoutException timeoutException)
-    {
-        if (!timeoutCts.IsCancellationRequested)
-        {
-            timeoutException = null!;
-            return false;
-        }
-
-        timeoutException = new TimeoutException(message, exception);
-        return true;
-    }
-
-    private void ScheduleReconnect()
-    {
-        lock (_sync)
-        {
-            if (_disposed || _reconnectScheduled)
-            {
-                return;
-            }
-
-            _reconnectScheduled = true;
-            _reconnectCts = new CancellationTokenSource();
-            _reconnectLoopTask = Task.Run(() => ReconnectLoopAsync(_reconnectCts.Token));
-        }
-    }
-
-    private async Task ReconnectLoopAsync(CancellationToken cancellationToken)
-    {
-        try
-        {
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
-                {
-                    if (!_client.IsConnected)
-                    {
-                        await _client.ConnectAsync(BuildClientOptions(), cancellationToken);
-                    }
-
-                    lock (_sync)
-                    {
-                        _reconnectScheduled = false;
-                    }
-
-                    return;
-                }
-                catch when (!cancellationToken.IsCancellationRequested)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        finally
-        {
-            lock (_sync)
-            {
-                _reconnectScheduled = false;
-            }
-        }
-    }
-
-    private static void TryWaitReconnectLoop(Task? reconnectLoopTask)
-    {
-        try
-        {
-            reconnectLoopTask?.GetAwaiter().GetResult();
-        }
-        catch
-        {
-        }
-    }
-
-    private void ThrowIfDisposed()
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
     }
 }
