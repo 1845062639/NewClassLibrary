@@ -8,6 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\StandardTestNext.Contracts\StandardTestNext.Contracts.csproj" />
+    <ProjectReference Include="..\StandardTestNext.Test\StandardTestNext.Test.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MQTTnet" Version="4.3.6.1152" />

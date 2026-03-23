@@ -90,6 +90,7 @@ public sealed class TestBootstrap
 
         ITestReportArtifactWriter reportArtifactWriter = new FileSystemTestReportArtifactWriter();
         ITestRecordQueryService recordQueryService = new TestRecordQueryService(recordRepository, attachmentRepository, reportRepository);
+
         var appRecordQueryFacade = new TestRecordQueryFacade(recordQueryService);
         ITestReportQueryService reportQueryService = new TestReportQueryService(reportRepository);
         ITestProductDefinitionService productDefinitionService = new TestProductDefinitionService(productRepository);
@@ -122,6 +123,7 @@ public sealed class TestBootstrap
         var recentRecordViews = appRecordQueryFacade.ListRecentForAppAsync(5).GetAwaiter().GetResult();
         var reloadedRecord = recordQueryService.GetByRecordCodeAsync(aggregate.RecordCode).GetAwaiter().GetResult();
         var reloadedRecordView = appRecordQueryFacade.GetDetailForAppAsync(aggregate.RecordCode).GetAwaiter().GetResult();
+
         var appQueryGateway = new TestRecordQueryGatewayAdapter(appRecordQueryFacade);
         var appRecentRecords = appQueryGateway.ListRecentAsync(5).GetAwaiter().GetResult();
         var appRecordDetail = appQueryGateway.GetDetailAsync(aggregate.RecordCode).GetAwaiter().GetResult();
@@ -151,7 +153,7 @@ public sealed class TestBootstrap
         if (reloadedRecord is not null)
         {
             Console.WriteLine($"[Test] Reloaded record attachments: record={reloadedRecord.RecordAttachments.Count}, itemBuckets={reloadedRecord.ItemAttachments.Count}");
-            Console.WriteLine($"[Test] Reloaded item details: {string.Join(", ", reloadedRecord.ItemDetails.Select(x => $"{x.ItemCode}:{x.RecordMode}:{x.SampleCount}:remark={(x.HasRemark ? "Y" : "N")}"))}");
+            Console.WriteLine($"[Test] Reloaded item details: {string.Join(", ", reloadedRecord.ItemDetails.Select(x => $"{x.ItemCode}:{x.RecordMode}:{x.SampleCount}:legacy={x.LegacySampleCount}:power={x.LegacyPayload.PowerCurveImageCount}:temp={x.LegacyPayload.TempCurveImageCount}:vibration={x.LegacyPayload.VibrationCurveImageCount}:remark={(x.HasRemark ? "Y" : "N")}"))}");
             Console.WriteLine($"[Test] Reloaded mapping: samples={reloadedRecord.Mapping.TotalSampleCount}:kp={reloadedRecord.Mapping.KeyPointSampleCount}:cont={reloadedRecord.Mapping.ContinuousSampleCount}");
             Console.WriteLine($"[Test] Reloaded reports: snapshots={reloadedRecord.Reports.Count}, summaries={reloadedRecord.ReportSummaries.Count}, hasArtifacts={reloadedRecord.HasReportArtifacts}");
             if (reloadedRecordView is not null)

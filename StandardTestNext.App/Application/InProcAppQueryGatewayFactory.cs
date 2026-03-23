@@ -1,13 +1,20 @@
-using System.Reflection;
+using StandardTestNext.App.Application.Services;
 using StandardTestNext.Contracts;
+using StandardTestNext.Test.Application.AppSide;
 
 namespace StandardTestNext.App.Application;
 
 public static class InProcAppQueryGatewayFactory
 {
-    public static DefaultQueryGatewayResolution ResolveDefaultGateway()
+    public static DefaultQueryGatewayResolution ResolveDefaultGateway(AppQueryGatewayMode mode = AppQueryGatewayMode.Auto)
     {
-        var gateway = TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway);
+        var gateway = mode switch
+        {
+            AppQueryGatewayMode.SeededInProc => TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway),
+            AppQueryGatewayMode.NullFallback => TestRecordQueryGatewayFactory.Create(),
+            _ => TestRecordQueryGatewayFactory.Create(TryCreateSeededGateway)
+        };
+
         return new DefaultQueryGatewayResolution
         {
             Gateway = gateway,
@@ -19,16 +26,7 @@ public static class InProcAppQueryGatewayFactory
 
     private static ITestRecordQueryGateway? TryCreateSeededGateway()
     {
-        var typeName = "StandardTestNext.Test.Application.AppSide.InProcAppQueryGatewaySeedFactory, StandardTestNext.Test";
-        var factoryType = Type.GetType(typeName, throwOnError: false);
-        var createMethod = factoryType?.GetMethod(
-            "CreateSeededGateway",
-            BindingFlags.Public | BindingFlags.Static,
-            binder: null,
-            types: Type.EmptyTypes,
-            modifiers: null);
-
-        return createMethod?.Invoke(null, null) as ITestRecordQueryGateway;
+        return InProcAppQueryGatewaySeedFactory.CreateSeededGateway();
     }
 }
 

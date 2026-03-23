@@ -10,6 +10,15 @@ var validation = TestRuntimeConfigurationSupport.ValidateTest(testOptions, messa
 TestRuntimeConfigurationSupport.ReportTest(testOptions, messageBusOptions, validation);
 TestRuntimeConfigurationSupport.ThrowIfInvalid(validation);
 
+if (testOptions.RunSmokeTests)
+{
+    Console.WriteLine("[Test] Running smoke tests...");
+    TestRecordLegacyPayloadReaderSmokeTests.Run();
+    TestRecordQueryGatewayAdapterSmokeTests.Run();
+    Console.WriteLine("[Test] Smoke tests passed.");
+    return;
+}
+
 var messageBus = MessageBusFactory.Create(messageBusOptions);
 var test = new TestBootstrap();
 test.Run(messageBus, testOptions);

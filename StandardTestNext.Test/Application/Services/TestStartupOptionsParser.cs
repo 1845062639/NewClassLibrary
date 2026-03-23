@@ -24,6 +24,7 @@ public static class TestStartupOptionsParser
         var fileConfiguration = TestRuntimeConfigurationLoader.Load(configPath);
         var persistenceMode = fileConfiguration.PersistenceMode?.Trim();
         var sqliteDbPath = fileConfiguration.SQLiteDbPath?.Trim();
+        var runSmokeTests = false;
         var messageBus = CloneMessageBusConfiguration(fileConfiguration.MessageBus);
 
         MessageBusRuntimeOverrides.ApplyEnvironmentOverrides(messageBus);
@@ -67,6 +68,18 @@ public static class TestStartupOptionsParser
                 continue;
             }
 
+            if (string.Equals(arg, "--smoke", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(arg, "--run-smoke-tests", StringComparison.OrdinalIgnoreCase))
+            {
+                runSmokeTests = true;
+                continue;
+            }
+
+            if (string.Equals(arg, "--no-smoke", StringComparison.OrdinalIgnoreCase))
+            {
+                runSmokeTests = false;
+                continue;
+            }
         }
 
         MessageBusRuntimeOverrides.ApplyCommandLineOverrides(messageBus, args);
@@ -75,6 +88,7 @@ public static class TestStartupOptionsParser
         {
             PersistenceMode = string.IsNullOrWhiteSpace(persistenceMode) ? "memory" : persistenceMode,
             SQLiteDbPath = string.IsNullOrWhiteSpace(sqliteDbPath) ? null : sqliteDbPath,
+            RunSmokeTests = runSmokeTests,
             MessageBus = messageBus
         };
     }
