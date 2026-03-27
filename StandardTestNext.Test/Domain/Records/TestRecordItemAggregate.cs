@@ -8,5 +8,5 @@ public sealed class TestRecordItemAggregate
     public string DataJson { get; set; } = "{}";
     public string? Remark { get; set; }
     public bool IsValid { get; set; } = true;
-    public List<RecordAttachment> Attachments { get; } = new();
+    public List<RecordAttachment> Attachments { get; set; } = new();
 }

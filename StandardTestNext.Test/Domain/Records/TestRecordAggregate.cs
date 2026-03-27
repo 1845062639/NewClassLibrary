@@ -15,6 +15,6 @@ public sealed class TestRecordAggregate
     public bool IsValid { get; set; } = true;
     public ProductDefinition? TestProduct { get; set; }
     public ProductDefinition? AccompanyProduct { get; set; }
-    public List<RecordAttachment> Attachments { get; } = new();
-    public List<TestRecordItemAggregate> Items { get; } = new();
+    public List<RecordAttachment> Attachments { get; set; } = new();
+    public List<TestRecordItemAggregate> Items { get; set; } = new();
 }

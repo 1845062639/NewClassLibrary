@@ -79,6 +79,9 @@
   1. 深挖旧代码关键链路（STPApiClient / TestRecordHelper / CYDJ_20220921 / Motor_Y / ClassLibrary）
   2. 按 v1.0 方案重构 `next-gen` 骨架
   3. 准备 Motor_Y 最小闭环落地
+- 已新增 App 查询网关 `sqlite-inproc` 模式：App 可直接读取 Test 持久化到 SQLite 的真实记录/附件/报告摘要，不再只能消费 seeded in-proc 假数据。
+- 已完成一轮真实闭环验证：使用 Test `--persistence sqlite` 写入 `/root/.openclaw/workspace/next-gen/artifacts/test-persistence/app-readback-demo.db`，随后由 App `--query-gateway sqlite-inproc` 成功回读同一库中的 recent list / detail / report artifact。
+- 本轮同时修复 SQLite 聚合回读缺口：`TestRecordAggregate.Items` 与 `TestRecordItemAggregate.Attachments` 已改为可反序列化回填，解决了“SQLite 中 AggregateJson 完整但回读后 item/sample 统计为 0”的假通问题。
 
 ## 6. 参考范围
 
