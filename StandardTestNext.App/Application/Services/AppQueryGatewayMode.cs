@@ -4,5 +4,6 @@ public enum AppQueryGatewayMode
 {
     Auto,
     SeededInProc,
+    SqliteInProc,
     NullFallback
 }

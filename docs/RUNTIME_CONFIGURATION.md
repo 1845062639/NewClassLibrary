@@ -79,6 +79,8 @@ App/Test 双端统一使用同构配置结构：
   "deviceId": "mock-motor-device",
   "productKind": "Motor_Y",
   "samplingMode": "single",
+  "queryGateway": "auto",
+  "queryGatewaySqliteDbPath": "../StandardTestNext.Test/artifacts/test-persistence/standardtest-next.db",
   "messageBus": {
     "provider": "inmemory",
     "host": "127.0.0.1",
@@ -93,11 +95,15 @@ App/Test 双端统一使用同构配置结构：
 - `deviceId`：设备实例标识
 - `productKind`：产品型号/产品线标识
 - `samplingMode`：采样模式；当前支持 `single` / `burst`
+- `queryGateway`：App 查询网关模式；当前支持 `auto` / `seeded-inproc` / `sqlite-inproc` / `null-fallback`
+- `queryGatewaySqliteDbPath`：当 `queryGateway=sqlite-inproc` 时使用的 SQLite 数据库路径；`auto` 模式下若该路径存在，则优先读取真实 SQLite，否则回退 seeded in-proc
 
 ### 环境变量
 - `STNEXT_APP_DEVICE_ID`
 - `STNEXT_APP_PRODUCT_KIND`
 - `STNEXT_APP_SAMPLING_MODE`
+- `STNEXT_APP_QUERY_GATEWAY`
+- `STNEXT_APP_QUERY_GATEWAY_SQLITE_DB`
 - `STNEXT_MESSAGE_BUS`
 
 ### 命令行参数
@@ -105,6 +111,8 @@ App/Test 双端统一使用同构配置结构：
 - `--device-id`
 - `--product-kind`
 - `--sampling-mode`
+- `--query-gateway`
+- `--query-gateway-sqlite-db`
 
 ## Test 侧配置约定
 ### 配置文件：`appsettings.test.json`
@@ -161,6 +169,7 @@ App/Test 双端统一使用同构配置结构：
 - `host/port/clientId/topicPrefix/username/password` 在 `inmemory` 模式下主要是结构占位；在 `mqtt` 模式下已进入真实连接参数
 - 当前已补 `RuntimeConfigurationValidator` + `RuntimeConfigurationConsoleReporter`，并已对一批明显非法值启用启动前失败策略：不支持的 provider、非法端口、空 `clientId` / `topicPrefix`、非法 `samplingMode` / `persistenceMode`
 - 本小时继续把部署坑前移到启动前自检：当 `provider=mqtt` 时会校验 `messageBus.host` 非空，并尝试对 `host:port` 做一次轻量 TCP reachability probe；当前探测结果已结构化区分 `reachable / timeout / connection-refused / dns-failed / auth-failed / probe-failed`，成功时记 `Info`，失败时记带状态的 `Warning`，减少联调时人工翻异常栈的成本；当 `persistenceMode=sqlite` 且显式给出 `sqliteDbPath` 时，会在启动前探测目录可创建/可写
+- 当前 App 查询入口新增了 `sqlite-inproc` 模式：允许 App 在保持当前 in-proc query adapter 结构不变的前提下，直接读取 Test 持久化到 SQLite 的真实记录/附件/报告摘要；这一步先解决“App 默认只看 seed 假数据”的问题，但仍不等同于最终的跨进程/远程 query 边界
 - 当前仍未覆盖的主要缺口：真正基于 MQTT 协议握手的认证有效性与 topic ACL 判定、主动重连/backoff 的更细粒度观测、持久化文件锁竞争与更细粒度的 SQLite schema/version 自检
 
 ## 下一步

@@ -22,10 +22,12 @@ public static class AppStartupOptionsParser
         }
 
         var fileConfiguration = AppRuntimeConfigurationLoader.Load(configPath);
-        var deviceId = fileConfiguration.DeviceId?.Trim();
-        var productKind = fileConfiguration.ProductKind?.Trim();
-        var samplingMode = fileConfiguration.SamplingMode?.Trim();
-        var queryGatewayMode = AppQueryGatewayMode.Auto;
+        var fileOptions = fileConfiguration.ToStartupOptions();
+        var deviceId = fileOptions.DeviceId?.Trim();
+        var productKind = fileOptions.ProductKind?.Trim();
+        var samplingMode = fileOptions.SamplingMode?.Trim();
+        var queryGatewayMode = fileOptions.QueryGatewayMode;
+        var queryGatewaySqliteDbPath = fileOptions.QueryGatewaySqliteDbPath?.Trim();
         var messageBus = CloneMessageBusConfiguration(fileConfiguration.MessageBus);
 
         MessageBusRuntimeOverrides.ApplyEnvironmentOverrides(messageBus);
@@ -52,6 +54,12 @@ public static class AppStartupOptionsParser
         if (TryParseQueryGatewayMode(envQueryGatewayMode, out var parsedEnvQueryGatewayMode))
         {
             queryGatewayMode = parsedEnvQueryGatewayMode;
+        }
+
+        var envQueryGatewaySqliteDbPath = Environment.GetEnvironmentVariable("STNEXT_APP_QUERY_GATEWAY_SQLITE_DB")?.Trim();
+        if (!string.IsNullOrWhiteSpace(envQueryGatewaySqliteDbPath))
+        {
+            queryGatewaySqliteDbPath = envQueryGatewaySqliteDbPath;
         }
 
         for (var i = 0; i < args.Length; i++)
@@ -113,6 +121,17 @@ public static class AppStartupOptionsParser
                 continue;
             }
 
+            if (string.Equals(arg, "--query-gateway-sqlite-db", StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+            {
+                queryGatewaySqliteDbPath = args[++i].Trim();
+                continue;
+            }
+
+            if (arg.StartsWith("--query-gateway-sqlite-db=", StringComparison.OrdinalIgnoreCase))
+            {
+                queryGatewaySqliteDbPath = arg[("--query-gateway-sqlite-db=".Length)..].Trim();
+                continue;
+            }
         }
 
         MessageBusRuntimeOverrides.ApplyCommandLineOverrides(messageBus, args);
@@ -123,11 +142,12 @@ public static class AppStartupOptionsParser
             ProductKind = string.IsNullOrWhiteSpace(productKind) ? "Motor_Y" : productKind,
             SamplingMode = string.IsNullOrWhiteSpace(samplingMode) ? "single" : samplingMode,
             QueryGatewayMode = queryGatewayMode,
+            QueryGatewaySqliteDbPath = string.IsNullOrWhiteSpace(queryGatewaySqliteDbPath) ? null : queryGatewaySqliteDbPath,
             MessageBus = messageBus
         };
     }
 
-    private static bool TryParseQueryGatewayMode(string? value, out AppQueryGatewayMode mode)
+    public static bool TryParseQueryGatewayMode(string? value, out AppQueryGatewayMode mode)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
@@ -145,6 +165,10 @@ public static class AppStartupOptionsParser
             case "seeded":
             case "inproc":
                 mode = AppQueryGatewayMode.SeededInProc;
+                return true;
+            case "sqliteinproc":
+            case "sqlite":
+                mode = AppQueryGatewayMode.SqliteInProc;
                 return true;
             case "nullfallback":
             case "null":

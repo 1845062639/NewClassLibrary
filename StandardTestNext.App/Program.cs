@@ -20,9 +20,15 @@ var validation = RuntimeConfigurationValidator.ValidateApp(appOptions, messageBu
 RuntimeConfigurationConsoleReporter.ReportApp(appOptions, messageBusOptions, validation);
 RuntimeConfigurationConsoleReporter.ThrowIfInvalid(validation);
 
-var defaultQueryGateway = InProcAppQueryGatewayFactory.ResolveDefaultGateway(appOptions.QueryGatewayMode);
+var defaultQueryGateway = InProcAppQueryGatewayFactory.ResolveDefaultGateway(appOptions.QueryGatewayMode, appOptions.QueryGatewaySqliteDbPath);
 Console.WriteLine($"[App.Config] queryGateway.requested={appOptions.QueryGatewayMode}");
-Console.WriteLine($"[App.Config] queryGateway.resolved={(defaultQueryGateway.ResolutionKind == DefaultQueryGatewayResolutionKind.SeededInProc ? "seeded-inproc" : "null-fallback")}");
+Console.WriteLine($"[App.Config] queryGateway.sqliteDb={(string.IsNullOrWhiteSpace(appOptions.QueryGatewaySqliteDbPath) ? "<none>" : Path.GetFullPath(appOptions.QueryGatewaySqliteDbPath))}");
+Console.WriteLine($"[App.Config] queryGateway.resolved={defaultQueryGateway.ResolutionKind switch
+{
+    DefaultQueryGatewayResolutionKind.SqliteInProc => "sqlite-inproc",
+    DefaultQueryGatewayResolutionKind.SeededInProc => "seeded-inproc",
+    _ => "null-fallback"
+}}");
 
 var messageBus = MessageBusFactory.Create(messageBusOptions);
 var app = new AppBootstrap(defaultQueryGateway.Gateway);

@@ -7,6 +7,7 @@ public static class AppQueryGatewayResolutionSmokeTests
     public static void Run()
     {
         ShouldResolveSeededGatewayWhenExplicitlyRequested();
+        ShouldResolveSqliteGatewayWhenDbExists();
         ShouldResolveNullGatewayWhenExplicitlyRequested();
         ShouldParseQueryGatewayAliases();
         ShouldApplyEnvironmentQueryGatewayOverride();
@@ -25,6 +26,33 @@ public static class AppQueryGatewayResolutionSmokeTests
         if (list.Count == 0)
         {
             throw new InvalidOperationException("Explicit seeded-inproc mode returned an empty recent record list.");
+        }
+    }
+
+    private static void ShouldResolveSqliteGatewayWhenDbExists()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"stnext-app-query-{Guid.NewGuid():N}.db");
+        try
+        {
+            StandardTestNext.Test.Infrastructure.Persistence.SQLiteTestPersistence.EnsureCreated(dbPath);
+            var resolution = InProcAppQueryGatewayFactory.ResolveDefaultGateway(AppQueryGatewayMode.SqliteInProc, dbPath);
+            if (resolution.ResolutionKind != DefaultQueryGatewayResolutionKind.SqliteInProc)
+            {
+                throw new InvalidOperationException("Explicit sqlite-inproc mode should resolve to sqlite gateway.");
+            }
+
+            var list = resolution.Gateway.ListRecentAsync(5).GetAwaiter().GetResult();
+            if (list.Count != 0)
+            {
+                throw new InvalidOperationException("Fresh sqlite gateway should not return seeded records.");
+            }
+        }
+        finally
+        {
+            if (File.Exists(dbPath))
+            {
+                File.Delete(dbPath);
+            }
         }
     }
 
@@ -58,6 +86,21 @@ public static class AppQueryGatewayResolutionSmokeTests
             if (options.QueryGatewayMode != AppQueryGatewayMode.SeededInProc)
             {
                 throw new InvalidOperationException("Seeded query gateway alias parsing failed.");
+            }
+        }
+
+        var sqliteVariants = new[]
+        {
+            new[] { "--query-gateway", "sqlite-inproc" },
+            new[] { "--query-gateway=sqlite" }
+        };
+
+        foreach (var args in sqliteVariants)
+        {
+            var options = AppStartupOptionsParser.Parse(args);
+            if (options.QueryGatewayMode != AppQueryGatewayMode.SqliteInProc)
+            {
+                throw new InvalidOperationException("SQLite query gateway alias parsing failed.");
             }
         }
 

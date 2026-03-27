@@ -7,17 +7,28 @@ public sealed class AppRuntimeConfiguration
     public string DeviceId { get; init; } = "mock-motor-device";
     public string ProductKind { get; init; } = "Motor_Y";
     public string SamplingMode { get; init; } = "single";
+    public string? QueryGateway { get; init; }
+    public string? QueryGatewaySqliteDbPath { get; init; }
     public MessageBusConfiguration MessageBus { get; init; } = new();
 
     public string MessageBusProvider => MessageBus.Provider;
 
     public AppStartupOptions ToStartupOptions()
     {
+        var queryGatewayMode = AppQueryGatewayMode.Auto;
+        if (!string.IsNullOrWhiteSpace(QueryGateway)
+            && AppStartupOptionsParser.TryParseQueryGatewayMode(QueryGateway, out var parsedQueryGatewayMode))
+        {
+            queryGatewayMode = parsedQueryGatewayMode;
+        }
+
         return new AppStartupOptions
         {
             DeviceId = DeviceId,
             ProductKind = ProductKind,
             SamplingMode = SamplingMode,
+            QueryGatewayMode = queryGatewayMode,
+            QueryGatewaySqliteDbPath = QueryGatewaySqliteDbPath,
             MessageBus = MessageBus
         };
     }
