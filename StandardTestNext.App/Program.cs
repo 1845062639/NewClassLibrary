@@ -9,6 +9,7 @@ if (runSmokeTests)
 {
     Console.WriteLine("[App] Running smoke tests...");
     AppQueryGatewaySmokeTests.Run();
+    AppQueryGatewayResolutionSmokeTests.Run();
     Console.WriteLine("[App] Smoke tests passed.");
     return;
 }

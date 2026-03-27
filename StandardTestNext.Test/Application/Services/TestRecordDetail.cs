@@ -14,6 +14,6 @@ public sealed class TestRecordDetail
     public IReadOnlyList<TestReportPersistenceSummary> ReportSummaries { get; init; } = Array.Empty<TestReportPersistenceSummary>();
     public bool HasReports => Reports.Count > 0;
     public bool HasReportArtifacts => Reports.Any(x => !string.IsNullOrWhiteSpace(x.ArtifactSavedPath));
-    public TestReportSnapshot? LightweightReport => Reports.FirstOrDefault(x => x.IsLightweightEntry);
-    public TestReportSnapshot? PrimaryReport => Reports.FirstOrDefault(x => x.IsPrimaryEntry);
+    public TestReportSnapshot? LightweightReport => TestReportSelection.SelectLightweight(Reports);
+    public TestReportSnapshot? PrimaryReport => TestReportSelection.SelectPrimary(Reports);
 }

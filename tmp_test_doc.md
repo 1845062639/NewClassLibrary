@@ -1,43 +1,53 @@
-# Test维护文档
+Test维护文档
 
-## 本次维护说明
-- 维护时间：2026-03-21 23:41 Asia/Shanghai
-- 本小时先尝试检查并更新腾讯文档 Test 维护文档 `DWUNpRERyY01pcVhK`，但腾讯文档 MCP 仍返回 `400007 access limit`，因此本轮继续先更新本地草稿，待额度恢复后再同步。
-- 按文档待办继续直接推进了开发，不等用户喊继续：对现有 `scripts/run-mqtt-smoke.sh` 做了真实执行，验证当前 Test 侧 MQTT runtime bridge 是否已经真正进入跨进程 smoke 阶段。
-- 真实结果：`dotnet build StandardTestNext.sln` 通过；随后运行 `BROKER_HOST=127.0.0.1 BROKER_PORT=1883 RUN_SECONDS=3 bash scripts/run-mqtt-smoke.sh`，Test 进程在 `MqttMessageBus.EnsureConnected()` 处因 `127.0.0.1:1883` 无 broker 而报 `Connection refused`。
-- 这个结果是有效推进：它证明 Test 侧不是还停在编译期或配置装配期，而是已经实际走到了 MQTT provider 的真实连接路径。当前待解决问题已收敛为 broker 环境/连接诊断，而不是项目引用或 RuntimeBridge 结构问题。
+本次维护说明
+维护时间：2026-03-23 08:41 Asia/Shanghai
+本小时先复核了 Test 维护文档、next-gen 当前工作区与最近 build/run 状态，然后继续按待办直接推进 legacy payload 查询链路，而不是停留在文档同步。本轮真实推进重点不是再扩新的记录 DTO，而是把 legacy payload 摘要从“已经能查到”继续收口为“共享格式化口径 + 最小 smoke tests + 运行链路可见 + query adapter 可回归验证”。
 
-## 代码修改记录
-- 本小时检查并确认/纳入维护的文件：
-  - `next-gen/scripts/run-mqtt-smoke.sh`
-  - `next-gen/StandardTestNext.Test/Program.cs`
-  - `next-gen/StandardTestNext.App/Program.cs`
-  - `next-gen/docs/RUNTIME_CONFIGURATION.md`
-- 本小时真实更新的维护文档草稿：
-  - `next-gen/tmp_test_doc.md`
-  - `next-gen/tmp_app_doc.md`
-- 本小时真实执行记录：
-  - `dotnet build /root/.openclaw/workspace/next-gen/StandardTestNext.sln`
-  - `BROKER_HOST=127.0.0.1 BROKER_PORT=1883 RUN_SECONDS=3 bash scripts/run-mqtt-smoke.sh`
-- 本小时新增运行产物：
-  - `next-gen/artifacts/logs/app-mqtt-smoke.log`
-  - `next-gen/artifacts/logs/test-mqtt-smoke.log`
-- 真实验证结果：
-  - Test 侧在 `StandardTestNext.Test.Application.RuntimeBridge.MqttMessageBus.EnsureConnected()` 连接 broker 时收到 `SocketException (111): Connection refused`
-  - App 侧也在对应 `MqttMessageBus.EnsureConnected()` 路径收到相同错误
-  - 说明当前双端 MQTT 接入代码都已真实执行到连接阶段，失败原因集中在 broker 缺失/不可达
+代码修改记录
+本小时 Test 侧与 legacy payload 主线直接相关的真实代码变更：
+- next-gen/StandardTestNext.Contracts/TestRecordLegacyPayloadFormatter.cs
+  - 新增共享 formatter，统一 recent list / detail 摘要字符串口径，供 App/Test 两侧复用。
+- next-gen/StandardTestNext.Test/Application/Services/TestRecordLegacyPayloadReaderSmokeTests.cs
+  - 新增最小 smoke tests。
+  - 覆盖 legacy payload JSON 解析：LegacySampleCount、PowerCurveImageCount、TempCurveImageCount、VibrationCurveImageCount、HasIncomingPowerMetrics、HasWindingTemperatureMetrics。
+  - 覆盖 legacy payload 摘要格式化输出，避免后续口径漂移时只能靠人工对控制台。
+- next-gen/StandardTestNext.Test/Application/Services/TestRecordQueryGatewayAdapterSmokeTests.cs
+  - 新增 query gateway adapter smoke tests。
+  - 覆盖 detail/list 路径对 LegacyPayload 摘要字段的映射与格式化结果。
+- next-gen/StandardTestNext.Test/Program.cs
+  - 在进入 TestBootstrap 前先执行 smoke tests。
+- next-gen/StandardTestNext.Test/Application/Services/TestRecordConsolePresenter.cs
+  - legacy payload summary 保持可见，并继续输出 incoming / winding 标志位，便于与共享 formatter / App 输出对照。
+- next-gen/StandardTestNext.Test/Application/TestBootstrap.cs
+  - 保持 Reloaded item details 的 legacy / power / temp / vibration 输出，继续验证 query 回读链路。
 
-## Git 提交记录
-- 本小时提交前状态：最近提交仍为 `7b44fbd refactor: remove test project dependency on app runtime bridge`
-- 本轮准备补一笔提交，固化 smoke 验证与维护文档更新结果。
+本轮 Test 侧阶段性结果：
+- legacy payload 解析链路仍保持：payload reader -> item detail/query contract -> bootstrap/reload 输出 -> console summary。
+- 共享 formatter 已下沉到 Contracts，减少 App/Test 两侧继续各自拼接 legacy 摘要字符串。
+- smoke tests 已开始覆盖 legacy payload 基本解析与 query adapter 摘要映射，后续继续补更靠近真实消费路径的回归测试时有了最小支点。
 
-## 待办事项
-- 腾讯文档额度恢复后，把本地草稿同步到 Test 维护文档 `DWUNpRERyY01pcVhK`。
-- 在本机补可用 broker 后，再跑一轮真实 MQTT smoke，重点检查：
-  - Test 发布 `TestCommandContract` 是否可被 App 消费
-  - Test 持久化 SQLite 文件是否按预期生成
-  - 双端日志中是否已出现完整的 publish/subscribe 路径
-- 若仍失败，继续补更细的 MQTT 级错误诊断，而不是只停留在 socket refused。
+本小时真实验证：
+- dotnet build next-gen/StandardTestNext.sln --no-restore -nologo ✅
+- dotnet run --project next-gen/StandardTestNext.Test/StandardTestNext.Test.csproj --no-build -nologo ✅
+当前结果：0 Warning / 0 Error。
 
-## 下次更新时间
-- 2026-03-22 00:41 Asia/Shanghai
+Git 提交记录
+本小时没有新增 git 提交。
+当前 next-gen/ 最近相关提交仍为：
+- f3e83b7 feat: expose legacy payload summaries in query contracts
+- cd7973d refactor: add null fallback for app query gateway
+- 21bf4fe refactor: align test runtime bridge with shared contracts
+- a954cac refactor: unify test record contracts and partition pipeline
+- a9b8448 refactor: decouple app seed gateway wiring
+
+本小时新增改动仍处于工作区未提交状态。
+
+待办事项
+- 继续为 TestRecordQueryGatewayAdapter 增加更贴近 query contract 的最小回归测试，不只停留在 payload reader smoke tests。
+- 继续把 legacy 曲线图片、进线电参、绕组温度指标评估为更明确的 measurement / report artifact contract，而不是长期只保留摘要计数。
+- 继续收口 bootstrap / console 层的 legacy 摘要演示，把稳定输出迁到更明确的 presenter / application service 边界。
+- 在 legacy 摘要链路稳定后，再继续推进真实 App 查询消费与报告边界细化。
+
+下次更新时间
+2026-03-23 09:41（Asia/Shanghai）

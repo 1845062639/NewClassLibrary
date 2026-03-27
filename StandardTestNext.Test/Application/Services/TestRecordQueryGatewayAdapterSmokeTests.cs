@@ -11,6 +11,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
     public static void Run()
     {
         ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway();
+        ShouldPreserveReportSelectionMetadataThroughAppQueryGateway();
+        ShouldReturnNullDetailForUnknownRecordCode();
     }
 
     private static void ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway()
@@ -56,14 +58,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             }
         };
 
-        var recordRepository = new InMemoryTestRecordRepository();
-        var attachmentRepository = new InMemoryRecordAttachmentRepository();
-        var reportRepository = new InMemoryTestReportRepository();
-        recordRepository.SaveAsync(record).GetAwaiter().GetResult();
-
-        var queryService = new TestRecordQueryService(recordRepository, attachmentRepository, reportRepository);
-        var facade = new TestRecordQueryFacade(queryService);
-        var gateway = new TestRecordQueryGatewayAdapter(facade);
+        var gateway = CreateGateway(record);
 
         var list = gateway.ListRecentAsync(5).GetAwaiter().GetResult();
         var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
@@ -103,5 +98,151 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         {
             throw new InvalidOperationException($"TestRecordQueryGatewayAdapter summary smoke test failed. Expected '{expected}', got '{summary}'.");
         }
+    }
+
+    private static void ShouldPreserveReportSelectionMetadataThroughAppQueryGateway()
+    {
+        var now = DateTimeOffset.Parse("2026-03-23T09:00:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-REPORT-001",
+            ProductKind = "Motor_T",
+            TestKindCode = "Type",
+            TestTime = now,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = "TempRise",
+                    MethodCode = "M-Temp",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "SampleCount": 2,
+                      "RecordMode": "key-point"
+                    }
+                    """
+                }
+            }
+        };
+
+        var reports = new[]
+        {
+            new TestReportSnapshot
+            {
+                RecordCode = record.RecordCode,
+                Format = "markdown",
+                Content = "# primary markdown",
+                SavedAt = now.AddMinutes(5),
+                ArtifactFileName = "REC-SMOKE-REPORT-001.md",
+                ArtifactSavedPath = "/tmp/REC-SMOKE-REPORT-001.md",
+                IsPrimaryEntry = true,
+                IsLightweightEntry = false
+            },
+            new TestReportSnapshot
+            {
+                RecordCode = record.RecordCode,
+                Format = "json",
+                Content = "{\"recordCode\":\"REC-SMOKE-REPORT-001\"}",
+                SavedAt = now.AddMinutes(3),
+                ArtifactFileName = "REC-SMOKE-REPORT-001.json",
+                ArtifactSavedPath = "/tmp/REC-SMOKE-REPORT-001.json",
+                IsPrimaryEntry = false,
+                IsLightweightEntry = true
+            }
+        };
+
+        var gateway = CreateGateway(new[] { record }, reports);
+        var listItem = gateway.ListRecentAsync(5).GetAwaiter().GetResult().Single();
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+
+        if (listItem.ReportCount != 2
+            || !listItem.HasReportArtifacts
+            || listItem.PrimaryReportFormat != "markdown"
+            || listItem.PrimaryReportArtifactFileName != "REC-SMOKE-REPORT-001.md"
+            || listItem.LightweightReportFormat != "json"
+            || listItem.LightweightReportArtifactFileName != "REC-SMOKE-REPORT-001.json")
+        {
+            throw new InvalidOperationException("TestRecordQueryGatewayAdapter list report metadata smoke test failed.");
+        }
+
+        if (detail is null
+            || !detail.HasReports
+            || !detail.HasReportArtifacts
+            || detail.PrimaryReportFormat != "markdown"
+            || detail.PrimaryReportArtifactFileName != "REC-SMOKE-REPORT-001.md"
+            || detail.LightweightReportFormat != "json"
+            || detail.LightweightReportArtifactFileName != "REC-SMOKE-REPORT-001.json"
+            || detail.ReportSummaries.Count != 2
+            || !detail.ReportSummaries.Any(summary => summary.IsPrimaryEntry && summary.Format == "markdown")
+            || !detail.ReportSummaries.Any(summary => summary.IsLightweightEntry && summary.Format == "json"))
+        {
+            throw new InvalidOperationException("TestRecordQueryGatewayAdapter detail report metadata smoke test failed.");
+        }
+    }
+
+    private static void ShouldReturnNullDetailForUnknownRecordCode()
+    {
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-UNKNOWN-BASE",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = DateTimeOffset.Parse("2026-03-23T10:00:00+08:00")
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync("REC-NOT-FOUND").GetAwaiter().GetResult();
+        if (detail is not null)
+        {
+            throw new InvalidOperationException("TestRecordQueryGatewayAdapter should return null for unknown record code.");
+        }
+    }
+
+    private static TestRecordQueryGatewayAdapter CreateGateway(params TestRecordAggregate[] records)
+    {
+        return CreateGateway(records, Array.Empty<TestReportSnapshot>());
+    }
+
+    private static TestRecordQueryGatewayAdapter CreateGateway(
+        IReadOnlyList<TestRecordAggregate> records,
+        IReadOnlyList<TestReportSnapshot> reports)
+    {
+        var recordRepository = new InMemoryTestRecordRepository();
+        var attachmentRepository = new InMemoryRecordAttachmentRepository();
+        var reportRepository = new InMemoryTestReportRepository();
+
+        foreach (var record in records)
+        {
+            recordRepository.SaveAsync(record).GetAwaiter().GetResult();
+        }
+
+        foreach (var report in reports)
+        {
+            var document = new TestReportDocument
+            {
+                RecordCode = report.RecordCode
+            };
+
+            reportRepository.SaveAsync(document, report.Format, report.Content).GetAwaiter().GetResult();
+            reportRepository.SaveSummaryAsync(new TestReportPersistenceSummary
+            {
+                RecordCode = report.RecordCode,
+                Format = report.Format,
+                ExportedAt = report.SavedAt,
+                ContentLength = report.Content.Length,
+                ArtifactFileName = report.ArtifactFileName,
+                ArtifactSavedPath = report.ArtifactSavedPath,
+                IsLightweightEntry = report.IsLightweightEntry,
+                IsPrimaryEntry = report.IsPrimaryEntry
+            }).GetAwaiter().GetResult();
+        }
+
+        var queryService = new TestRecordQueryService(recordRepository, attachmentRepository, reportRepository);
+        var facade = new TestRecordQueryFacade(queryService);
+        return new TestRecordQueryGatewayAdapter(facade);
     }
 }
