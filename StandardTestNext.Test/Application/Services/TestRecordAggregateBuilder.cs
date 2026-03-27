@@ -6,6 +6,7 @@ namespace StandardTestNext.Test.Application.Services;
 public sealed class TestRecordAggregateBuilder
 {
     private readonly TestRecordItemMapper _itemMapper = new();
+    private readonly MotorYTrialRecordBuilder _motorYTrialRecordBuilder = new();
 
     public TestRecordBuildResult BuildDemoRecord(
         MotorRatedParamsContract rated,
@@ -27,6 +28,11 @@ public sealed class TestRecordAggregateBuilder
             TestProduct = productDefinition
         };
 
+        foreach (var trialItem in _motorYTrialRecordBuilder.BuildTrialItems(rated, samples))
+        {
+            record.Items.Add(trialItem);
+        }
+
         var mappingResult = _itemMapper.MapRealtimeSamples(samples, legacySamples);
         foreach (var item in mappingResult.Items)
         {
@@ -35,11 +41,11 @@ public sealed class TestRecordAggregateBuilder
 
         var statistics = new TestRecordStatistics
         {
-            ItemCount = mappingResult.Items.Count,
+            ItemCount = record.Items.Count,
             TotalSampleCount = mappingResult.Partitions.Sum(x => x.SampleCount),
             KeyPointSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == TestRecordSampleModes.KeyPointOnly).Sum(x => x.SampleCount),
             ContinuousSampleCount = mappingResult.Partitions.Where(x => x.RecordMode == TestRecordSampleModes.Continuous).Sum(x => x.SampleCount),
-            ItemCodes = mappingResult.Items.Select(x => x.ItemCode).ToArray()
+            ItemCodes = record.Items.Select(x => x.ItemCode).ToArray()
         };
 
         return new TestRecordBuildResult
