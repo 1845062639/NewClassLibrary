@@ -143,6 +143,27 @@ public sealed class TestBootstrap
         var loadALegacyShape = MotorYLoadALegacyShape.FromJson(loadAPayload ?? string.Empty);
         var loadBPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LoadB")?.DataJson;
         var loadBLegacyShape = MotorYLoadBLegacyShape.FromJson(loadBPayload ?? string.Empty);
+        var normalizedRealStpAliases = new[]
+        {
+            "直流电阻测定",
+            "陪试直流电阻测定",
+            "空载特性试验",
+            "空载试验",
+            "空载试验（出厂）",
+            "空载特性测量",
+            "空载特性完全试验",
+            "热试验",
+            "热试验2",
+            "温度计法热试验",
+            "A法负载试验",
+            "B法负载试验",
+            "堵转特性试验",
+            "堵转试验",
+            "堵转试验（出厂）",
+            "C法负载试验"
+        }
+            .Select(code => $"{code}->{MotorYLegacyItemCodeNormalizer.Normalize(code)}:core={(MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(code) ? "Y" : "N")}")
+            .ToArray();
 
         Console.WriteLine($"[Test] Product definition resolved: {productDefinition.ProductId} / {productDefinition.ProductKind} / {productDefinition.Model}");
         Console.WriteLine($"[Test] Aggregate persisted: record={aggregate.TestRecordId}, items={aggregate.Items.Count}");
@@ -163,6 +184,7 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Thermal legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatThermal(thermalLegacyShape)}");
         Console.WriteLine($"[Test] LoadA legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadA(loadALegacyShape)}");
         Console.WriteLine($"[Test] LoadB legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadB(loadBLegacyShape)}");
+        Console.WriteLine($"[Test] Real stp alias normalization: {string.Join(", ", normalizedRealStpAliases)}");
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)

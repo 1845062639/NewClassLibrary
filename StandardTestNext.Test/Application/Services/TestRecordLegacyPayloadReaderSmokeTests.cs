@@ -11,6 +11,7 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
         ShouldHandleLegacyPayloadEdgeCases();
         ShouldFormatLegacyPayloadSummaryWithMetricsFlags();
         ShouldFormatListSummaryWithPayloadFlags();
+        ShouldNormalizeMotorYLegacyItemCodesFromRealStpAliases();
     }
 
     private static void ShouldParseLegacyPayloadSummaryFromJson()
@@ -173,6 +174,44 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
         if (!string.Equals(summary, expected, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Legacy payload list formatter smoke test failed. Expected '{expected}', got '{summary}'.");
+        }
+    }
+
+    private static void ShouldNormalizeMotorYLegacyItemCodesFromRealStpAliases()
+    {
+        var cases = new (string Alias, string Canonical, bool IsCoreTrial)[]
+        {
+            ("直流电阻测定", MotorYTestMethodCodes.DcResistance, true),
+            ("陪试直流电阻测定", MotorYTestMethodCodes.DcResistance, true),
+            ("空载特性试验", MotorYTestMethodCodes.NoLoad, true),
+            ("空载试验", MotorYTestMethodCodes.NoLoad, true),
+            ("空载试验（出厂）", MotorYTestMethodCodes.NoLoad, true),
+            ("空载特性测量", MotorYTestMethodCodes.NoLoad, true),
+            ("空载特性完全试验", MotorYTestMethodCodes.NoLoad, true),
+            ("热试验", MotorYTestMethodCodes.HeatRun, true),
+            ("热试验2", MotorYTestMethodCodes.HeatRun, true),
+            ("温度计法热试验", MotorYTestMethodCodes.HeatRun, true),
+            ("陪试热试验", MotorYTestMethodCodes.HeatRun, true),
+            ("A法负载试验", MotorYTestMethodCodes.LoadA, true),
+            ("B法负载试验", MotorYTestMethodCodes.LoadB, true),
+            ("堵转特性试验", MotorYTestMethodCodes.LockedRotor, true),
+            ("堵转试验", MotorYTestMethodCodes.LockedRotor, true),
+            ("堵转试验（出厂）", MotorYTestMethodCodes.LockedRotor, true),
+            ("C法负载试验", "C法负载试验", false)
+        };
+
+        foreach (var (alias, canonical, isCoreTrial) in cases)
+        {
+            var normalized = MotorYLegacyItemCodeNormalizer.Normalize(alias);
+            if (!string.Equals(normalized, canonical, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y alias normalize smoke test failed for '{alias}'. Expected '{canonical}', got '{normalized}'.");
+            }
+
+            if (MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(alias) != isCoreTrial)
+            {
+                throw new InvalidOperationException($"Motor_Y core-trial detect smoke test failed for '{alias}'.");
+            }
         }
     }
 
