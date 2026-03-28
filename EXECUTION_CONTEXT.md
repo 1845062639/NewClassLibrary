@@ -85,6 +85,7 @@
 - 当前 demo 记录骨架已从纯技术分桶推进到一版 Motor_Y 业务试验项骨架：在保留 `RealtimeKeyPoints` / `RealtimeContinuous` 的同时，新增 `MotorY.DcResistance`、`MotorY.NoLoad`、`MotorY.HeatRun`、`MotorY.LoadA`、`MotorY.LoadB`、`MotorY.LockedRotor` 六类试验项，用于让后续详情页、报表与方法映射围绕业务项而非仅围绕采样桶推进。
 - 已锁定旧系统对应基线：`Settings_CYDJ.json` 中的 Motor_Y 方法名与 `StandardTest.Library/TestData/Motor/Y/*`、`Algorithm/Motor/Algorithm_Motor_Y.cs` 中的对象/算法入口已确认可作为 next-gen 对齐来源；当前已开始让 payload reader 识别 `DataList / RawDataList / ResultDataList / Data1List / Data2List` 这类旧结构形状，避免业务试验项在详情查询中全部显示为 0 样本空壳。
 - `MotorYTrialRecordBuilder` 已开始把 6 个业务试验项 payload 直接改造成接近旧 `TestData_Motor_Y_*` 的 JSON 结构：直流电阻对齐 `Ruv/Rvw/Rwu/R1/θ1c/ΔR/R`，空载对齐 `DataList + P0/I0/Pfw/Pfe`，堵转对齐 `DataList + Ikn/Pkn/Tkn`，热试验对齐 `Data1List/Data2List + θw/Δθ`，A/B 法对齐 `RawDataList/ResultDataList` 主字段，为后续迁移算法与报表字段打底。
+- 已在 next-gen 内新增轻量兼容层 `MotorYNoLoadLegacyShape` + `MotorYNoLoadLegacyPreviewFormatter`：先不强行引入旧 net48 `StandardTest.Library`，而是在当前 net8 主干中验证 NoLoad payload 是否已经具备“可按旧对象形状成功反序列化”的条件，为后续逐项增加 legacy-shape mapper/adapter 做试点。
 
 ## 6. 参考范围
 

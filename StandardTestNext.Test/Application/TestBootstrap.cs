@@ -133,6 +133,8 @@ public sealed class TestBootstrap
         var reloadedProductDefinition = productDefinitionQueryService.GetByKindAsync(rated.ProductKind).GetAwaiter().GetResult();
         var lightweightReport = recordReports.FirstOrDefault(x => x.IsLightweightEntry);
         var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
+        var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
+        var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
 
         Console.WriteLine($"[Test] Product definition resolved: {productDefinition.ProductId} / {productDefinition.ProductKind} / {productDefinition.Model}");
         Console.WriteLine($"[Test] Aggregate persisted: record={aggregate.TestRecordId}, items={aggregate.Items.Count}");
@@ -148,6 +150,7 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Primary record report: {(primaryRecordReport is null ? "<none>" : $"{primaryRecordReport.Format}:{primaryRecordReport.ArtifactFileName}")}");
         Console.WriteLine($"[Test] Recent report summaries: {string.Join(", ", recentReportSummaries.Select(x => $"{x.RecordCode}:{x.Format}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
         Console.WriteLine($"[Test] Recent products: {string.Join(", ", recentProducts.Select(x => $"{x.ProductKind}:{x.Model}:{x.Code}"))}");
+        Console.WriteLine($"[Test] NoLoad legacy-shape preview: {MotorYNoLoadLegacyPreviewFormatter.Format(noLoadLegacyShape)}");
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)
