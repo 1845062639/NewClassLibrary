@@ -75,7 +75,7 @@ ORDER BY rowid DESC;";
                 continue;
             }
 
-            if (!IsValidBaselineCandidate(canonicalCode, dataJson))
+            if (!MotorYSamplePayloadCandidateValidator.IsValidBaselineCandidate(canonicalCode, dataJson))
             {
                 continue;
             }

@@ -475,12 +475,20 @@ ORDER BY COALESCE(Code, ''), Method;";
 
     private static IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> LoadMotorYMethodAdaptationPlans(SqliteConnection connection)
     {
+        var samplePayloads = LoadMotorYSamplePayloadByCanonicalCode(connection);
+
         return LoadMotorYMethodDecisions(connection)
             .Select(decision =>
             {
                 var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
                 var selectedRoute = selection.SelectedRoute;
                 var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
+                var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
+                samplePayloads.TryGetValue(selection.CanonicalCode, out var sampleDataJson);
+                var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
+                    selection.CanonicalCode,
+                    requiredPayloadFields,
+                    sampleDataJson);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -508,8 +516,12 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
                     RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
                     UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
-                    RequiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>(),
+                    RequiredPayloadFields = requiredPayloadFields,
                     RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+                    CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,
+                    MissingRequiredPayloadFieldCount = coverage.MissingRequiredPayloadFieldCount,
+                    MissingRequiredPayloadFields = coverage.MissingRequiredPayloadFields,
+                    RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
@@ -525,6 +537,46 @@ ORDER BY COALESCE(Code, ''), Method;";
             .Select(MotorYMethodRouteSelectionSnapshotFactory.Create)
             .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static Dictionary<string, string> LoadMotorYSamplePayloadByCanonicalCode(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT Code, Method, COALESCE(Data, '{}')
+FROM TestRecordItems
+WHERE Code IN (
+    '直流电阻测定',
+    '空载试验',
+    '空载特性试验',
+    '热试验',
+    'A法负载试验',
+    'B法负载试验',
+    '堵转试验',
+    '堵转特性试验')
+ORDER BY rowid DESC;";
+
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode) || result.ContainsKey(canonicalCode))
+            {
+                continue;
+            }
+
+            var dataJson = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+            if (!MotorYSamplePayloadCandidateValidator.IsValidBaselineCandidate(canonicalCode, dataJson))
+            {
+                continue;
+            }
+
+            result[canonicalCode] = dataJson;
+        }
+
+        return result;
     }
 
     private static IReadOnlyList<MotorYMethodRecommendationSnapshot> LoadMotorYMethodRecommendations(SqliteConnection connection)

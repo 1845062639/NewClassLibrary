@@ -28,6 +28,10 @@ public sealed class MotorYMethodAdaptationPlanContract
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public int CoveredRequiredPayloadFieldCount { get; init; }
+    public int MissingRequiredPayloadFieldCount { get; init; }
+    public IReadOnlyList<string> MissingRequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public string RequiredPayloadFieldCoverageSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;

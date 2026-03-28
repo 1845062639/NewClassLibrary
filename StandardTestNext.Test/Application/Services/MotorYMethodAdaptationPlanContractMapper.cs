@@ -11,6 +11,11 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(snapshot);
         var selectedProfile = selection.SelectedRoute;
         var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
+        var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
+        var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
+            selection.CanonicalCode,
+            requiredPayloadFields,
+            null);
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -38,8 +43,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
-            RequiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>(),
+            RequiredPayloadFields = requiredPayloadFields,
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+            CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,
+            MissingRequiredPayloadFieldCount = coverage.MissingRequiredPayloadFieldCount,
+            MissingRequiredPayloadFields = coverage.MissingRequiredPayloadFields,
+            RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
             DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
