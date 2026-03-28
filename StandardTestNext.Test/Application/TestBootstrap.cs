@@ -196,6 +196,10 @@ public sealed class TestBootstrap
             if (reloadedRecordView is not null)
             {
                 Console.WriteLine($"[Test] Reloaded record view: {reloadedRecordView.RecordCode}:{reloadedRecordView.ProductDisplayName}:items={reloadedRecordView.ItemCount}:samples={reloadedRecordView.SampleCount}:reports={reloadedRecordView.ReportSummaries.Count}");
+                if (reloadedRecordView.MotorYMethodDecisions.Count > 0)
+                {
+                    Console.WriteLine($"[Test] Reloaded Motor_Y method decisions: {FormatMethodDecisions(reloadedRecordView.MotorYMethodDecisions)}");
+                }
             }
         }
         new TestRecordConsolePresenter().PrintSummary(aggregate, buildResult.Statistics, primaryReport.Format, primaryReport.Content);
@@ -208,5 +212,25 @@ public sealed class TestBootstrap
         return string.IsNullOrWhiteSpace(mode)
             ? "memory"
             : mode.Trim().ToLowerInvariant();
+    }
+
+    private static string FormatMethodDecisions(IReadOnlyList<MotorYMethodDecisionSnapshot> decisions)
+    {
+        return string.Join(", ", decisions.Select(FormatMethodDecisionSnapshot));
+    }
+
+    private static string FormatMethodDecisionSnapshot(MotorYMethodDecisionSnapshot decision)
+    {
+        var baseline = decision.BaselineRoute is null
+            ? "baseline=<none>"
+            : $"baseline={decision.BaselineRoute.MethodValue}/{decision.BaselineRoute.ProfileKey}:{decision.BaselineCount}";
+        var dominant = decision.DominantRoute is null
+            ? "dominant=<none>"
+            : $"dominant={decision.DominantRoute.MethodValue}/{decision.DominantRoute.ProfileKey}:{decision.DominantCount}:{decision.DominantShare:P1}";
+        var distributions = decision.Distributions.Count == 0
+            ? "dist=<none>"
+            : "dist=" + string.Join("|", decision.Distributions.Select(x => $"{x.MethodValue}:{x.Count}:{x.Share:P1}:{x.Route?.VariantKind ?? "unknown"}"));
+
+        return $"{decision.CanonicalCode}[{baseline};{dominant};prioritize={(decision.ShouldPrioritizeDominantOverBaseline ? "Y" : "N")};{distributions}]";
     }
 }

@@ -364,6 +364,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertDistribution(decisions, MotorYTestMethodCodes.NoLoad, 59, 2, 0.6667d, false);
         AssertDistribution(decisions, MotorYTestMethodCodes.NoLoad, 0, 1, 0.3333d, true);
         AssertDistribution(decisions, MotorYTestMethodCodes.LoadA, 4, 1, 1d, true);
+        AssertDistributionOrdering(decisions, MotorYTestMethodCodes.NoLoad, 59, 0);
     }
 
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
@@ -478,6 +479,23 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
     }
 
+    private static void AssertDistributionOrdering(
+        IReadOnlyDictionary<string, MotorYMethodDecisionContract> decisions,
+        string canonicalCode,
+        params int[] expectedMethodsInOrder)
+    {
+        if (!decisions.TryGetValue(canonicalCode, out var decision))
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test missing decision '{canonicalCode}' for ordering assertion.");
+        }
+
+        var actual = decision.Distributions.Select(x => x.MethodValue).ToArray();
+        if (!actual.SequenceEqual(expectedMethodsInOrder))
+        {
+            throw new InvalidOperationException(
+                $"Motor_Y method decision query smoke test distribution ordering mismatch for '{canonicalCode}'. expected={string.Join(",", expectedMethodsInOrder)}, actual={string.Join(",", actual)}");
+        }
+    }
 
     private static void ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile()
     {

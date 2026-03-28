@@ -76,8 +76,9 @@ public static class TestRecordViewMapper
     private static IReadOnlyList<MotorYMethodDecisionSnapshot> BuildMotorYMethodDecisions(IReadOnlyList<TestRecordItemDetail> itemDetails)
     {
         return itemDetails
-            .Where(item => item.BuildProfile is not null && !string.IsNullOrWhiteSpace(item.BuildProfile.CanonicalCode))
-            .Select(item => item.BuildProfile!)
+            .Select(item => item.BuildProfile)
+            .Where(profile => profile is not null && !string.IsNullOrWhiteSpace(profile.CanonicalCode))
+            .Select(profile => profile!)
             .GroupBy(profile => profile.CanonicalCode, StringComparer.Ordinal)
             .Select(group =>
             {
