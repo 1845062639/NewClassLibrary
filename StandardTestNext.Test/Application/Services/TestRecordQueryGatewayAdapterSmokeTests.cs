@@ -357,7 +357,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
 
         var decisions = detail.MotorYMethodDecisions.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
         AssertMethodDecision(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1, 1, 1, false, 1d);
-        AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, true, 0.6667d);
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, false, 0.6667d);
         AssertMethodDecision(decisions, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, false, 1d);
 
         AssertDistribution(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1d, true);
@@ -450,7 +450,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             ? expectedDominantMethod
             : expectedBaselineMethod;
         var expectedRecommendedStrategy = expectedPrioritize
-            ? "dominant-over-baseline"
+            ? "dominant-threshold-over-baseline"
             : "baseline";
         if (decision.RecommendedProfile is null
             || decision.RecommendedProfile.MethodValue != expectedRecommendedMethod

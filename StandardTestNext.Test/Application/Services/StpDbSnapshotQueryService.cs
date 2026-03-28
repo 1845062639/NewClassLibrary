@@ -136,6 +136,13 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorRatedParamsValueDistribution(connection);
     }
 
+    public IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> ListMotorYMethodAdaptationPlans()
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+        return LoadMotorYMethodAdaptationPlans(connection);
+    }
+
     public IReadOnlyList<MotorYMethodRecommendationSnapshot> ListMotorYMethodRecommendations()
     {
         if (!File.Exists(_dbPath))
@@ -450,6 +457,39 @@ ORDER BY COALESCE(Code, ''), Method;";
             .OrderBy(snapshot => snapshot.FieldName, StringComparer.Ordinal)
             .ThenByDescending(snapshot => snapshot.Count)
             .ThenBy(snapshot => snapshot.RawValue, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> LoadMotorYMethodAdaptationPlans(SqliteConnection connection)
+    {
+        return LoadMotorYMethodDecisions(connection)
+            .Select(decision =>
+            {
+                var selectedRoute = decision.RecommendedRoute;
+                var selectedCount = decision.ShouldPrioritizeDominantOverBaseline
+                    ? decision.DominantCount
+                    : decision.BaselineCount;
+
+                return new MotorYMethodAdaptationPlanSnapshot
+                {
+                    CanonicalCode = decision.CanonicalCode,
+                    TotalCount = decision.TotalCount,
+                    BaselineRoute = decision.BaselineRoute,
+                    BaselineCount = decision.BaselineCount,
+                    DominantRoute = decision.DominantRoute,
+                    DominantCount = decision.DominantCount,
+                    SelectedRoute = selectedRoute,
+                    SelectedCount = selectedCount,
+                    SelectionStrategy = decision.RecommendedStrategy,
+                    ShouldUseDominantRoute = decision.ShouldPrioritizeDominantOverBaseline,
+                    DominantShare = decision.DominantShare,
+                    DominantOverrideThreshold = decision.DominantOverrideThreshold,
+                    AlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty,
+                    SettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty,
+                    LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
+                    Distributions = decision.Distributions
+                };
+            })
             .ToArray();
     }
 
