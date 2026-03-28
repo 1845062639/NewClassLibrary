@@ -398,6 +398,17 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
         AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.NoLoad, 4, 0, 1, 59, 3, 59, 3, true, 0.75d, "dominant-threshold-over-baseline");
         AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, 4, 1, false, 1d, "baseline");
+
+        var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00 %)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
+        }
+
+        if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00 %), dominant 59 (delivery)=3/4 (75.00 %)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test comparison summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.BaselineDominantComparisonSummary}'");
+        }
     }
 
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)

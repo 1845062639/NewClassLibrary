@@ -194,8 +194,38 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
+            SelectedMethodSummary = BuildSelectedMethodSummary(snapshot, selectedProfile, selectedCount),
+            BaselineDominantComparisonSummary = BuildBaselineDominantComparisonSummary(snapshot),
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
         };
+    }
+
+    private static string BuildSelectedMethodSummary(
+        MotorYMethodDecisionSnapshot snapshot,
+        MotorYLegacyAlgorithmRoute? selectedProfile,
+        int selectedCount)
+    {
+        var selectedMethod = selectedProfile?.MethodValue;
+        var selectedMethodName = selectedProfile?.LegacyMethodName ?? snapshot.CanonicalCode;
+        var selectedVariant = selectedProfile?.VariantKind ?? string.Empty;
+        var share = snapshot.TotalCount <= 0
+            ? 0d
+            : Math.Round((double)selectedCount / snapshot.TotalCount, 4, MidpointRounding.AwayFromZero);
+
+        return $"selected {selectedMethodName} method {selectedMethod} ({selectedVariant}) covering {selectedCount}/{snapshot.TotalCount} items ({share:P2})";
+    }
+
+    private static string BuildBaselineDominantComparisonSummary(MotorYMethodDecisionSnapshot snapshot)
+    {
+        var baselineMethod = snapshot.BaselineRoute?.MethodValue;
+        var dominantMethod = snapshot.DominantRoute?.MethodValue;
+        var baselineVariant = snapshot.BaselineRoute?.VariantKind ?? string.Empty;
+        var dominantVariant = snapshot.DominantRoute?.VariantKind ?? string.Empty;
+        var baselineShare = snapshot.TotalCount <= 0
+            ? 0d
+            : Math.Round((double)snapshot.BaselineCount / snapshot.TotalCount, 4, MidpointRounding.AwayFromZero);
+
+        return $"baseline {baselineMethod} ({baselineVariant})={snapshot.BaselineCount}/{snapshot.TotalCount} ({baselineShare:P2}), dominant {dominantMethod} ({dominantVariant})={snapshot.DominantCount}/{snapshot.TotalCount} ({snapshot.DominantShare:P2})";
     }
 
     private static string BuildSelectionReason(
