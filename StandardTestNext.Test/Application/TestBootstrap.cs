@@ -135,6 +135,14 @@ public sealed class TestBootstrap
         var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
+        var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
+        var lockRotorLegacyShape = MotorYLockRotorLegacyShape.FromJson(lockRotorPayload ?? string.Empty);
+        var thermalPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.HeatRun")?.DataJson;
+        var thermalLegacyShape = MotorYThermalLegacyShape.FromJson(thermalPayload ?? string.Empty);
+        var loadAPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LoadA")?.DataJson;
+        var loadALegacyShape = MotorYLoadALegacyShape.FromJson(loadAPayload ?? string.Empty);
+        var loadBPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LoadB")?.DataJson;
+        var loadBLegacyShape = MotorYLoadBLegacyShape.FromJson(loadBPayload ?? string.Empty);
 
         Console.WriteLine($"[Test] Product definition resolved: {productDefinition.ProductId} / {productDefinition.ProductKind} / {productDefinition.Model}");
         Console.WriteLine($"[Test] Aggregate persisted: record={aggregate.TestRecordId}, items={aggregate.Items.Count}");
@@ -151,6 +159,10 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Recent report summaries: {string.Join(", ", recentReportSummaries.Select(x => $"{x.RecordCode}:{x.Format}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
         Console.WriteLine($"[Test] Recent products: {string.Join(", ", recentProducts.Select(x => $"{x.ProductKind}:{x.Model}:{x.Code}"))}");
         Console.WriteLine($"[Test] NoLoad legacy-shape preview: {MotorYNoLoadLegacyPreviewFormatter.Format(noLoadLegacyShape)}");
+        Console.WriteLine($"[Test] LockRotor legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLockRotor(lockRotorLegacyShape)}");
+        Console.WriteLine($"[Test] Thermal legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatThermal(thermalLegacyShape)}");
+        Console.WriteLine($"[Test] LoadA legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadA(loadALegacyShape)}");
+        Console.WriteLine($"[Test] LoadB legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadB(loadBLegacyShape)}");
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)
