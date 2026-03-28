@@ -480,6 +480,7 @@ ORDER BY COALESCE(Code, ''), Method;";
             {
                 var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
                 var selectedRoute = selection.SelectedRoute;
+                var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -505,6 +506,11 @@ ORDER BY COALESCE(Code, ''), Method;";
                     AlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty,
                     SettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty,
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
+                    RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
+                    UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                    RequiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>(),
+                    RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+                    DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
                     Distributions = selection.Distributions

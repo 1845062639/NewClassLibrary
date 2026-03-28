@@ -10,6 +10,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
     {
         var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(snapshot);
         var selectedProfile = selection.SelectedRoute;
+        var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -35,6 +36,11 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
+            RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
+            UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+            RequiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>(),
+            RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+            DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
             Distributions = selection.Distributions

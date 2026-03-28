@@ -26,6 +26,7 @@ if (testOptions.RunSmokeTests)
     StpDbMotorYMethodRecommendationSmokeTests.Run();
     StpDbMotorRatedParamsDistributionSmokeTests.Run();
     MotorYMethodProfileCatalogSmokeTests.Run();
+    MotorYLegacyAlgorithmDependencyCatalogSmokeTests.Run();
     MotorYTrialItemProfileCatalogSmokeTests.Run();
     MotorYStpDbShapeAlignmentSmokeTests.Run();
     StpDbSnapshotQuerySmokeTests.Run();

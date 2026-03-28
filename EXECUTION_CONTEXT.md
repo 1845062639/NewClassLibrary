@@ -125,6 +125,7 @@
 - 本轮继续把同一套“推荐方法摘要 + 基线/主流对比摘要”打通到 `stp.db` 真实快照决策层：`MotorYMethodDecisionSnapshot` 新增 `RecommendedMethodSummary / BaselineDominantComparisonSummary`，`StpDbSnapshotQueryService.ListMotorYMethodDecisions()` 现已直接复用 `MotorYMethodRouteSelectionSnapshotFactory` 产出统一摘要，避免 `stp.db snapshot` 与 `builder -> query detail` 两套文案口径漂移；并补 `StpDbMotorYMethodDecisionSmokeTests` 锁定真实库下 6 个 Motor_Y 核心试验项的摘要字符串与推荐策略一致性，方便后续算法适配/报表直接消费真实库决策摘要。
 - 本轮又把这套摘要能力继续补到 `stp.db -> MotorYMethodAdaptationPlanSnapshot`：适配计划快照现在也直接暴露 `BaselineShare / SelectedShare / SelectedLeadCountVsBaseline / SelectedLeadPercentagePointsVsBaseline / SelectedMethodSummary / BaselineDominantComparisonSummary`，并改为复用 `MotorYMethodRouteSelectionSnapshotFactory` 统一产出，`StpDbMotorYMethodAdaptationPlanSmokeTests` 已锁定真实库下 6 个核心试验项的数值与摘要，避免 snapshot/contract/app 三层再次各自手算、各自拼文案。
 - 本轮继续把 Motor_Y 方法选择逻辑从“多处各写一遍”收敛成共享工厂：新增 `MotorYMethodDecisionFactory`，统一产出 `Baseline/Dominant/Recommended/Share/Lead/Reason/Summary` 全套决策字段，并让 `stp.db` 真实快照层与 `builder -> query detail` 闭环同时复用同一实现；同时把阈值口径收敛为共享常量，避免后续算法适配、报表提示或 App 查询层在 70% override 规则上出现漂移。
+- 本轮继续把旧 `Algorithm_Motor_Y.cs` 的“算法入口依赖什么上游试验/额定参数/关键字段”从代码隐式逻辑沉成显式模型：新增 `MotorYLegacyAlgorithmDependencyCatalog`，为 6 个核心试验项结构化记录 `RequiresRatedParams / UpstreamCanonicalCodes / RequiredPayloadFields / RequiredRatedParamFields / Notes`；同时把这些依赖画像投影进 `MotorYMethodAdaptationPlanSnapshot/Contract` 与 `stp.db` 适配计划查询结果，并新增 smoke test 锁定。例如 Load_B 现可直接在 next-gen 适配计划中看出其依赖 `NoLoad + HeatRun`、需要 `θw/θb/Pfw/CoefficientOfPfe` 与额定参数 `GB`，为后续真正迁移算法 adapter 做输入清单基线。
 
 ## 6. 参考范围
 

@@ -24,6 +24,11 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string AlgorithmEntry { get; init; } = string.Empty;
     public string SettingsMethodName { get; init; } = string.Empty;
     public string LegacyMethodName { get; init; } = string.Empty;
+    public bool RequiresRatedParams { get; init; }
+    public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public string DependencyNotes { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
