@@ -28,17 +28,13 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             null);
-        var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-            dependencyProfile?.FormulaSignals,
-            dependencyProfile?.FormulaSignals,
-            "formula signals");
         var formulaEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildFormulaSignalEvidence(
             selection.CanonicalCode,
             resultCoverage.CoveredRequiredResultFields);
-        var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-            dependencyProfile?.LegacyAlgorithmRules,
-            dependencyProfile?.LegacyAlgorithmRules,
-            "legacy algorithm rules");
+        var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+            dependencyProfile?.FormulaSignals,
+            formulaEvidence.ObservedPayloadFields,
+            "formula signals");
         var ruleObservedFields = coverage.CoveredRequiredPayloadFields
             .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
             .Concat(resultCoverage.CoveredRequiredResultFields)
@@ -47,6 +43,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var ruleEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyRuleEvidence(
             selection.CanonicalCode,
             ruleObservedFields);
+        var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+            dependencyProfile?.LegacyAlgorithmRules,
+            ruleEvidence.ObservedPayloadFields,
+            "legacy algorithm rules");
         var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
             && coverage.MissingRequiredPayloadFieldCount == 0
             && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
