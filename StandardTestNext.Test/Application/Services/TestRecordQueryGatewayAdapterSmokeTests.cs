@@ -383,7 +383,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             TestTime = baseTime,
             Items =
             {
-                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime),
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime),
                 CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(1)),
                 CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(2)),
                 CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 0, baseTime.AddMinutes(3)),
@@ -412,18 +412,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
         }
 
-        if (noLoadPlan.CoveredFormulaSignalCount != noLoadPlan.FormulaSignals.Count
-            || noLoadPlan.MissingFormulaSignalCount != 0
-            || !noLoadPlan.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || noLoadPlan.MissingFormulaSignals.Count != 0
-            || Math.Abs(noLoadPlan.FormulaSignalCoverageRatio - 1d) > 0.0001d
-            || noLoadPlan.FormulaSignalCoveragePercentagePoints != 100
-            || noLoadPlan.CoveredLegacyAlgorithmRuleCount != noLoadPlan.LegacyAlgorithmRules.Count
-            || noLoadPlan.MissingLegacyAlgorithmRuleCount != 0
-            || !noLoadPlan.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || noLoadPlan.MissingLegacyAlgorithmRules.Count != 0
-            || Math.Abs(noLoadPlan.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
-            || noLoadPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 100)
+        if (noLoadPlan.CoveredFormulaSignalCount != 0
+            || noLoadPlan.MissingFormulaSignalCount != noLoadPlan.FormulaSignals.Count
+            || noLoadPlan.CoveredFormulaSignals.Count != 0
+            || !noLoadPlan.MissingFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.FormulaSignalCoverageRatio != 0d
+            || noLoadPlan.FormulaSignalCoveragePercentagePoints != 0
+            || noLoadPlan.CoveredLegacyAlgorithmRuleCount != 0
+            || noLoadPlan.MissingLegacyAlgorithmRuleCount != noLoadPlan.LegacyAlgorithmRules.Count
+            || noLoadPlan.CoveredLegacyAlgorithmRules.Count != 0
+            || !noLoadPlan.MissingLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.LegacyAlgorithmRuleCoverageRatio != 0d
+            || noLoadPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 0)
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test formula/rule coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual formulaCovered=[{string.Join(", ", noLoadPlan.CoveredFormulaSignals)}], rulesCovered=[{string.Join(", ", noLoadPlan.CoveredLegacyAlgorithmRules)}]");
         }
@@ -453,9 +453,33 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || loadAPlan.RawDataListAvailable
             || loadAPlan.RawDataSignalCoverageRatio != 0d
             || loadAPlan.RawDataSignalCoveragePercentagePoints != 0
-            || !string.Equals(loadAPlan.RawDataSignalCoverageSummary, "raw data signals covered 0/6 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U; observed: none", StringComparison.Ordinal))
+            || !string.Equals(loadAPlan.RawDataSignalCoverageSummary, "raw data signals covered 0/6 (0pp); raw samples=0; missing: U, I1, P1t, Nt, Tt, Frequency; observed: none", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test raw-data signal coverage mismatch for '{MotorYTestMethodCodes.LoadA}'. summary='{loadAPlan.RawDataSignalCoverageSummary}'");
+        }
+
+        if (!noLoadPlan.RequiredStructuredPayloadSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "DataList.I0", "DataList.P0", "DataList.P0cu1", "DataList.Pcon", "DataList.Pfe", "DataList.T0", "DataList.U0", "DataList.n0" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.ObservedStructuredPayloadSignals.Count != 0
+            || noLoadPlan.MissingStructuredPayloadSignals.Count != 8
+            || noLoadPlan.StructuredPayloadSignalCoveredCount != 0
+            || noLoadPlan.StructuredPayloadSignalMissingCount != 8
+            || noLoadPlan.StructuredPayloadSampleCount != 0
+            || noLoadPlan.StructuredPayloadAvailable
+            || noLoadPlan.StructuredPayloadSignalCoverageRatio != 0d
+            || noLoadPlan.StructuredPayloadSignalCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.StructuredPayloadSignalCoverageSummary, "structured payload signals covered 0/8 (0pp); samples=0; missing: DataList.U0, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.n0, DataList.T0; observed: none", StringComparison.Ordinal)
+            || !noLoadPlan.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "CoefficientOfPfe", "I0", "P0", "Pcu", "Pfe", "Pfw", "ΔI0" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.ObservedStructuredResultSignals.Count != 0
+            || noLoadPlan.MissingStructuredResultSignals.Count != 7
+            || noLoadPlan.StructuredResultSignalCoveredCount != 0
+            || noLoadPlan.StructuredResultSignalMissingCount != 7
+            || noLoadPlan.StructuredResultSampleCount != 0
+            || noLoadPlan.StructuredResultAvailable
+            || noLoadPlan.StructuredResultSignalCoverageRatio != 0d
+            || noLoadPlan.StructuredResultSignalCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.StructuredResultSignalCoverageSummary, "structured result signals covered 0/7 (0pp); samples=0; missing: P0, I0, ΔI0, Pcu, Pfw, Pfe, CoefficientOfPfe; observed: none", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test structured signal coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. payload='{noLoadPlan.StructuredPayloadSignalCoverageSummary}', result='{noLoadPlan.StructuredResultSignalCoverageSummary}'");
         }
 
         if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00%), dominant 59 (delivery)=3/4 (75.00%)", StringComparison.Ordinal))
@@ -510,6 +534,68 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                   "VoltageAverage": 380.0
                 }
               ]
+            }
+            """
+        };
+    }
+
+    private static TestRecordItemAggregate CreateMotorYDetailedDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
+    {
+        if (!string.Equals(canonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal))
+        {
+            return CreateMotorYDecisionItem(canonicalCode, methodValue, sampleTime);
+        }
+
+        var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue)
+            ?? throw new InvalidOperationException($"Missing Motor_Y route for {canonicalCode}:{methodValue}.");
+
+        return new TestRecordItemAggregate
+        {
+            TestRecordItemId = Guid.NewGuid(),
+            ItemCode = canonicalCode,
+            MethodCode = route.MethodKey,
+            IsValid = true,
+            DataJson = $$"""
+            {
+              "BuildProfile": {
+                "CanonicalCode": "{{route.CanonicalCode}}",
+                "MethodValue": {{route.MethodValue}},
+                "MethodKey": "{{route.MethodKey}}",
+                "ProfileKey": "{{route.ProfileKey}}",
+                "VariantKind": "{{route.VariantKind}}",
+                "AlgorithmFamily": "{{route.AlgorithmFamily}}",
+                "LegacyEnumName": "{{route.LegacyEnumName}}",
+                "LegacyFormName": "{{route.LegacyFormName}}",
+                "LegacyAlgorithmEntry": "{{route.LegacyAlgorithmEntry}}",
+                "LegacyMethodName": "{{route.LegacyMethodName}}",
+                "LegacySettingsMethodName": "{{route.LegacySettingsMethodName}}",
+                "IsBaselineMethod": {{route.IsBaselineMethod.ToString().ToLowerInvariant()}}
+              },
+              "Un": 380.0,
+              "R1c": 12.5,
+              "θ1c": 26.5,
+              "K1": 235.0,
+              "Order": 3,
+              "DataList": [
+                {
+                  "U0": 380.0,
+                  "I0": 12.3,
+                  "P0": 3.4,
+                  "P0cu1": 1.2,
+                  "Pcon": 2.1,
+                  "Pfe": 0.9,
+                  "n0": 1498.0,
+                  "T0": 2.4
+                }
+              ],
+              "P0": 3.4,
+              "I0": 12.3,
+              "ΔI0": 0.4,
+              "Pcu": 1.2,
+              "Pfw": 0.8,
+              "Pfe": 0.9,
+              "CoefficientOfPfe": [0.0, 0.12, 0.03],
+              "RConverseType": 0
             }
             """
         };

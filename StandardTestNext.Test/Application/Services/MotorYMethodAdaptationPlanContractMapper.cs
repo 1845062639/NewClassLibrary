@@ -50,12 +50,30 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             dependencyProfile?.LegacyAlgorithmRules,
             ruleEvidence.ObservedPayloadFields,
             "legacy algorithm rules");
+        var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+            dependencyProfile?.RequiredStructuredPayloadSignals,
+            null,
+            "structured payload signals");
+        var structuredResultCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+            dependencyProfile?.RequiredStructuredResultSignals,
+            null,
+            "structured result signals");
         var rawDataSignalsReady = rawDataSignalCoverage.MissingSignals.Count == 0;
+        var structuredSignalsReady = structuredPayloadCoverage.MissingSignalCount == 0
+            && structuredResultCoverage.MissingSignalCount == 0;
         var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
             && coverage.MissingRequiredPayloadFieldCount == 0
             && ratedCoverage.MissingRequiredRatedParamFieldCount == 0
-            && rawDataSignalsReady;
-        var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(upstream, coverage, ratedCoverage, rawDataSignalCoverage, legacyAlgorithmInputsReady);
+            && rawDataSignalsReady
+            && structuredSignalsReady;
+        var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
+            upstream,
+            coverage,
+            ratedCoverage,
+            rawDataSignalCoverage,
+            structuredPayloadCoverage,
+            structuredResultCoverage,
+            legacyAlgorithmInputsReady);
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -126,6 +144,26 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
             LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
             RawDataSignalsReady = rawDataSignalsReady,
+            RequiredStructuredPayloadSignals = dependencyProfile?.RequiredStructuredPayloadSignals ?? Array.Empty<string>(),
+            ObservedStructuredPayloadSignals = structuredPayloadCoverage.ObservedSignals,
+            MissingStructuredPayloadSignals = structuredPayloadCoverage.MissingSignals,
+            StructuredPayloadSignalCoveredCount = structuredPayloadCoverage.CoveredSignalCount,
+            StructuredPayloadSignalMissingCount = structuredPayloadCoverage.MissingSignalCount,
+            StructuredPayloadSampleCount = structuredPayloadCoverage.SampleCount,
+            StructuredPayloadAvailable = structuredPayloadCoverage.StructuredDataAvailable,
+            StructuredPayloadSignalCoverageRatio = structuredPayloadCoverage.CoverageRatio,
+            StructuredPayloadSignalCoveragePercentagePoints = structuredPayloadCoverage.CoveragePercentagePoints,
+            StructuredPayloadSignalCoverageSummary = structuredPayloadCoverage.Summary,
+            RequiredStructuredResultSignals = dependencyProfile?.RequiredStructuredResultSignals ?? Array.Empty<string>(),
+            ObservedStructuredResultSignals = structuredResultCoverage.ObservedSignals,
+            MissingStructuredResultSignals = structuredResultCoverage.MissingSignals,
+            StructuredResultSignalCoveredCount = structuredResultCoverage.CoveredSignalCount,
+            StructuredResultSignalMissingCount = structuredResultCoverage.MissingSignalCount,
+            StructuredResultSampleCount = structuredResultCoverage.SampleCount,
+            StructuredResultAvailable = structuredResultCoverage.StructuredDataAvailable,
+            StructuredResultSignalCoverageRatio = structuredResultCoverage.CoverageRatio,
+            StructuredResultSignalCoveragePercentagePoints = structuredResultCoverage.CoveragePercentagePoints,
+            StructuredResultSignalCoverageSummary = structuredResultCoverage.Summary,
             LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
             DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
             FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
@@ -165,16 +203,20 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
         MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
         bool legacyAlgorithmInputsReady)
     {
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
         var ratedStatus = ratedCoverage.RequiredRatedParamFieldCoverageSummary;
         var upstreamStatus = upstream.UpstreamDependencySummary;
         var rawDataStatus = rawDataCoverage.Summary;
+        var structuredPayloadStatus = structuredPayloadCoverage.Summary;
+        var structuredResultStatus = structuredResultCoverage.Summary;
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
     }
 
     private static MotorYObservedAlgorithmEvidenceGapContract MapEvidenceGap(MotorYObservedAlgorithmEvidenceGap gap)

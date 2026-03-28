@@ -46,6 +46,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: result fields mismatch for {row.Item1}.");
             }
 
+            if (profile.RequiredStructuredPayloadSignals.Count == 0
+                || profile.RequiredStructuredResultSignals.Count == 0)
+            {
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: structured signal dependency missing for {row.Item1}.");
+            }
+
             if (string.IsNullOrWhiteSpace(profile.Notes)
                 || string.IsNullOrWhiteSpace(profile.AlgorithmEntry)
                 || profile.FormulaSignals.Count == 0
@@ -112,6 +118,22 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             });
 
         if (!contract.RequiresRatedParams
+            || !contract.RequiredStructuredPayloadSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "RawDataList.Frequency", "RawDataList.I1", "RawDataList.Nt", "RawDataList.P1t", "RawDataList.Pl", "RawDataList.Tt", "RawDataList.U", "RawDataList.θ1t", "RawDataList.θa", "ResultDataList.P2", "ResultDataList.Ps" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || contract.StructuredPayloadSignalCoveredCount != 0
+            || contract.StructuredPayloadSignalMissingCount != 11
+            || contract.StructuredPayloadSampleCount != 0
+            || contract.StructuredPayloadAvailable
+            || contract.StructuredPayloadSignalCoverageRatio != 0d
+            || contract.StructuredPayloadSignalCoveragePercentagePoints != 0
+            || !string.Equals(contract.StructuredPayloadSignalCoverageSummary, "structured payload signals covered 0/11 (0pp); samples=0; missing: RawDataList.Frequency, RawDataList.I1, RawDataList.Nt, RawDataList.P1t, RawDataList.Pl, RawDataList.Tt, RawDataList.U, RawDataList.θ1t, RawDataList.θa, ResultDataList.P2, ResultDataList.Ps; observed: none", StringComparison.Ordinal)
+            || !contract.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || contract.StructuredResultSignalCoveredCount != 0
+            || contract.StructuredResultSignalMissingCount != 7
+            || contract.StructuredResultSampleCount != 0
+            || contract.StructuredResultAvailable
+            || contract.StructuredResultSignalCoverageRatio != 0d
+            || contract.StructuredResultSignalCoveragePercentagePoints != 0
+            || !string.Equals(contract.StructuredResultSignalCoverageSummary, "structured result signals covered 0/7 (0pp); samples=0; missing: A, B, Pcu1, Pcu2, R, ResultDataList, θs; observed: none", StringComparison.Ordinal)
             || !contract.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
             || contract.ObservedUpstreamCanonicalCodeCount != 0
             || contract.ObservedUpstreamCanonicalCodes.Count != 0
@@ -142,7 +164,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.RawDataListAvailable
             || contract.RawDataSignalCoverageRatio != 0d
             || contract.RawDataSignalCoveragePercentagePoints != 0
-            || !string.Equals(contract.RawDataSignalCoverageSummary, "raw data signals covered 0/8 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa; observed: none", StringComparison.Ordinal)
+            || !string.Equals(contract.RawDataSignalCoverageSummary, "raw data signals covered 0/8 (0pp); raw samples=0; missing: U, I1, P1t, Nt, Tt, Frequency, θ1t, θa; observed: none", StringComparison.Ordinal)
             || contract.RatedParamsAvailable
             || contract.RawDataSignalsReady
             || contract.RequiredRatedParamFieldCoverageRatio != 0d
@@ -194,6 +216,22 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             ?? throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: missing LoadB adaptation plan from stp.db snapshot.");
 
         if (!loadBPlan.RequiresRatedParams
+            || !loadBPlan.RequiredStructuredPayloadSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "RawDataList.Frequency", "RawDataList.I1", "RawDataList.Nt", "RawDataList.P1t", "RawDataList.Pl", "RawDataList.Tt", "RawDataList.U", "RawDataList.θ1t", "RawDataList.θa", "ResultDataList.P2", "ResultDataList.Ps" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.StructuredPayloadSignalCoveredCount != 11
+            || loadBPlan.StructuredPayloadSignalMissingCount != 0
+            || loadBPlan.StructuredPayloadSampleCount <= 0
+            || !loadBPlan.StructuredPayloadAvailable
+            || Math.Abs(loadBPlan.StructuredPayloadSignalCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.StructuredPayloadSignalCoveragePercentagePoints != 100
+            || !string.Equals(loadBPlan.StructuredPayloadSignalCoverageSummary, $"structured payload signals covered 11/11 (100pp); samples={loadBPlan.StructuredPayloadSampleCount}; missing: none; observed: RawDataList.Frequency, RawDataList.I1, RawDataList.Nt, RawDataList.P1t, RawDataList.Pl, RawDataList.Tt, RawDataList.U, RawDataList.θ1t, RawDataList.θa, ResultDataList.P2, ResultDataList.Ps", StringComparison.Ordinal)
+            || !loadBPlan.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.StructuredResultSignalCoveredCount != 7
+            || loadBPlan.StructuredResultSignalMissingCount != 0
+            || loadBPlan.StructuredResultSampleCount <= 0
+            || !loadBPlan.StructuredResultAvailable
+            || Math.Abs(loadBPlan.StructuredResultSignalCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.StructuredResultSignalCoveragePercentagePoints != 100
+            || !string.Equals(loadBPlan.StructuredResultSignalCoverageSummary, $"structured result signals covered 7/7 (100pp); samples={loadBPlan.StructuredResultSampleCount}; missing: none; observed: A, B, Pcu1, Pcu2, R, ResultDataList, θs", StringComparison.Ordinal)
             || !loadBPlan.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
             || loadBPlan.ObservedUpstreamCanonicalCodeCount != 2
             || !loadBPlan.ObservedUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)

@@ -79,6 +79,26 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string RequiredRatedParamFieldCoverageSummary { get; init; } = string.Empty;
     public bool LegacyAlgorithmInputsReady { get; init; }
     public bool RawDataSignalsReady { get; init; }
+    public IReadOnlyList<string> RequiredStructuredPayloadSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedStructuredPayloadSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingStructuredPayloadSignals { get; init; } = Array.Empty<string>();
+    public int StructuredPayloadSignalCoveredCount { get; init; }
+    public int StructuredPayloadSignalMissingCount { get; init; }
+    public int StructuredPayloadSampleCount { get; init; }
+    public bool StructuredPayloadAvailable { get; init; }
+    public double StructuredPayloadSignalCoverageRatio { get; init; }
+    public int StructuredPayloadSignalCoveragePercentagePoints { get; init; }
+    public string StructuredPayloadSignalCoverageSummary { get; init; } = string.Empty;
+    public IReadOnlyList<string> RequiredStructuredResultSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedStructuredResultSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingStructuredResultSignals { get; init; } = Array.Empty<string>();
+    public int StructuredResultSignalCoveredCount { get; init; }
+    public int StructuredResultSignalMissingCount { get; init; }
+    public int StructuredResultSampleCount { get; init; }
+    public bool StructuredResultAvailable { get; init; }
+    public double StructuredResultSignalCoverageRatio { get; init; }
+    public int StructuredResultSignalCoveragePercentagePoints { get; init; }
+    public string StructuredResultSignalCoverageSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();

@@ -525,6 +525,14 @@ ORDER BY COALESCE(Code, ''), Method;";
                     dependencyProfile?.LegacyAlgorithmRules,
                     ruleEvidence.ObservedPayloadFields,
                     "legacy algorithm rules");
+                var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+                    dependencyProfile?.RequiredStructuredPayloadSignals,
+                    sampleDataJson,
+                    "structured payload signals");
+                var structuredResultCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+                    dependencyProfile?.RequiredStructuredResultSignals,
+                    sampleDataJson,
+                    "structured result signals");
                 var rawDataSignalsReady = rawDataSignalCoverage.MissingSignals.Count == 0;
                 var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
                     && coverage.MissingRequiredPayloadFieldCount == 0
@@ -603,6 +611,26 @@ ORDER BY COALESCE(Code, ''), Method;";
                     RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
                     LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
                     RawDataSignalsReady = rawDataSignalsReady,
+                    RequiredStructuredPayloadSignals = dependencyProfile?.RequiredStructuredPayloadSignals ?? Array.Empty<string>(),
+                    ObservedStructuredPayloadSignals = structuredPayloadCoverage.ObservedSignals,
+                    MissingStructuredPayloadSignals = structuredPayloadCoverage.MissingSignals,
+                    StructuredPayloadSignalCoveredCount = structuredPayloadCoverage.CoveredSignalCount,
+                    StructuredPayloadSignalMissingCount = structuredPayloadCoverage.MissingSignalCount,
+                    StructuredPayloadSampleCount = structuredPayloadCoverage.SampleCount,
+                    StructuredPayloadAvailable = structuredPayloadCoverage.StructuredDataAvailable,
+                    StructuredPayloadSignalCoverageRatio = structuredPayloadCoverage.CoverageRatio,
+                    StructuredPayloadSignalCoveragePercentagePoints = structuredPayloadCoverage.CoveragePercentagePoints,
+                    StructuredPayloadSignalCoverageSummary = structuredPayloadCoverage.Summary,
+                    RequiredStructuredResultSignals = dependencyProfile?.RequiredStructuredResultSignals ?? Array.Empty<string>(),
+                    ObservedStructuredResultSignals = structuredResultCoverage.ObservedSignals,
+                    MissingStructuredResultSignals = structuredResultCoverage.MissingSignals,
+                    StructuredResultSignalCoveredCount = structuredResultCoverage.CoveredSignalCount,
+                    StructuredResultSignalMissingCount = structuredResultCoverage.MissingSignalCount,
+                    StructuredResultSampleCount = structuredResultCoverage.SampleCount,
+                    StructuredResultAvailable = structuredResultCoverage.StructuredDataAvailable,
+                    StructuredResultSignalCoverageRatio = structuredResultCoverage.CoverageRatio,
+                    StructuredResultSignalCoveragePercentagePoints = structuredResultCoverage.CoveragePercentagePoints,
+                    StructuredResultSignalCoverageSummary = structuredResultCoverage.Summary,
                     LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
