@@ -31,6 +31,10 @@ public sealed class MotorYMethodAdaptationPlanContract
     public int CoveredRequiredPayloadFieldCount { get; init; }
     public int MissingRequiredPayloadFieldCount { get; init; }
     public IReadOnlyList<string> MissingRequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CoveredRequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public double RequiredPayloadFieldCoverageRatio { get; init; }
+    public int RequiredPayloadFieldCoveragePercentagePoints { get; init; }
+    public bool SamplePayloadAvailable { get; init; }
     public string RequiredPayloadFieldCoverageSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;

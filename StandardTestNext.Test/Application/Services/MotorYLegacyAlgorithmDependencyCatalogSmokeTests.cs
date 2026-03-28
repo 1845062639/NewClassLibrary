@@ -107,6 +107,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !contract.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
             || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
+            || contract.SamplePayloadAvailable
+            || contract.RequiredPayloadFieldCoverageRatio != 0d
+            || contract.RequiredPayloadFieldCoveragePercentagePoints != 0
+            || contract.CoveredRequiredPayloadFields.Count != 0
             || string.IsNullOrWhiteSpace(contract.DependencyNotes))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: adaptation contract dependency projection mismatch for LoadB.");
@@ -120,7 +124,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
         if (!loadBPlan.RequiresRatedParams
             || !loadBPlan.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
             || !loadBPlan.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
-            || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal))
+            || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
+            || !loadBPlan.SamplePayloadAvailable
+            || loadBPlan.CoveredRequiredPayloadFields.Count == 0
+            || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
+            || loadBPlan.RequiredPayloadFieldCoveragePercentagePoints <= 0
+            || string.IsNullOrWhiteSpace(loadBPlan.RequiredPayloadFieldCoverageSummary))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: stp.db adaptation plan dependency projection mismatch for LoadB.");
         }
