@@ -4,7 +4,9 @@ public static class TestRecordItemDescriptorResolver
 {
     public static string ResolveDisplayName(string itemCode, string? recordMode)
     {
-        return itemCode switch
+        var canonicalItemCode = MotorYLegacyItemCodeNormalizer.Normalize(itemCode);
+
+        return canonicalItemCode switch
         {
             "MotorY.DcResistance" => "Motor_Y DC Resistance",
             "MotorY.NoLoad" => "Motor_Y No-Load Test",
@@ -22,7 +24,9 @@ public static class TestRecordItemDescriptorResolver
 
     public static int ResolveSortOrder(string itemCode, string? recordMode)
     {
-        return itemCode switch
+        var canonicalItemCode = MotorYLegacyItemCodeNormalizer.Normalize(itemCode);
+
+        return canonicalItemCode switch
         {
             "MotorY.DcResistance" => 10,
             "MotorY.NoLoad" => 20,

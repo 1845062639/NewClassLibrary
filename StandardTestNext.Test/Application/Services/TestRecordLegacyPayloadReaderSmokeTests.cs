@@ -12,6 +12,7 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
         ShouldFormatLegacyPayloadSummaryWithMetricsFlags();
         ShouldFormatListSummaryWithPayloadFlags();
         ShouldNormalizeMotorYLegacyItemCodesFromRealStpAliases();
+        ShouldResolveMotorYLegacyAliasesToStableDisplayMetadata();
         ShouldParseMotorYTrialPayloadShapesFromBuilder();
     }
 
@@ -212,6 +213,30 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
             if (MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(alias) != isCoreTrial)
             {
                 throw new InvalidOperationException($"Motor_Y core-trial detect smoke test failed for '{alias}'.");
+            }
+        }
+    }
+
+    private static void ShouldResolveMotorYLegacyAliasesToStableDisplayMetadata()
+    {
+        var cases = new (string Alias, string DisplayName, int SortOrder)[]
+        {
+            ("直流电阻测定", "Motor_Y DC Resistance", 10),
+            ("空载特性试验", "Motor_Y No-Load Test", 20),
+            ("热试验2", "Motor_Y Heat Run Test", 30),
+            ("A法负载试验", "Motor_Y Load Test A", 40),
+            ("B法负载试验", "Motor_Y Load Test B", 50),
+            ("堵转试验（出厂）", "Motor_Y Locked-Rotor Test", 60)
+        };
+
+        foreach (var (alias, displayName, sortOrder) in cases)
+        {
+            var resolvedName = TestRecordItemDescriptorResolver.ResolveDisplayName(alias, recordMode: null);
+            var resolvedSortOrder = TestRecordItemDescriptorResolver.ResolveSortOrder(alias, recordMode: null);
+            if (!string.Equals(resolvedName, displayName, StringComparison.Ordinal) || resolvedSortOrder != sortOrder)
+            {
+                throw new InvalidOperationException(
+                    $"Motor_Y descriptor resolver smoke test failed for '{alias}'. Expected name='{displayName}', sort={sortOrder}; got name='{resolvedName}', sort={resolvedSortOrder}.");
             }
         }
     }
