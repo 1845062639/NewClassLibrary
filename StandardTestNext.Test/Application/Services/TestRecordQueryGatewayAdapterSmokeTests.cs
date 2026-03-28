@@ -445,6 +445,19 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         {
             throw new InvalidOperationException($"Motor_Y method decision query smoke test dominant mismatch for '{canonicalCode}'.");
         }
+
+        var expectedRecommendedMethod = expectedPrioritize
+            ? expectedDominantMethod
+            : expectedBaselineMethod;
+        var expectedRecommendedStrategy = expectedPrioritize
+            ? "dominant-over-baseline"
+            : "baseline";
+        if (decision.RecommendedProfile is null
+            || decision.RecommendedProfile.MethodValue != expectedRecommendedMethod
+            || !string.Equals(decision.RecommendedStrategy, expectedRecommendedStrategy, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test recommended route mismatch for '{canonicalCode}'.");
+        }
     }
     private static void AssertDistribution(
         IReadOnlyDictionary<string, MotorYMethodDecisionContract> decisions,

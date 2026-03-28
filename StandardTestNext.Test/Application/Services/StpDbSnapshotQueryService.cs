@@ -465,15 +465,15 @@ ORDER BY COALESCE(Code, ''), Method;";
                 DominantMethod = decision.DominantRoute?.MethodValue ?? 0,
                 DominantCount = decision.DominantCount,
                 DominantMethodKey = decision.DominantRoute?.MethodKey ?? string.Empty,
-                DominantProfileKey = decision.DominantRoute?.ProfileKey,
-                DominantVariantKind = decision.DominantRoute?.VariantKind,
-                DominantAlgorithmFamily = decision.DominantRoute?.AlgorithmFamily,
-                DominantLegacyEnumName = decision.DominantRoute?.LegacyEnumName,
-                DominantLegacyFormName = decision.DominantRoute?.LegacyFormName,
-                DominantLegacyAlgorithmEntry = decision.DominantRoute?.LegacyAlgorithmEntry,
-                DominantLegacyMethodName = decision.DominantRoute?.LegacyMethodName,
-                DominantLegacySettingsMethodName = decision.DominantRoute?.LegacySettingsMethodName,
-                DominantIsBaselineMethod = decision.DominantRoute?.IsBaselineMethod == true,
+                DominantProfileKey = decision.RecommendedRoute?.ProfileKey,
+                DominantVariantKind = decision.RecommendedRoute?.VariantKind,
+                DominantAlgorithmFamily = decision.RecommendedRoute?.AlgorithmFamily,
+                DominantLegacyEnumName = decision.RecommendedRoute?.LegacyEnumName,
+                DominantLegacyFormName = decision.RecommendedRoute?.LegacyFormName,
+                DominantLegacyAlgorithmEntry = decision.RecommendedRoute?.LegacyAlgorithmEntry,
+                DominantLegacyMethodName = decision.RecommendedRoute?.LegacyMethodName,
+                DominantLegacySettingsMethodName = decision.RecommendedRoute?.LegacySettingsMethodName,
+                DominantIsBaselineMethod = decision.RecommendedRoute?.IsBaselineMethod == true,
                 ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
                 DominantShare = decision.DominantShare
             })
@@ -500,20 +500,25 @@ ORDER BY COALESCE(Code, ''), Method;";
             var baseline = group.FirstOrDefault(row => row.IsBaselineMethod)
                 ?? ordered.FirstOrDefault(row => string.Equals(row.MethodProfileKey, "baseline", StringComparison.Ordinal))
                 ?? ordered.OrderBy(row => row.Method).First();
+            var baselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, baseline.Method);
+            var dominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, dominant.Method);
             var totalCount = group.Sum(row => row.Count);
             var dominantShare = totalCount <= 0
                 ? 0d
                 : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+            var shouldPrioritizeDominant = dominant.Method != baseline.Method;
 
             result.Add(new MotorYMethodDecisionSnapshot
             {
                 CanonicalCode = group.Key,
                 TotalCount = totalCount,
-                BaselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, baseline.Method),
+                BaselineRoute = baselineRoute,
                 BaselineCount = baseline.Count,
-                DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, dominant.Method),
+                DominantRoute = dominantRoute,
                 DominantCount = dominant.Count,
-                ShouldPrioritizeDominantOverBaseline = dominant.Method != baseline.Method,
+                RecommendedRoute = shouldPrioritizeDominant ? dominantRoute : baselineRoute,
+                RecommendedStrategy = shouldPrioritizeDominant ? "dominant-over-baseline" : "baseline",
+                ShouldPrioritizeDominantOverBaseline = shouldPrioritizeDominant,
                 DominantShare = dominantShare,
                 Distributions = ordered
                     .Select(row => new MotorYMethodDistributionSnapshot

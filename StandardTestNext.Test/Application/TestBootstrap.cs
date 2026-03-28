@@ -227,10 +227,13 @@ public sealed class TestBootstrap
         var dominant = decision.DominantRoute is null
             ? "dominant=<none>"
             : $"dominant={decision.DominantRoute.MethodValue}/{decision.DominantRoute.ProfileKey}:{decision.DominantCount}:{decision.DominantShare:P1}";
+        var recommended = decision.RecommendedRoute is null
+            ? $"recommended={decision.RecommendedStrategy}:<none>"
+            : $"recommended={decision.RecommendedStrategy}:{decision.RecommendedRoute.MethodValue}/{decision.RecommendedRoute.ProfileKey}";
         var distributions = decision.Distributions.Count == 0
             ? "dist=<none>"
             : "dist=" + string.Join("|", decision.Distributions.Select(x => $"{x.MethodValue}:{x.Count}:{x.Share:P1}:{x.Route?.VariantKind ?? "unknown"}"));
 
-        return $"{decision.CanonicalCode}[{baseline};{dominant};prioritize={(decision.ShouldPrioritizeDominantOverBaseline ? "Y" : "N")};{distributions}]";
+        return $"{decision.CanonicalCode}[{baseline};{dominant};{recommended};prioritize={(decision.ShouldPrioritizeDominantOverBaseline ? "Y" : "N")};{distributions}]";
     }
 }

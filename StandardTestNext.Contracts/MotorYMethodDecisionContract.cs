@@ -16,6 +16,8 @@ public sealed class MotorYMethodDecisionContract
     public int BaselineCount { get; init; }
     public MotorYBuildProfileContract? DominantProfile { get; init; }
     public int DominantCount { get; init; }
+    public MotorYBuildProfileContract? RecommendedProfile { get; init; }
+    public string RecommendedStrategy { get; init; } = string.Empty;
     public bool ShouldPrioritizeDominantOverBaseline { get; init; }
     public double DominantShare { get; init; }
     public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();

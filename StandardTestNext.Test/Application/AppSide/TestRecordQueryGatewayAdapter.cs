@@ -139,6 +139,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             BaselineCount = snapshot.BaselineCount,
             DominantProfile = MapBuildProfile(snapshot.DominantRoute),
             DominantCount = snapshot.DominantCount,
+            RecommendedProfile = MapBuildProfile(snapshot.RecommendedRoute),
+            RecommendedStrategy = snapshot.RecommendedStrategy,
             ShouldPrioritizeDominantOverBaseline = snapshot.ShouldPrioritizeDominantOverBaseline,
             DominantShare = snapshot.DominantShare,
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()

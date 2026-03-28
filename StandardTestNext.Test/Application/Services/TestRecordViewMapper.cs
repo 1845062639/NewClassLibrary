@@ -123,6 +123,12 @@ public static class TestRecordViewMapper
                     BaselineCount = baselineCount,
                     DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue),
                     DominantCount = dominant.Count,
+                    RecommendedRoute = dominant.MethodValue != baseline.MethodValue
+                        ? MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue)
+                        : MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue),
+                    RecommendedStrategy = dominant.MethodValue != baseline.MethodValue
+                        ? "dominant-over-baseline"
+                        : "baseline",
                     ShouldPrioritizeDominantOverBaseline = dominant.MethodValue != baseline.MethodValue,
                     DominantShare = dominantShare,
                     Distributions = distributions

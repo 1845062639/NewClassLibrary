@@ -16,6 +16,8 @@ public sealed class MotorYMethodDecisionSnapshot
     public int BaselineCount { get; init; }
     public MotorYLegacyAlgorithmRoute? DominantRoute { get; init; }
     public int DominantCount { get; init; }
+    public MotorYLegacyAlgorithmRoute? RecommendedRoute { get; init; }
+    public string RecommendedStrategy { get; init; } = string.Empty;
     public bool ShouldPrioritizeDominantOverBaseline { get; init; }
     public double DominantShare { get; init; }
     public IReadOnlyList<MotorYMethodDistributionSnapshot> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionSnapshot>();

@@ -51,6 +51,18 @@ public static class StpDbMotorYMethodDecisionSmokeTests
             AssertRoute(snapshot.BaselineRoute, row.CanonicalCode, row.BaselineMethod, $"baseline/{row.CanonicalCode}");
             AssertRoute(snapshot.DominantRoute, row.CanonicalCode, row.DominantMethod, $"dominant/{row.CanonicalCode}");
 
+            var expectedRecommendedMethod = row.BaselineMethod != row.DominantMethod
+                ? row.DominantMethod
+                : row.BaselineMethod;
+            var expectedRecommendedStrategy = row.BaselineMethod != row.DominantMethod
+                ? "dominant-over-baseline"
+                : "baseline";
+            AssertRoute(snapshot.RecommendedRoute, row.CanonicalCode, expectedRecommendedMethod, $"recommended/{row.CanonicalCode}");
+            if (!string.Equals(snapshot.RecommendedStrategy, expectedRecommendedStrategy, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: recommended strategy mismatch for {row.CanonicalCode}. expected={expectedRecommendedStrategy}, actual={snapshot.RecommendedStrategy}");
+            }
+
             var expectedShare = row.TotalCount <= 0
                 ? 0d
                 : Math.Round((double)row.DominantCount / row.TotalCount, 4, MidpointRounding.AwayFromZero);
