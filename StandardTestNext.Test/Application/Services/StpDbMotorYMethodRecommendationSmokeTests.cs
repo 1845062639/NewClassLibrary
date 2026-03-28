@@ -4,6 +4,7 @@ namespace StandardTestNext.Test.Application.Services;
 
 public static class StpDbMotorYMethodRecommendationSmokeTests
 {
+    private const double DominantOverrideThreshold = 0.7d;
     private static readonly string DbPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../..", "stp.db"));
 
     public static void Run()
@@ -78,7 +79,8 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: dominant share mismatch for {row.CanonicalCode}. expected={expectedShare}, actual={snapshot.DominantShare}");
             }
 
-            var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod;
+            var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod
+                && expectedShare >= DominantOverrideThreshold;
             if (snapshot.ShouldPrioritizeDominantOverBaseline != shouldPrioritizeDominant)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");

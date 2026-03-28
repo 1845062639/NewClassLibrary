@@ -6,6 +6,8 @@ namespace StandardTestNext.Test.Application.Services;
 
 public sealed class StpDbSnapshotQueryService
 {
+    private const double MotorYDominantOverrideThreshold = 0.7d;
+
     private static readonly string[] MotorYLegacyItemCodes =
     [
         "直流电阻测定",
@@ -506,7 +508,12 @@ ORDER BY COALESCE(Code, ''), Method;";
             var dominantShare = totalCount <= 0
                 ? 0d
                 : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
-            var shouldPrioritizeDominant = dominant.Method != baseline.Method;
+            var shouldPrioritizeDominant = dominant.Method != baseline.Method
+                && dominantShare >= MotorYDominantOverrideThreshold;
+            var recommendedRoute = shouldPrioritizeDominant ? dominantRoute : baselineRoute;
+            var recommendedStrategy = shouldPrioritizeDominant
+                ? "dominant-threshold-over-baseline"
+                : "baseline";
 
             result.Add(new MotorYMethodDecisionSnapshot
             {
@@ -516,10 +523,11 @@ ORDER BY COALESCE(Code, ''), Method;";
                 BaselineCount = baseline.Count,
                 DominantRoute = dominantRoute,
                 DominantCount = dominant.Count,
-                RecommendedRoute = shouldPrioritizeDominant ? dominantRoute : baselineRoute,
-                RecommendedStrategy = shouldPrioritizeDominant ? "dominant-over-baseline" : "baseline",
+                RecommendedRoute = recommendedRoute,
+                RecommendedStrategy = recommendedStrategy,
                 ShouldPrioritizeDominantOverBaseline = shouldPrioritizeDominant,
                 DominantShare = dominantShare,
+                DominantOverrideThreshold = MotorYDominantOverrideThreshold,
                 Distributions = ordered
                     .Select(row => new MotorYMethodDistributionSnapshot
                     {

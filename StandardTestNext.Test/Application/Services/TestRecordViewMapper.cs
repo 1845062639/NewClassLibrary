@@ -4,6 +4,8 @@ namespace StandardTestNext.Test.Application.Services;
 
 public static class TestRecordViewMapper
 {
+    private const double MotorYDominantOverrideThreshold = 0.7d;
+
     public static TestRecordListView ToListView(this TestRecordSummary summary)
     {
         return new TestRecordListView
@@ -114,6 +116,14 @@ public static class TestRecordViewMapper
                         Route = MotorYLegacyAlgorithmRouteResolver.Resolve(row.Profile.CanonicalCode, row.MethodValue)
                     })
                     .ToArray();
+                var shouldPrioritizeDominant = dominant.MethodValue != baseline.MethodValue
+                    && dominantShare >= MotorYDominantOverrideThreshold;
+                var recommendedRoute = shouldPrioritizeDominant
+                    ? MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue)
+                    : MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue);
+                var recommendedStrategy = shouldPrioritizeDominant
+                    ? "dominant-threshold-over-baseline"
+                    : "baseline";
 
                 return new MotorYMethodDecisionSnapshot
                 {
@@ -123,14 +133,11 @@ public static class TestRecordViewMapper
                     BaselineCount = baselineCount,
                     DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue),
                     DominantCount = dominant.Count,
-                    RecommendedRoute = dominant.MethodValue != baseline.MethodValue
-                        ? MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue)
-                        : MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue),
-                    RecommendedStrategy = dominant.MethodValue != baseline.MethodValue
-                        ? "dominant-over-baseline"
-                        : "baseline",
-                    ShouldPrioritizeDominantOverBaseline = dominant.MethodValue != baseline.MethodValue,
+                    RecommendedRoute = recommendedRoute,
+                    RecommendedStrategy = recommendedStrategy,
+                    ShouldPrioritizeDominantOverBaseline = shouldPrioritizeDominant,
                     DominantShare = dominantShare,
+                    DominantOverrideThreshold = MotorYDominantOverrideThreshold,
                     Distributions = distributions
                 };
             })

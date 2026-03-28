@@ -20,5 +20,6 @@ public sealed class MotorYMethodDecisionContract
     public string RecommendedStrategy { get; init; } = string.Empty;
     public bool ShouldPrioritizeDominantOverBaseline { get; init; }
     public double DominantShare { get; init; }
+    public double DominantOverrideThreshold { get; init; }
     public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
 }

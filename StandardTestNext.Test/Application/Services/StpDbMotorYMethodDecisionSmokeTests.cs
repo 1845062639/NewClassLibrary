@@ -4,6 +4,7 @@ namespace StandardTestNext.Test.Application.Services;
 
 public static class StpDbMotorYMethodDecisionSmokeTests
 {
+    private const double DominantOverrideThreshold = 0.7d;
     private static readonly string DbPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../..", "stp.db"));
 
     public static void Run()
@@ -51,11 +52,16 @@ public static class StpDbMotorYMethodDecisionSmokeTests
             AssertRoute(snapshot.BaselineRoute, row.CanonicalCode, row.BaselineMethod, $"baseline/{row.CanonicalCode}");
             AssertRoute(snapshot.DominantRoute, row.CanonicalCode, row.DominantMethod, $"dominant/{row.CanonicalCode}");
 
-            var expectedRecommendedMethod = row.BaselineMethod != row.DominantMethod
+            var expectedShare = row.TotalCount <= 0
+                ? 0d
+                : Math.Round((double)row.DominantCount / row.TotalCount, 4, MidpointRounding.AwayFromZero);
+            var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod
+                && expectedShare >= DominantOverrideThreshold;
+            var expectedRecommendedMethod = shouldPrioritizeDominant
                 ? row.DominantMethod
                 : row.BaselineMethod;
-            var expectedRecommendedStrategy = row.BaselineMethod != row.DominantMethod
-                ? "dominant-over-baseline"
+            var expectedRecommendedStrategy = shouldPrioritizeDominant
+                ? "dominant-threshold-over-baseline"
                 : "baseline";
             AssertRoute(snapshot.RecommendedRoute, row.CanonicalCode, expectedRecommendedMethod, $"recommended/{row.CanonicalCode}");
             if (!string.Equals(snapshot.RecommendedStrategy, expectedRecommendedStrategy, StringComparison.Ordinal))
@@ -63,15 +69,16 @@ public static class StpDbMotorYMethodDecisionSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: recommended strategy mismatch for {row.CanonicalCode}. expected={expectedRecommendedStrategy}, actual={snapshot.RecommendedStrategy}");
             }
 
-            var expectedShare = row.TotalCount <= 0
-                ? 0d
-                : Math.Round((double)row.DominantCount / row.TotalCount, 4, MidpointRounding.AwayFromZero);
             if (Math.Abs(snapshot.DominantShare - expectedShare) > 0.0001d)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: dominant share mismatch for {row.CanonicalCode}. expected={expectedShare}, actual={snapshot.DominantShare}");
             }
 
-            var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod;
+            if (Math.Abs(snapshot.DominantOverrideThreshold - DominantOverrideThreshold) > 0.0001d)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: override threshold mismatch for {row.CanonicalCode}. expected={DominantOverrideThreshold}, actual={snapshot.DominantOverrideThreshold}");
+            }
+
             if (snapshot.ShouldPrioritizeDominantOverBaseline != shouldPrioritizeDominant)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
