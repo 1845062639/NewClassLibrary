@@ -50,6 +50,11 @@ ORDER BY rowid DESC;";
                 continue;
             }
 
+            if (!IsValidBaselineCandidate(canonicalCode, dataJson))
+            {
+                continue;
+            }
+
             AssertPayload(canonicalCode, method, payload, dataJson);
             verified.Add(canonicalCode);
         }
@@ -98,6 +103,49 @@ ORDER BY rowid DESC;";
         return false;
     }
 
+    private static bool IsValidBaselineCandidate(string canonicalCode, string dataJson)
+    {
+        switch (canonicalCode)
+        {
+            case var code when code == MotorYTestMethodCodes.DcResistance:
+                return dataJson.Contains("\"Ruv\"", StringComparison.Ordinal);
+
+            case var code when code == MotorYTestMethodCodes.NoLoad:
+                var noLoad = MotorYNoLoadLegacyShape.FromJson(dataJson);
+                return noLoad is not null && noLoad.DataList.Count > 0 && (noLoad.P0 > 0 || noLoad.I0 > 0 || noLoad.DataList.Any(x => x.P0 > 0 || x.I0 > 0));
+
+            case var code when code == MotorYTestMethodCodes.HeatRun:
+                var heatRun = MotorYThermalLegacyShape.FromJson(dataJson);
+                return heatRun is not null
+                    && heatRun.Data1List.Count > 0
+                    && heatRun.Data2List.Count > 0
+                    && (heatRun.Δθ > 0 || heatRun.θw > 0 || heatRun.Rw > 0 || heatRun.Data1List.Any(x => x.θ1 > 0 || x.P1 > 0) || heatRun.Data2List.Any(x => x.R > 0));
+
+            case var code when code == MotorYTestMethodCodes.LoadA:
+                var loadA = MotorYLoadALegacyShape.FromJson(dataJson);
+                return loadA is not null
+                    && loadA.RawDataList.Count > 0
+                    && loadA.ResultDataList.Count > 0
+                    && (loadA.Un > 0 || loadA.Pn > 0 || loadA.RawDataList.Any(x => x.U > 0 || x.I1 > 0 || x.P1t > 0));
+
+            case var code when code == MotorYTestMethodCodes.LoadB:
+                var loadB = MotorYLoadBLegacyShape.FromJson(dataJson);
+                return loadB is not null
+                    && loadB.RawDataList.Count > 0
+                    && loadB.ResultDataList.Count > 0
+                    && (loadB.Pfw > 0 || loadB.Pcu1 > 0 || loadB.Pcu2 > 0 || loadB.RawDataList.Any(x => x.U > 0 || x.I1 > 0 || x.P1t > 0));
+
+            case var code when code == MotorYTestMethodCodes.LockedRotor:
+                var lockedRotor = MotorYLockRotorLegacyShape.FromJson(dataJson);
+                return lockedRotor is not null
+                    && lockedRotor.DataList.Count > 0
+                    && (lockedRotor.Ikn > 0 || lockedRotor.Pkn > 0 || lockedRotor.DataList.Any(x => x.Uk > 0 || x.Ik > 0 || x.Pk > 0 || x.Tk > 0));
+
+            default:
+                return false;
+        }
+    }
+
     private static void AssertPayload(
         string canonicalCode,
         int method,
@@ -112,51 +160,147 @@ ORDER BY rowid DESC;";
         switch (canonicalCode)
         {
             case var code when code == MotorYTestMethodCodes.DcResistance:
-                if (!string.IsNullOrWhiteSpace(payload.RecordMode))
-                {
-                    throw new InvalidOperationException($"DC resistance should not infer record mode, got '{payload.RecordMode}'.");
-                }
-
-                if (!dataJson.Contains("Ruv", StringComparison.Ordinal) || method != 1)
-                {
-                    throw new InvalidOperationException("DC resistance payload/method shape mismatch against stp.db baseline.");
-                }
+                AssertDcResistance(method, payload, dataJson);
                 break;
 
             case var code when code == MotorYTestMethodCodes.NoLoad:
-                if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 0, 2))
-                {
-                    throw new InvalidOperationException($"No-load payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
-                }
+                AssertNoLoad(method, payload, dataJson);
                 break;
 
             case var code when code == MotorYTestMethodCodes.HeatRun:
-                if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 3))
-                {
-                    throw new InvalidOperationException($"Heat-run payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
-                }
+                AssertHeatRun(method, payload, dataJson);
                 break;
 
             case var code when code == MotorYTestMethodCodes.LoadA:
-                if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 4, 60))
-                {
-                    throw new InvalidOperationException($"Load-A payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
-                }
+                AssertLoadA(method, payload, dataJson);
                 break;
 
             case var code when code == MotorYTestMethodCodes.LoadB:
-                if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 5))
-                {
-                    throw new InvalidOperationException($"Load-B payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
-                }
+                AssertLoadB(method, payload, dataJson);
                 break;
 
             case var code when code == MotorYTestMethodCodes.LockedRotor:
-                if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 11, 47))
-                {
-                    throw new InvalidOperationException($"Locked-rotor payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
-                }
+                AssertLockedRotor(method, payload, dataJson);
                 break;
+        }
+    }
+
+    private static void AssertDcResistance(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (!string.IsNullOrWhiteSpace(payload.RecordMode))
+        {
+            throw new InvalidOperationException($"DC resistance should not infer record mode, got '{payload.RecordMode}'.");
+        }
+
+        if (!dataJson.Contains("Ruv", StringComparison.Ordinal) || method != 1)
+        {
+            throw new InvalidOperationException("DC resistance payload/method shape mismatch against stp.db baseline.");
+        }
+    }
+
+    private static void AssertNoLoad(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 0, 2))
+        {
+            throw new InvalidOperationException($"No-load payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
+        }
+
+        var shape = MotorYNoLoadLegacyShape.FromJson(dataJson)
+            ?? throw new InvalidOperationException("No-load payload cannot deserialize to MotorYNoLoadLegacyShape.");
+
+        if (shape.DataList.Count <= 0)
+        {
+            throw new InvalidOperationException("No-load legacy shape should contain DataList baseline samples.");
+        }
+
+        if (shape.P0 <= 0 || shape.I0 <= 0)
+        {
+            throw new InvalidOperationException($"No-load baseline summary invalid. P0={shape.P0}, I0={shape.I0}");
+        }
+    }
+
+    private static void AssertHeatRun(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 3))
+        {
+            throw new InvalidOperationException($"Heat-run payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
+        }
+
+        var shape = MotorYThermalLegacyShape.FromJson(dataJson)
+            ?? throw new InvalidOperationException("Heat-run payload cannot deserialize to MotorYThermalLegacyShape.");
+
+        if (shape.Data1List.Count <= 0 || shape.Data2List.Count <= 0)
+        {
+            throw new InvalidOperationException("Heat-run legacy shape should contain Data1List + Data2List baseline samples.");
+        }
+
+        if (shape.Δθ <= 0 && shape.θw <= 0 && shape.Rw <= 0)
+        {
+            throw new InvalidOperationException($"Heat-run baseline summary invalid. Δθ={shape.Δθ}, θw={shape.θw}, Rw={shape.Rw}");
+        }
+    }
+
+    private static void AssertLoadA(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 4, 60))
+        {
+            throw new InvalidOperationException($"Load-A payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
+        }
+
+        var shape = MotorYLoadALegacyShape.FromJson(dataJson)
+            ?? throw new InvalidOperationException("Load-A payload cannot deserialize to MotorYLoadALegacyShape.");
+
+        if (shape.RawDataList.Count <= 0 || shape.ResultDataList.Count <= 0)
+        {
+            throw new InvalidOperationException("Load-A legacy shape should contain RawDataList + ResultDataList baseline samples.");
+        }
+
+        if (shape.Un <= 0 || shape.Pn <= 0)
+        {
+            throw new InvalidOperationException($"Load-A baseline rated summary invalid. Un={shape.Un}, Pn={shape.Pn}");
+        }
+    }
+
+    private static void AssertLoadB(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 5))
+        {
+            throw new InvalidOperationException($"Load-B payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
+        }
+
+        var shape = MotorYLoadBLegacyShape.FromJson(dataJson)
+            ?? throw new InvalidOperationException("Load-B payload cannot deserialize to MotorYLoadBLegacyShape.");
+
+        if (shape.RawDataList.Count <= 0 || shape.ResultDataList.Count <= 0)
+        {
+            throw new InvalidOperationException("Load-B legacy shape should contain RawDataList + ResultDataList baseline samples.");
+        }
+
+        if (shape.Pfw < 0 || shape.Pcu1 < 0 || shape.Pcu2 < 0)
+        {
+            throw new InvalidOperationException($"Load-B baseline loss summary invalid. Pfw={shape.Pfw}, Pcu1={shape.Pcu1}, Pcu2={shape.Pcu2}");
+        }
+    }
+
+    private static void AssertLockedRotor(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
+    {
+        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 11, 47))
+        {
+            throw new InvalidOperationException($"Locked-rotor payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
+        }
+
+        var shape = MotorYLockRotorLegacyShape.FromJson(dataJson)
+            ?? throw new InvalidOperationException("Locked-rotor payload cannot deserialize to MotorYLockRotorLegacyShape.");
+
+        if (shape.DataList.Count <= 0)
+        {
+            throw new InvalidOperationException("Locked-rotor legacy shape should contain DataList baseline samples.");
+        }
+
+        var first = shape.DataList[0];
+        if (shape.Ikn <= 0 && shape.Pkn <= 0 && first.Ik <= 0 && first.Pk <= 0)
+        {
+            throw new InvalidOperationException($"Locked-rotor baseline summary invalid. Ikn={shape.Ikn}, Pkn={shape.Pkn}, Ik={first.Ik}, Pk={first.Pk}");
         }
     }
 }
