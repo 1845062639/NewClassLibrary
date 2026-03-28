@@ -20,6 +20,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             requiredPayloadFields,
             null);
+        var ratedCoverage = MotorYRequiredRatedParamFieldCoverageEvaluator.Evaluate(
+            selection.CanonicalCode,
+            dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+            null);
+        var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
+            && coverage.MissingRequiredPayloadFieldCount == 0
+            && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
+        var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(upstream, coverage, ratedCoverage, legacyAlgorithmInputsReady);
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -60,6 +68,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RequiredPayloadFieldCoveragePercentagePoints = coverage.RequiredPayloadFieldCoveragePercentagePoints,
             SamplePayloadAvailable = coverage.SamplePayloadAvailable,
             RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
+            CoveredRequiredRatedParamFieldCount = ratedCoverage.CoveredRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFieldCount = ratedCoverage.MissingRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFields = ratedCoverage.MissingRequiredRatedParamFields,
+            CoveredRequiredRatedParamFields = ratedCoverage.CoveredRequiredRatedParamFields,
+            RequiredRatedParamFieldCoverageRatio = ratedCoverage.RequiredRatedParamFieldCoverageRatio,
+            RequiredRatedParamFieldCoveragePercentagePoints = ratedCoverage.RequiredRatedParamFieldCoveragePercentagePoints,
+            RatedParamsAvailable = ratedCoverage.RatedParamsAvailable,
+            RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
+            LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
+            LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
             DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
@@ -67,6 +85,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 .Select(MapDistribution)
                 .ToArray()
         };
+    }
+
+    private static string BuildLegacyAlgorithmInputReadinessSummary(
+        MotorYUpstreamDependencySnapshot upstream,
+        MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
+        MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
+        bool legacyAlgorithmInputsReady)
+    {
+        var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
+        var ratedStatus = ratedCoverage.RequiredRatedParamFieldCoverageSummary;
+        var upstreamStatus = upstream.UpstreamDependencySummary;
+
+        return legacyAlgorithmInputsReady
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}";
     }
 
     private static MotorYMethodDistributionContract MapDistribution(MotorYMethodDistributionSnapshot snapshot)

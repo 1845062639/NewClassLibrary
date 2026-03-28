@@ -39,6 +39,16 @@ public sealed class MotorYMethodAdaptationPlanContract
     public int RequiredPayloadFieldCoveragePercentagePoints { get; init; }
     public bool SamplePayloadAvailable { get; init; }
     public string RequiredPayloadFieldCoverageSummary { get; init; } = string.Empty;
+    public int CoveredRequiredRatedParamFieldCount { get; init; }
+    public int MissingRequiredRatedParamFieldCount { get; init; }
+    public IReadOnlyList<string> MissingRequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CoveredRequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public double RequiredRatedParamFieldCoverageRatio { get; init; }
+    public int RequiredRatedParamFieldCoveragePercentagePoints { get; init; }
+    public bool RatedParamsAvailable { get; init; }
+    public string RequiredRatedParamFieldCoverageSummary { get; init; } = string.Empty;
+    public bool LegacyAlgorithmInputsReady { get; init; }
+    public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;

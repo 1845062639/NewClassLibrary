@@ -476,6 +476,7 @@ ORDER BY COALESCE(Code, ''), Method;";
     private static IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> LoadMotorYMethodAdaptationPlans(SqliteConnection connection)
     {
         var samplePayloads = LoadMotorYSamplePayloadByCanonicalCode(connection);
+        var sampleRatedParams = LoadMotorYSampleRatedParamsByCanonicalCode(connection);
 
         return LoadMotorYMethodDecisions(connection)
             .Select(decision =>
@@ -489,10 +490,21 @@ ORDER BY COALESCE(Code, ''), Method;";
                     dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
                     samplePayloads.Keys);
                 samplePayloads.TryGetValue(selection.CanonicalCode, out var sampleDataJson);
+                sampleRatedParams.TryGetValue(selection.CanonicalCode, out var sampleRatedParamsContract);
                 var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
                     selection.CanonicalCode,
                     requiredPayloadFields,
                     sampleDataJson);
+                var ratedCoverage = MotorYRequiredRatedParamFieldCoverageEvaluator.Evaluate(
+                    selection.CanonicalCode,
+                    dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+                    sampleRatedParamsContract);
+                var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
+                    && coverage.MissingRequiredPayloadFieldCount == 0
+                    && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
+                var legacyAlgorithmInputReadinessSummary = legacyAlgorithmInputsReady
+                    ? $"legacy algorithm inputs ready; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}"
+                    : $"legacy algorithm inputs incomplete; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}";
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -533,6 +545,16 @@ ORDER BY COALESCE(Code, ''), Method;";
                     RequiredPayloadFieldCoveragePercentagePoints = coverage.RequiredPayloadFieldCoveragePercentagePoints,
                     SamplePayloadAvailable = coverage.SamplePayloadAvailable,
                     RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
+                    CoveredRequiredRatedParamFieldCount = ratedCoverage.CoveredRequiredRatedParamFieldCount,
+                    MissingRequiredRatedParamFieldCount = ratedCoverage.MissingRequiredRatedParamFieldCount,
+                    MissingRequiredRatedParamFields = ratedCoverage.MissingRequiredRatedParamFields,
+                    CoveredRequiredRatedParamFields = ratedCoverage.CoveredRequiredRatedParamFields,
+                    RequiredRatedParamFieldCoverageRatio = ratedCoverage.RequiredRatedParamFieldCoverageRatio,
+                    RequiredRatedParamFieldCoveragePercentagePoints = ratedCoverage.RequiredRatedParamFieldCoveragePercentagePoints,
+                    RatedParamsAvailable = ratedCoverage.RatedParamsAvailable,
+                    RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
+                    LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
+                    LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
@@ -585,6 +607,50 @@ ORDER BY rowid DESC;";
             }
 
             result[canonicalCode] = dataJson;
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, MotorRatedParamsContract> LoadMotorYSampleRatedParamsByCanonicalCode(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT tri.Code, tri.Method, pt.Code, COALESCE(pt.RatedParams, '{}')
+FROM TestRecordItems tri
+JOIN TestRecords tr ON tr.Id = tri.TestRecordId
+LEFT JOIN ProductTypes pt ON pt.Id = tr.TestProductTypeId
+WHERE tri.Code IN (
+    '直流电阻测定',
+    '空载试验',
+    '空载特性试验',
+    '热试验',
+    'A法负载试验',
+    'B法负载试验',
+    '堵转试验',
+    '堵转特性试验')
+ORDER BY tri.rowid DESC;";
+
+        var result = new Dictionary<string, MotorRatedParamsContract>(StringComparer.Ordinal);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode) || result.ContainsKey(canonicalCode))
+            {
+                continue;
+            }
+
+            var productTypeCode = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
+            var ratedParamsJson = reader.IsDBNull(3) ? "{}" : reader.GetString(3);
+            var ratedParams = TryParseMotorRatedParams(productTypeCode, ratedParamsJson);
+            if (ratedParams is null)
+            {
+                continue;
+            }
+
+            result[canonicalCode] = ratedParams;
         }
 
         return result;
