@@ -137,6 +137,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             FormulaSignalCoveragePercentagePoints = formulaCoverage.CoveragePercentagePoints,
             FormulaSignalsBackedByObservedPayload = formulaEvidence.BackedByObservedPayload,
             FormulaSignalsObservedPayloadFields = formulaEvidence.ObservedPayloadFields,
+            FormulaSignalObservedPayloadGaps = formulaEvidence.SignalOrRuleGaps.Select(MapEvidenceGap).ToArray(),
             FormulaSignalsObservedPayloadSummary = formulaEvidence.Summary,
             LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
             CoveredLegacyAlgorithmRuleCount = ruleCoverage.CoveredCount,
@@ -147,6 +148,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyAlgorithmRuleCoveragePercentagePoints = ruleCoverage.CoveragePercentagePoints,
             LegacyAlgorithmRulesBackedByObservedPayload = ruleEvidence.BackedByObservedPayload,
             LegacyAlgorithmRulesObservedPayloadFields = ruleEvidence.ObservedPayloadFields,
+            LegacyAlgorithmRulesObservedPayloadGaps = ruleEvidence.SignalOrRuleGaps.Select(MapEvidenceGap).ToArray(),
             LegacyAlgorithmRulesObservedPayloadSummary = ruleEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
@@ -173,6 +175,19 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         return legacyAlgorithmInputsReady
             ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}"
             : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {rawDataStatus}";
+    }
+
+    private static MotorYObservedAlgorithmEvidenceGapContract MapEvidenceGap(MotorYObservedAlgorithmEvidenceGap gap)
+    {
+        return new MotorYObservedAlgorithmEvidenceGapContract
+        {
+            SignalOrRule = gap.SignalOrRule,
+            RequiredPayloadFields = gap.RequiredPayloadFields,
+            ObservedPayloadFields = gap.ObservedPayloadFields,
+            MissingPayloadFields = gap.MissingPayloadFields,
+            CoveredByObservedPayload = gap.CoveredByObservedPayload,
+            Summary = gap.Summary
+        };
     }
 
     private static MotorYMethodDistributionContract MapDistribution(MotorYMethodDistributionSnapshot snapshot)

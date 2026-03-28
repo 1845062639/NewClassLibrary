@@ -614,6 +614,17 @@ ORDER BY COALESCE(Code, ''), Method;";
                     FormulaSignalCoveragePercentagePoints = formulaCoverage.CoveragePercentagePoints,
                     FormulaSignalsBackedByObservedPayload = formulaEvidence.BackedByObservedPayload,
                     FormulaSignalsObservedPayloadFields = formulaEvidence.ObservedPayloadFields,
+                    FormulaSignalObservedPayloadGaps = formulaEvidence.SignalOrRuleGaps
+                        .Select(gap => new MotorYObservedAlgorithmEvidenceGapSnapshot
+                        {
+                            SignalOrRule = gap.SignalOrRule,
+                            RequiredPayloadFields = gap.RequiredPayloadFields,
+                            ObservedPayloadFields = gap.ObservedPayloadFields,
+                            MissingPayloadFields = gap.MissingPayloadFields,
+                            CoveredByObservedPayload = gap.CoveredByObservedPayload,
+                            Summary = gap.Summary
+                        })
+                        .ToArray(),
                     FormulaSignalsObservedPayloadSummary = formulaEvidence.Summary,
                     LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
                     CoveredLegacyAlgorithmRuleCount = ruleCoverage.CoveredCount,
@@ -624,6 +635,17 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyAlgorithmRuleCoveragePercentagePoints = ruleCoverage.CoveragePercentagePoints,
                     LegacyAlgorithmRulesBackedByObservedPayload = ruleEvidence.BackedByObservedPayload,
                     LegacyAlgorithmRulesObservedPayloadFields = ruleEvidence.ObservedPayloadFields,
+                    LegacyAlgorithmRulesObservedPayloadGaps = ruleEvidence.SignalOrRuleGaps
+                        .Select(gap => new MotorYObservedAlgorithmEvidenceGapSnapshot
+                        {
+                            SignalOrRule = gap.SignalOrRule,
+                            RequiredPayloadFields = gap.RequiredPayloadFields,
+                            ObservedPayloadFields = gap.ObservedPayloadFields,
+                            MissingPayloadFields = gap.MissingPayloadFields,
+                            CoveredByObservedPayload = gap.CoveredByObservedPayload,
+                            Summary = gap.Summary
+                        })
+                        .ToArray(),
                     LegacyAlgorithmRulesObservedPayloadSummary = ruleEvidence.Summary,
                     FormulaSignalSummary = formulaCoverage.Summary,
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,

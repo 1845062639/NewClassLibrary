@@ -1,5 +1,15 @@
 namespace StandardTestNext.Contracts;
 
+public sealed class MotorYObservedAlgorithmEvidenceGapContract
+{
+    public string SignalOrRule { get; init; } = string.Empty;
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public bool CoveredByObservedPayload { get; init; }
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYMethodAdaptationPlanContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -80,6 +90,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public int FormulaSignalCoveragePercentagePoints { get; init; }
     public bool FormulaSignalsBackedByObservedPayload { get; init; }
     public IReadOnlyList<string> FormulaSignalsObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapContract> FormulaSignalObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapContract>();
     public string FormulaSignalsObservedPayloadSummary { get; init; } = string.Empty;
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public int CoveredLegacyAlgorithmRuleCount { get; init; }
@@ -90,6 +101,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public int LegacyAlgorithmRuleCoveragePercentagePoints { get; init; }
     public bool LegacyAlgorithmRulesBackedByObservedPayload { get; init; }
     public IReadOnlyList<string> LegacyAlgorithmRulesObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapContract> LegacyAlgorithmRulesObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapContract>();
     public string LegacyAlgorithmRulesObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;

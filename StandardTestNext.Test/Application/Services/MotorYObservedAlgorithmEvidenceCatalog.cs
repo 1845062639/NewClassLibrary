@@ -1,5 +1,15 @@
 namespace StandardTestNext.Test.Application.Services;
 
+internal sealed class MotorYObservedAlgorithmEvidenceGap
+{
+    public string SignalOrRule { get; init; } = string.Empty;
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public bool CoveredByObservedPayload { get; init; }
+    public string Summary { get; init; } = string.Empty;
+}
+
 internal sealed class MotorYObservedAlgorithmEvidenceSnapshot
 {
     public bool BackedByObservedPayload { get; init; }
@@ -7,6 +17,7 @@ internal sealed class MotorYObservedAlgorithmEvidenceSnapshot
     public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
     public double CoverageRatio { get; init; }
     public int CoveragePercentagePoints { get; init; }
+    public IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> SignalOrRuleGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGap>();
     public string Summary { get; init; } = string.Empty;
 }
 
@@ -35,16 +46,17 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         };
 
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
-        => Build(canonicalCode, observedPayloadFields, FormulaSignalObservedFieldsByCanonicalCode, "formula signal observed payload");
+        => Build(canonicalCode, observedPayloadFields, FormulaSignalObservedFieldsByCanonicalCode, "formula signal observed payload", "formula-signal");
 
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyRuleEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
-        => Build(canonicalCode, observedPayloadFields, LegacyRuleObservedFieldsByCanonicalCode, "legacy algorithm rule observed payload");
+        => Build(canonicalCode, observedPayloadFields, LegacyRuleObservedFieldsByCanonicalCode, "legacy algorithm rule observed payload", "legacy-rule");
 
     private static MotorYObservedAlgorithmEvidenceSnapshot Build(
         string canonicalCode,
         IReadOnlyList<string>? observedPayloadFields,
         IReadOnlyDictionary<string, string[]> catalog,
-        string summaryLabel)
+        string summaryLabel,
+        string gapLabelPrefix)
     {
         var requiredFields = catalog.TryGetValue(canonicalCode, out var fields)
             ? fields.Where(field => !string.IsNullOrWhiteSpace(field)).Distinct(StringComparer.Ordinal).ToArray()
@@ -64,6 +76,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             ? 1d
             : Math.Round((double)matched.Length / requiredFields.Length, 4, MidpointRounding.AwayFromZero);
         var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
+        var gaps = BuildSignalOrRuleGaps(requiredFields, observed, gapLabelPrefix);
 
         return new MotorYObservedAlgorithmEvidenceSnapshot
         {
@@ -72,7 +85,33 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             MissingPayloadFields = missing,
             CoverageRatio = ratio,
             CoveragePercentagePoints = percentagePoints,
+            SignalOrRuleGaps = gaps,
             Summary = $"{summaryLabel} fields observed {matched.Length}/{requiredFields.Length} ({percentagePoints}pp); missing: {(missing.Length == 0 ? "none" : string.Join(", ", missing))}; observed: {(matched.Length == 0 ? "none" : string.Join(", ", matched))}"
         };
+    }
+
+    private static IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> BuildSignalOrRuleGaps(
+        IReadOnlyList<string> requiredFields,
+        IReadOnlyList<string> observedFields,
+        string gapLabelPrefix)
+    {
+        return requiredFields
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .Select(field =>
+            {
+                var isCovered = observedFields.Contains(field, StringComparer.Ordinal);
+                return new MotorYObservedAlgorithmEvidenceGap
+                {
+                    SignalOrRule = $"{gapLabelPrefix}:{field}",
+                    RequiredPayloadFields = new[] { field },
+                    ObservedPayloadFields = isCovered ? new[] { field } : Array.Empty<string>(),
+                    MissingPayloadFields = isCovered ? Array.Empty<string>() : new[] { field },
+                    CoveredByObservedPayload = isCovered,
+                    Summary = isCovered
+                        ? $"{gapLabelPrefix}:{field} covered by observed payload field '{field}'"
+                        : $"{gapLabelPrefix}:{field} missing observed payload field '{field}'"
+                };
+            })
+            .ToArray();
     }
 }

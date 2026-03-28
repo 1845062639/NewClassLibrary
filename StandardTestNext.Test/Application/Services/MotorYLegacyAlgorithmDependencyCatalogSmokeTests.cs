@@ -158,6 +158,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.FormulaSignalCoveragePercentagePoints != 100
             || contract.FormulaSignalsBackedByObservedPayload
             || contract.FormulaSignalsObservedPayloadFields.Count != 0
+            || contract.FormulaSignalObservedPayloadGaps.Count != 5
+            || contract.FormulaSignalObservedPayloadGaps.Any(gap => gap.CoveredByObservedPayload)
+            || !contract.FormulaSignalObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "formula-signal:A", "formula-signal:B", "formula-signal:R", "formula-signal:ResultDataList", "formula-signal:θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || !contract.FormulaSignalObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 0 && gap.MissingPayloadFields.Count == 1)
             || !string.Equals(contract.FormulaSignalsObservedPayloadSummary, "formula signal observed payload fields observed 0/5 (0pp); missing: A, B, R, ResultDataList, θs; observed: none", StringComparison.Ordinal)
             || contract.LegacyAlgorithmRules.Count == 0
             || contract.CoveredLegacyAlgorithmRuleCount != contract.LegacyAlgorithmRules.Count
@@ -168,6 +172,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.LegacyAlgorithmRuleCoveragePercentagePoints != 100
             || contract.LegacyAlgorithmRulesBackedByObservedPayload
             || contract.LegacyAlgorithmRulesObservedPayloadFields.Count != 0
+            || contract.LegacyAlgorithmRulesObservedPayloadGaps.Count != 9
+            || contract.LegacyAlgorithmRulesObservedPayloadGaps.Any(gap => gap.CoveredByObservedPayload)
+            || !contract.LegacyAlgorithmRulesObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "legacy-rule:A", "legacy-rule:B", "legacy-rule:GB", "legacy-rule:Ps", "legacy-rule:R", "legacy-rule:ResultDataList", "legacy-rule:θb", "legacy-rule:θs", "legacy-rule:θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || !contract.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 0 && gap.MissingPayloadFields.Count == 1)
             || !string.Equals(contract.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 0/9 (0pp); missing: A, B, GB, Ps, R, ResultDataList, θb, θs, θw; observed: none", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
             || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
@@ -231,6 +239,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.FormulaSignalCoveragePercentagePoints != 100
             || !loadBPlan.FormulaSignalsBackedByObservedPayload
             || !loadBPlan.FormulaSignalsObservedPayloadFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.FormulaSignalObservedPayloadGaps.Count != 5
+            || !loadBPlan.FormulaSignalObservedPayloadGaps.All(gap => gap.CoveredByObservedPayload)
+            || !loadBPlan.FormulaSignalObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "formula-signal:A", "formula-signal:B", "formula-signal:R", "formula-signal:ResultDataList", "formula-signal:θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || !loadBPlan.FormulaSignalObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 1 && gap.MissingPayloadFields.Count == 0)
             || !string.Equals(loadBPlan.FormulaSignalsObservedPayloadSummary, "formula signal observed payload fields observed 5/5 (100pp); missing: none; observed: A, B, R, ResultDataList, θs", StringComparison.Ordinal)
             || loadBPlan.LegacyAlgorithmRules.Count == 0
             || loadBPlan.CoveredLegacyAlgorithmRuleCount != loadBPlan.LegacyAlgorithmRules.Count
@@ -241,6 +253,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 100
             || !loadBPlan.LegacyAlgorithmRulesBackedByObservedPayload
             || !loadBPlan.LegacyAlgorithmRulesObservedPayloadFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "GB", "Ps", "R", "ResultDataList", "θb", "θs", "θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.Count != 9
+            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.CoveredByObservedPayload)
+            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "legacy-rule:A", "legacy-rule:B", "legacy-rule:GB", "legacy-rule:Ps", "legacy-rule:R", "legacy-rule:ResultDataList", "legacy-rule:θb", "legacy-rule:θs", "legacy-rule:θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 1 && gap.MissingPayloadFields.Count == 0)
             || !string.Equals(loadBPlan.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 9/9 (100pp); missing: none; observed: A, B, GB, Ps, R, ResultDataList, θb, θs, θw", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredPayloadFieldCoverageSummary)
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredRatedParamFieldCoverageSummary)
