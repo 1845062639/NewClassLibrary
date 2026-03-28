@@ -4,7 +4,7 @@ namespace StandardTestNext.Test.Application.Services;
 
 public static class TestRecordViewMapper
 {
-    private const double MotorYDominantOverrideThreshold = 0.7d;
+    internal const double MotorYDominantOverrideThreshold = 0.7d;
 
     public static TestRecordListView ToListView(this TestRecordSummary summary)
     {
@@ -102,14 +102,8 @@ public static class TestRecordViewMapper
                 var baseline = group.FirstOrDefault(profile => profile.IsBaselineMethod)
                     ?? dominant.Profile;
                 var baselineCount = group.Count(profile => profile.MethodValue == baseline.MethodValue);
-                var dominantShare = totalCount <= 0
-                    ? 0d
-                    : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
-                var baselineShare = totalCount <= 0
-                    ? 0d
-                    : Math.Round((double)baselineCount / totalCount, 4, MidpointRounding.AwayFromZero);
-                var dominantLeadCount = Math.Max(0, dominant.Count - baselineCount);
-                var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((dominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
+                var baselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue);
+                var dominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue);
                 var distributions = methodGroups
                     .Select(row => new MotorYMethodDistributionSnapshot
                     {
@@ -121,61 +115,16 @@ public static class TestRecordViewMapper
                         Route = MotorYLegacyAlgorithmRouteResolver.Resolve(row.Profile.CanonicalCode, row.MethodValue)
                     })
                     .ToArray();
-                var shouldPrioritizeDominant = dominant.MethodValue != baseline.MethodValue
-                    && dominantShare >= MotorYDominantOverrideThreshold;
-                var recommendedRoute = shouldPrioritizeDominant
-                    ? MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue)
-                    : MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue);
-                var recommendedStrategy = shouldPrioritizeDominant
-                    ? "dominant-threshold-over-baseline"
-                    : "baseline";
 
-                var decision = new MotorYMethodDecisionSnapshot
-                {
-                    CanonicalCode = group.Key,
-                    TotalCount = totalCount,
-                    BaselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue),
-                    BaselineCount = baselineCount,
-                    DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue),
-                    DominantCount = dominant.Count,
-                    RecommendedRoute = recommendedRoute,
-                    RecommendedStrategy = recommendedStrategy,
-                    ShouldPrioritizeDominantOverBaseline = shouldPrioritizeDominant,
-                    DominantShare = dominantShare,
-                    BaselineShare = baselineShare,
-                    DominantOverrideThreshold = MotorYDominantOverrideThreshold,
-                    DominantLeadCount = dominantLeadCount,
-                    DominantLeadPercentagePoints = dominantLeadPercentagePoints,
-                    RecommendationReason = shouldPrioritizeDominant
-                        ? $"selected dominant method {dominant.MethodValue} over baseline {baseline.MethodValue} because dominant share {dominantShare:P2} reached threshold {MotorYDominantOverrideThreshold:P0} (+{dominantLeadCount} items, +{dominantLeadPercentagePoints}pp)"
-                        : baseline.MethodValue == dominant.MethodValue
-                            ? $"kept baseline method {baseline.MethodValue} because baseline already matches dominant distribution ({dominantShare:P2})"
-                            : $"kept baseline method {baseline.MethodValue} because dominant method {dominant.MethodValue} share {dominantShare:P2} did not reach threshold {MotorYDominantOverrideThreshold:P0}",
-                    Distributions = distributions
-                };
-
-                var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
-                return new MotorYMethodDecisionSnapshot
-                {
-                    CanonicalCode = decision.CanonicalCode,
-                    TotalCount = decision.TotalCount,
-                    BaselineRoute = decision.BaselineRoute,
-                    BaselineCount = decision.BaselineCount,
-                    DominantRoute = decision.DominantRoute,
-                    DominantCount = decision.DominantCount,
-                    RecommendedRoute = decision.RecommendedRoute,
-                    RecommendedStrategy = decision.RecommendedStrategy,
-                    ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
-                    DominantShare = decision.DominantShare,
-                    BaselineShare = decision.BaselineShare,
-                    DominantOverrideThreshold = decision.DominantOverrideThreshold,
-                    DominantLeadCount = decision.DominantLeadCount,
-                    DominantLeadPercentagePoints = decision.DominantLeadPercentagePoints,
-                    RecommendationReason = decision.RecommendationReason,
-                    RecommendedMethodSummary = selection.SelectedMethodSummary,
-                    BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
-                    Distributions = decision.Distributions
-                };
+                return MotorYMethodDecisionFactory.Create(
+                    group.Key,
+                    totalCount,
+                    baselineRoute,
+                    baselineCount,
+                    dominantRoute,
+                    dominant.Count,
+                    distributions,
+                    MotorYDominantOverrideThreshold);
             })
             .OrderBy(x => x.CanonicalCode, StringComparer.Ordinal)
             .ToArray();

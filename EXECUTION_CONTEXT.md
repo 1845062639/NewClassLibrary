@@ -123,6 +123,8 @@
 - 本轮又把同一批 share/gap 摘要补进 `MotorYMethodAdaptationPlanContract`：适配计划现在除 `DominantShare` 外，也直接暴露 `BaselineShare / SelectedShare / SelectedLeadCountVsBaseline / SelectedLeadPercentagePointsVsBaseline`，并由 query smoke test 锁定 NoLoad 场景下的数值。这样后续 Motor_Y 算法适配器、报表默认方法选择或 UI 提示，可直接消费“基线 vs 主流 vs 实际选中”三路占比与领先幅度，无需在 App 侧再次手算。
 - 本轮继续把同一套方法选择摘要向 App detail 闭环补齐：`MotorYMethodDecisionContract` 新增 `RecommendedMethodSummary / BaselineDominantComparisonSummary`，直接复用 `MotorYMethodRouteSelectionSnapshotFactory` 产出“推荐方法摘要 + 基线/主流对比摘要”，并由 query smoke test 锁定字符串内容。这样后续 App 页面、报表或算法适配提示层读取 detail 时，不必再自行拼装 `baseline vs dominant vs recommended` 的说明文案。
 - 本轮继续把同一套“推荐方法摘要 + 基线/主流对比摘要”打通到 `stp.db` 真实快照决策层：`MotorYMethodDecisionSnapshot` 新增 `RecommendedMethodSummary / BaselineDominantComparisonSummary`，`StpDbSnapshotQueryService.ListMotorYMethodDecisions()` 现已直接复用 `MotorYMethodRouteSelectionSnapshotFactory` 产出统一摘要，避免 `stp.db snapshot` 与 `builder -> query detail` 两套文案口径漂移；并补 `StpDbMotorYMethodDecisionSmokeTests` 锁定真实库下 6 个 Motor_Y 核心试验项的摘要字符串与推荐策略一致性，方便后续算法适配/报表直接消费真实库决策摘要。
+- 本轮又把这套摘要能力继续补到 `stp.db -> MotorYMethodAdaptationPlanSnapshot`：适配计划快照现在也直接暴露 `BaselineShare / SelectedShare / SelectedLeadCountVsBaseline / SelectedLeadPercentagePointsVsBaseline / SelectedMethodSummary / BaselineDominantComparisonSummary`，并改为复用 `MotorYMethodRouteSelectionSnapshotFactory` 统一产出，`StpDbMotorYMethodAdaptationPlanSmokeTests` 已锁定真实库下 6 个核心试验项的数值与摘要，避免 snapshot/contract/app 三层再次各自手算、各自拼文案。
+- 本轮继续把 Motor_Y 方法选择逻辑从“多处各写一遍”收敛成共享工厂：新增 `MotorYMethodDecisionFactory`，统一产出 `Baseline/Dominant/Recommended/Share/Lead/Reason/Summary` 全套决策字段，并让 `stp.db` 真实快照层与 `builder -> query detail` 闭环同时复用同一实现；同时把阈值口径收敛为共享常量，避免后续算法适配、报表提示或 App 查询层在 70% override 规则上出现漂移。
 
 ## 6. 参考范围
 
