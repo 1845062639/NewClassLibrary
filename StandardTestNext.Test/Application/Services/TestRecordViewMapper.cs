@@ -105,6 +105,11 @@ public static class TestRecordViewMapper
                 var dominantShare = totalCount <= 0
                     ? 0d
                     : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+                var baselineShare = totalCount <= 0
+                    ? 0d
+                    : Math.Round((double)baselineCount / totalCount, 4, MidpointRounding.AwayFromZero);
+                var dominantLeadCount = Math.Max(0, dominant.Count - baselineCount);
+                var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((dominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
                 var distributions = methodGroups
                     .Select(row => new MotorYMethodDistributionSnapshot
                     {
@@ -137,7 +142,15 @@ public static class TestRecordViewMapper
                     RecommendedStrategy = recommendedStrategy,
                     ShouldPrioritizeDominantOverBaseline = shouldPrioritizeDominant,
                     DominantShare = dominantShare,
+                    BaselineShare = baselineShare,
                     DominantOverrideThreshold = MotorYDominantOverrideThreshold,
+                    DominantLeadCount = dominantLeadCount,
+                    DominantLeadPercentagePoints = dominantLeadPercentagePoints,
+                    RecommendationReason = shouldPrioritizeDominant
+                        ? $"selected dominant method {dominant.MethodValue} over baseline {baseline.MethodValue} because dominant share {dominantShare:P2} reached threshold {MotorYDominantOverrideThreshold:P0} (+{dominantLeadCount} items, +{dominantLeadPercentagePoints}pp)"
+                        : baseline.MethodValue == dominant.MethodValue
+                            ? $"kept baseline method {baseline.MethodValue} because baseline already matches dominant distribution ({dominantShare:P2})"
+                            : $"kept baseline method {baseline.MethodValue} because dominant method {dominant.MethodValue} share {dominantShare:P2} did not reach threshold {MotorYDominantOverrideThreshold:P0}",
                     Distributions = distributions
                 };
             })

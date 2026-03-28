@@ -357,9 +357,12 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
 
         var decisions = detail.MotorYMethodDecisions.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
-        AssertMethodDecision(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1, 1, 1, false, 1d);
-        AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, false, 0.6667d);
-        AssertMethodDecision(decisions, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, false, 1d);
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1, 1, 1, false, 1d, 1d, 0, 0,
+            "kept baseline method 1 because baseline already matches dominant distribution (100.00%)");
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, false, 0.6667d, 0.3333d, 1, 33,
+            "kept baseline method 0 because dominant method 59 share 66.67% did not reach threshold 70%");
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, false, 1d, 1d, 0, 0,
+            "kept baseline method 4 because baseline already matches dominant distribution (100.00%)");
 
         AssertDistribution(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1d, true);
         AssertDistribution(decisions, MotorYTestMethodCodes.NoLoad, 59, 2, 0.6667d, false);
@@ -400,12 +403,12 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, 4, 1, false, 1d, "baseline");
 
         var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
-        if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00 %)", StringComparison.Ordinal))
+        if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
         }
 
-        if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00 %), dominant 59 (delivery)=3/4 (75.00 %)", StringComparison.Ordinal))
+        if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00%), dominant 59 (delivery)=3/4 (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test comparison summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.BaselineDominantComparisonSummary}'");
         }
@@ -461,7 +464,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         int expectedDominantMethod,
         int expectedDominantCount,
         bool expectedPrioritize,
-        double expectedDominantShare)
+        double expectedDominantShare,
+        double expectedBaselineShare,
+        int expectedDominantLeadCount,
+        int expectedDominantLeadPercentagePoints,
+        string expectedRecommendationReason)
     {
         if (!decisions.TryGetValue(canonicalCode, out var decision))
         {
@@ -472,9 +479,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || decision.BaselineCount != expectedBaselineCount
             || decision.DominantCount != expectedDominantCount
             || decision.ShouldPrioritizeDominantOverBaseline != expectedPrioritize
-            || Math.Abs(decision.DominantShare - expectedDominantShare) > 0.0001d)
+            || Math.Abs(decision.DominantShare - expectedDominantShare) > 0.0001d
+            || Math.Abs(decision.BaselineShare - expectedBaselineShare) > 0.0001d
+            || decision.DominantLeadCount != expectedDominantLeadCount
+            || decision.DominantLeadPercentagePoints != expectedDominantLeadPercentagePoints
+            || !string.Equals(decision.RecommendationReason, expectedRecommendationReason, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y method decision query smoke test numeric mismatch for '{canonicalCode}'.");
+            throw new InvalidOperationException(
+                $"Motor_Y method decision query smoke test numeric mismatch for '{canonicalCode}'. actual: total={decision.TotalCount}, baselineCount={decision.BaselineCount}, dominantCount={decision.DominantCount}, prioritize={decision.ShouldPrioritizeDominantOverBaseline}, dominantShare={decision.DominantShare}, baselineShare={decision.BaselineShare}, leadCount={decision.DominantLeadCount}, leadPp={decision.DominantLeadPercentagePoints}, reason='{decision.RecommendationReason}'");
         }
 
         if (decision.BaselineProfile is null

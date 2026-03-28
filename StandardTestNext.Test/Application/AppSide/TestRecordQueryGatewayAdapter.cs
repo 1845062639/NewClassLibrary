@@ -146,7 +146,11 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             RecommendedStrategy = snapshot.RecommendedStrategy,
             ShouldPrioritizeDominantOverBaseline = snapshot.ShouldPrioritizeDominantOverBaseline,
             DominantShare = snapshot.DominantShare,
+            BaselineShare = snapshot.BaselineShare,
             DominantOverrideThreshold = snapshot.DominantOverrideThreshold,
+            DominantLeadCount = snapshot.DominantLeadCount,
+            DominantLeadPercentagePoints = snapshot.DominantLeadPercentagePoints,
+            RecommendationReason = snapshot.RecommendationReason,
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
         };
     }
