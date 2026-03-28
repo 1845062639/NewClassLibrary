@@ -131,7 +131,19 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.CoveredRequiredRatedParamFields.Count != 0
             || contract.LegacyAlgorithmInputsReady
             || contract.FormulaSignals.Count == 0
+            || contract.CoveredFormulaSignalCount != contract.FormulaSignals.Count
+            || contract.MissingFormulaSignalCount != 0
+            || !contract.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(contract.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || contract.MissingFormulaSignals.Count != 0
+            || Math.Abs(contract.FormulaSignalCoverageRatio - 1d) > 0.0001d
+            || contract.FormulaSignalCoveragePercentagePoints != 100
             || contract.LegacyAlgorithmRules.Count == 0
+            || contract.CoveredLegacyAlgorithmRuleCount != contract.LegacyAlgorithmRules.Count
+            || contract.MissingLegacyAlgorithmRuleCount != 0
+            || !contract.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(contract.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || contract.MissingLegacyAlgorithmRules.Count != 0
+            || Math.Abs(contract.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
+            || contract.LegacyAlgorithmRuleCoveragePercentagePoints != 100
             || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
             || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
             || !string.Equals(contract.RequiredRatedParamFieldCoverageSummary, "rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
@@ -168,7 +180,19 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.RequiredRatedParamFieldCoveragePercentagePoints <= 0
             || !loadBPlan.LegacyAlgorithmInputsReady
             || loadBPlan.FormulaSignals.Count == 0
+            || loadBPlan.CoveredFormulaSignalCount != loadBPlan.FormulaSignals.Count
+            || loadBPlan.MissingFormulaSignalCount != 0
+            || !loadBPlan.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(loadBPlan.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.MissingFormulaSignals.Count != 0
+            || Math.Abs(loadBPlan.FormulaSignalCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.FormulaSignalCoveragePercentagePoints != 100
             || loadBPlan.LegacyAlgorithmRules.Count == 0
+            || loadBPlan.CoveredLegacyAlgorithmRuleCount != loadBPlan.LegacyAlgorithmRules.Count
+            || loadBPlan.MissingLegacyAlgorithmRuleCount != 0
+            || !loadBPlan.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(loadBPlan.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.MissingLegacyAlgorithmRules.Count != 0
+            || Math.Abs(loadBPlan.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 100
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredPayloadFieldCoverageSummary)
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredRatedParamFieldCoverageSummary)
             || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmInputReadinessSummary)

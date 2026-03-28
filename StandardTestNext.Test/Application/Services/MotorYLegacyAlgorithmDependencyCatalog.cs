@@ -20,6 +20,18 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public string Notes { get; init; } = string.Empty;
 }
 
+internal sealed class MotorYStructuredListCoverageSnapshot
+{
+    public int RequiredCount { get; init; }
+    public int CoveredCount { get; init; }
+    public int MissingCount { get; init; }
+    public IReadOnlyList<string> CoveredItems { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingItems { get; init; } = Array.Empty<string>();
+    public double CoverageRatio { get; init; }
+    public int CoveragePercentagePoints { get; init; }
+    public string Summary { get; init; } = string.Empty;
+}
+
 public static class MotorYLegacyAlgorithmDependencyCatalog
 {
     private static readonly IReadOnlyDictionary<string, MotorYLegacyAlgorithmDependencyProfile> Profiles =

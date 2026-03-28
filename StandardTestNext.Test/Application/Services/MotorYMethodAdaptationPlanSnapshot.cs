@@ -54,7 +54,19 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
+    public int CoveredFormulaSignalCount { get; init; }
+    public int MissingFormulaSignalCount { get; init; }
+    public IReadOnlyList<string> CoveredFormulaSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingFormulaSignals { get; init; } = Array.Empty<string>();
+    public double FormulaSignalCoverageRatio { get; init; }
+    public int FormulaSignalCoveragePercentagePoints { get; init; }
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
+    public int CoveredLegacyAlgorithmRuleCount { get; init; }
+    public int MissingLegacyAlgorithmRuleCount { get; init; }
+    public IReadOnlyList<string> CoveredLegacyAlgorithmRules { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingLegacyAlgorithmRules { get; init; } = Array.Empty<string>();
+    public double LegacyAlgorithmRuleCoverageRatio { get; init; }
+    public int LegacyAlgorithmRuleCoveragePercentagePoints { get; init; }
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;

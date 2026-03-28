@@ -406,9 +406,25 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         if (noLoadPlan.ObservedUpstreamCanonicalCodeCount != 0
             || noLoadPlan.ObservedUpstreamCanonicalCodes.Count != 0
             || !noLoadPlan.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
-            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: DcResistance; observed 0/1 required upstream codes", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
+        }
+
+        if (noLoadPlan.CoveredFormulaSignalCount != noLoadPlan.FormulaSignals.Count
+            || noLoadPlan.MissingFormulaSignalCount != 0
+            || !noLoadPlan.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.MissingFormulaSignals.Count != 0
+            || Math.Abs(noLoadPlan.FormulaSignalCoverageRatio - 1d) > 0.0001d
+            || noLoadPlan.FormulaSignalCoveragePercentagePoints != 100
+            || noLoadPlan.CoveredLegacyAlgorithmRuleCount != noLoadPlan.LegacyAlgorithmRules.Count
+            || noLoadPlan.MissingLegacyAlgorithmRuleCount != 0
+            || !noLoadPlan.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.MissingLegacyAlgorithmRules.Count != 0
+            || Math.Abs(noLoadPlan.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
+            || noLoadPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 100)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test formula/rule coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual formulaCovered=[{string.Join(", ", noLoadPlan.CoveredFormulaSignals)}], rulesCovered=[{string.Join(", ", noLoadPlan.CoveredLegacyAlgorithmRules)}]");
         }
 
         if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))

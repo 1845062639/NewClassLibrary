@@ -24,6 +24,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             null);
+        var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+            dependencyProfile?.FormulaSignals,
+            dependencyProfile?.FormulaSignals,
+            "formula signals");
+        var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+            dependencyProfile?.LegacyAlgorithmRules,
+            dependencyProfile?.LegacyAlgorithmRules,
+            "legacy algorithm rules");
         var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
             && coverage.MissingRequiredPayloadFieldCount == 0
             && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
@@ -83,9 +91,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
             DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
             FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
+            CoveredFormulaSignalCount = formulaCoverage.CoveredCount,
+            MissingFormulaSignalCount = formulaCoverage.MissingCount,
+            CoveredFormulaSignals = formulaCoverage.CoveredItems,
+            MissingFormulaSignals = formulaCoverage.MissingItems,
+            FormulaSignalCoverageRatio = formulaCoverage.CoverageRatio,
+            FormulaSignalCoveragePercentagePoints = formulaCoverage.CoveragePercentagePoints,
             LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
-            FormulaSignalSummary = BuildListSummary("formula signals", dependencyProfile?.FormulaSignals),
-            LegacyAlgorithmRuleSummary = BuildListSummary("legacy algorithm rules", dependencyProfile?.LegacyAlgorithmRules),
+            CoveredLegacyAlgorithmRuleCount = ruleCoverage.CoveredCount,
+            MissingLegacyAlgorithmRuleCount = ruleCoverage.MissingCount,
+            CoveredLegacyAlgorithmRules = ruleCoverage.CoveredItems,
+            MissingLegacyAlgorithmRules = ruleCoverage.MissingItems,
+            LegacyAlgorithmRuleCoverageRatio = ruleCoverage.CoverageRatio,
+            LegacyAlgorithmRuleCoveragePercentagePoints = ruleCoverage.CoveragePercentagePoints,
+            FormulaSignalSummary = formulaCoverage.Summary,
+            LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
             Distributions = selection.Distributions
@@ -107,16 +127,6 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         return legacyAlgorithmInputsReady
             ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}"
             : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}";
-    }
-
-    private static string BuildListSummary(string label, IReadOnlyList<string>? items)
-    {
-        if (items is null || items.Count == 0)
-        {
-            return $"{label}: none";
-        }
-
-        return $"{label} ({items.Count}): {string.Join(" | ", items)}";
     }
 
     private static MotorYMethodDistributionContract MapDistribution(MotorYMethodDistributionSnapshot snapshot)
