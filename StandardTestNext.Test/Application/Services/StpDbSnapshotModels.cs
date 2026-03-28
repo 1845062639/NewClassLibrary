@@ -10,7 +10,9 @@ public sealed class StpDbProductTypeSnapshot
     public string? Remark { get; init; }
     public bool IsValid { get; init; }
     public string? CreateTimeRaw { get; init; }
+    public string? CreateBy { get; init; }
     public string? UpdateTimeRaw { get; init; }
+    public string? UpdateBy { get; init; }
 }
 
 public sealed class StpDbTestRecordSnapshot
@@ -27,6 +29,11 @@ public sealed class StpDbTestRecordSnapshot
     public string? Remark { get; init; }
     public string? TestTimeRaw { get; init; }
     public bool IsValid { get; init; }
+    public string? CreateTimeRaw { get; init; }
+    public string? CreateBy { get; init; }
+    public string? UpdateTimeRaw { get; init; }
+    public string? UpdateBy { get; init; }
+    public IReadOnlyList<StpDbFileAttachmentSnapshot> Attachments { get; init; } = Array.Empty<StpDbFileAttachmentSnapshot>();
 }
 
 public sealed class StpDbTestRecordItemSnapshot
@@ -38,6 +45,10 @@ public sealed class StpDbTestRecordItemSnapshot
     public string? Remark { get; init; }
     public string? TestRecordId { get; init; }
     public bool IsValid { get; init; }
+    public string? CreateTimeRaw { get; init; }
+    public string? CreateBy { get; init; }
+    public string? UpdateTimeRaw { get; init; }
+    public string? UpdateBy { get; init; }
     public IReadOnlyList<StpDbFileAttachmentSnapshot> Attachments { get; init; } = Array.Empty<StpDbFileAttachmentSnapshot>();
 }
 

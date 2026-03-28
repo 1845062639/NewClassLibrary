@@ -48,6 +48,32 @@ public sealed class StpDbSnapshotQueryService
         var productTypes = LoadProductTypes(connection, productTypeIds);
 
         var recordIds = records.Select(record => record.Id).ToArray();
+        var recordAttachmentMap = LoadRecordAttachments(connection, recordIds);
+        records = records
+            .Select(record => new StpDbTestRecordSnapshot
+            {
+                Id = record.Id,
+                Code = record.Code,
+                SerialNumber = record.SerialNumber,
+                TestProductTypeId = record.TestProductTypeId,
+                AccompanyProductTypeId = record.AccompanyProductTypeId,
+                Kind = record.Kind,
+                OwnDepart = record.OwnDepart,
+                TestDepartId = record.TestDepartId,
+                TesterId = record.TesterId,
+                Remark = record.Remark,
+                TestTimeRaw = record.TestTimeRaw,
+                IsValid = record.IsValid,
+                CreateTimeRaw = record.CreateTimeRaw,
+                CreateBy = record.CreateBy,
+                UpdateTimeRaw = record.UpdateTimeRaw,
+                UpdateBy = record.UpdateBy,
+                Attachments = recordAttachmentMap.TryGetValue(record.Id, out var attachments)
+                    ? attachments
+                    : Array.Empty<StpDbFileAttachmentSnapshot>()
+            })
+            .ToArray();
+
         var itemAttachmentMap = LoadMotorYItemAttachments(connection, recordIds);
         var itemsByRecordId = LoadMotorYItems(connection, recordIds, itemAttachmentMap)
             .GroupBy(item => item.TestRecordId ?? string.Empty, StringComparer.OrdinalIgnoreCase)
@@ -83,7 +109,11 @@ SELECT DISTINCT
     tr.TesterId,
     tr.Remark,
     tr.TestTime,
-    tr.IsValid
+    tr.IsValid,
+    tr.CreateTime,
+    tr.CreateBy,
+    tr.UpdateTime,
+    tr.UpdateBy
 FROM TestRecords tr
 INNER JOIN TestRecordItems tri ON tri.TestRecordId = tr.ID
 WHERE tri.Code IN ({BuildInlineQuotedList(MotorYLegacyItemCodes)})
@@ -108,7 +138,11 @@ LIMIT $take;";
                 TesterId = reader.IsDBNull(8) ? null : reader.GetString(8),
                 Remark = reader.IsDBNull(9) ? null : reader.GetString(9),
                 TestTimeRaw = reader.IsDBNull(10) ? null : reader.GetString(10),
-                IsValid = !reader.IsDBNull(11) && reader.GetInt64(11) == 1
+                IsValid = !reader.IsDBNull(11) && reader.GetInt64(11) == 1,
+                CreateTimeRaw = reader.IsDBNull(12) ? null : reader.GetString(12),
+                CreateBy = reader.IsDBNull(13) ? null : reader.GetString(13),
+                UpdateTimeRaw = reader.IsDBNull(14) ? null : reader.GetString(14),
+                UpdateBy = reader.IsDBNull(15) ? null : reader.GetString(15)
             });
         }
 
@@ -136,7 +170,7 @@ LIMIT $take;";
         }
 
         command.CommandText = $@"
-SELECT ID, COALESCE(Code, ''), COALESCE(RatedParams, '{{}}'), Category, Manufacturer, Remark, IsValid, CreateTime, UpdateTime
+SELECT ID, COALESCE(Code, ''), COALESCE(RatedParams, '{{}}'), Category, Manufacturer, Remark, IsValid, CreateTime, CreateBy, UpdateTime, UpdateBy
 FROM ProductTypes
 WHERE ID IN ({string.Join(", ", parameterNames)});";
 
@@ -153,10 +187,83 @@ WHERE ID IN ({string.Join(", ", parameterNames)});";
                 Remark = reader.IsDBNull(5) ? null : reader.GetString(5),
                 IsValid = !reader.IsDBNull(6) && reader.GetInt64(6) == 1,
                 CreateTimeRaw = reader.IsDBNull(7) ? null : reader.GetString(7),
-                UpdateTimeRaw = reader.IsDBNull(8) ? null : reader.GetString(8)
+                CreateBy = reader.IsDBNull(8) ? null : reader.GetString(8),
+                UpdateTimeRaw = reader.IsDBNull(9) ? null : reader.GetString(9),
+                UpdateBy = reader.IsDBNull(10) ? null : reader.GetString(10)
             };
 
             result[snapshot.Id] = snapshot;
+        }
+
+        return result;
+    }
+
+    private static Dictionary<string, IReadOnlyList<StpDbFileAttachmentSnapshot>> LoadRecordAttachments(
+        SqliteConnection connection,
+        IReadOnlyCollection<string> recordIds)
+    {
+        var result = new Dictionary<string, IReadOnlyList<StpDbFileAttachmentSnapshot>>(StringComparer.OrdinalIgnoreCase);
+        if (recordIds.Count == 0)
+        {
+            return result;
+        }
+
+        using var command = connection.CreateCommand();
+        var parameterNames = new List<string>();
+        var index = 0;
+        foreach (var recordId in recordIds)
+        {
+            var parameterName = "$r" + index++;
+            parameterNames.Add(parameterName);
+            command.Parameters.AddWithValue(parameterName, recordId);
+        }
+
+        command.CommandText = $@"
+SELECT
+    tra.TestRecordId,
+    fa.ID,
+    COALESCE(fa.FileName, ''),
+    COALESCE(fa.FileExt, ''),
+    fa.Path,
+    COALESCE(fa.Length, 0),
+    fa.UploadTime,
+    fa.SaveMode,
+    fa.ExtraInfo,
+    fa.HandlerInfo,
+    COALESCE(tra.[Order], 0)
+FROM TestRecordAttachments tra
+INNER JOIN FileAttachments fa ON fa.ID = tra.FileId
+WHERE tra.TestRecordId IN ({string.Join(", ", parameterNames)})
+ORDER BY tra.TestRecordId, COALESCE(tra.[Order], 0), fa.UploadTime, fa.ID;";
+
+        var grouped = new Dictionary<string, List<StpDbFileAttachmentSnapshot>>(StringComparer.OrdinalIgnoreCase);
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var recordId = reader.GetString(0);
+            if (!grouped.TryGetValue(recordId, out var attachments))
+            {
+                attachments = new List<StpDbFileAttachmentSnapshot>();
+                grouped[recordId] = attachments;
+            }
+
+            attachments.Add(new StpDbFileAttachmentSnapshot
+            {
+                Id = reader.GetString(1),
+                FileName = reader.GetString(2),
+                FileExt = reader.GetString(3),
+                Path = reader.IsDBNull(4) ? null : reader.GetString(4),
+                Length = reader.GetInt64(5),
+                UploadTimeRaw = reader.IsDBNull(6) ? null : reader.GetString(6),
+                SaveMode = reader.IsDBNull(7) ? null : reader.GetString(7),
+                ExtraInfo = reader.IsDBNull(8) ? null : reader.GetString(8),
+                HandlerInfo = reader.IsDBNull(9) ? null : reader.GetString(9)
+            });
+        }
+
+        foreach (var pair in grouped)
+        {
+            result[pair.Key] = pair.Value;
         }
 
         return result;
@@ -183,7 +290,7 @@ WHERE ID IN ({string.Join(", ", parameterNames)});";
         }
 
         command.CommandText = $@"
-SELECT ID, COALESCE(Code, ''), Method, COALESCE(Data, '{{}}'), Remark, TestRecordId, IsValid
+SELECT ID, COALESCE(Code, ''), Method, COALESCE(Data, '{{}}'), Remark, TestRecordId, IsValid, CreateTime, CreateBy, UpdateTime, UpdateBy
 FROM TestRecordItems
 WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
   AND Code IN ({BuildInlineQuotedList(MotorYLegacyItemCodes)});";
@@ -202,6 +309,10 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
                 Remark = reader.IsDBNull(4) ? null : reader.GetString(4),
                 TestRecordId = reader.IsDBNull(5) ? null : reader.GetString(5),
                 IsValid = !reader.IsDBNull(6) && reader.GetInt64(6) == 1,
+                CreateTimeRaw = reader.IsDBNull(7) ? null : reader.GetString(7),
+                CreateBy = reader.IsDBNull(8) ? null : reader.GetString(8),
+                UpdateTimeRaw = reader.IsDBNull(9) ? null : reader.GetString(9),
+                UpdateBy = reader.IsDBNull(10) ? null : reader.GetString(10),
                 Attachments = itemAttachmentMap.TryGetValue(id, out var attachments)
                     ? attachments
                     : Array.Empty<StpDbFileAttachmentSnapshot>()
@@ -286,6 +397,6 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
 
     private static string BuildInlineQuotedList(IEnumerable<string> values)
     {
-        return string.Join(", ", values.Select(static value => $"'{value.Replace("'", "''")}'"));
+        return string.Join(", ", values.Select(value => $"'{value.Replace("'", "''")}'"));
     }
 }

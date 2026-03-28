@@ -35,6 +35,19 @@ public static class StpDbSnapshotQuerySmokeTests
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} missing Motor_Y items.");
             }
 
+            foreach (var attachment in snapshot.Record.Attachments)
+            {
+                if (string.IsNullOrWhiteSpace(attachment.Id) || string.IsNullOrWhiteSpace(attachment.FileName))
+                {
+                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} has record attachment with missing id/fileName.");
+                }
+
+                if (attachment.Length <= 0)
+                {
+                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} has record attachment {attachment.FileName} with invalid length.");
+                }
+            }
+
             if (!snapshot.Items.Any(item => MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.Code)))
             {
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} has no core Motor_Y items.");
@@ -77,14 +90,33 @@ public static class StpDbSnapshotQuerySmokeTests
             throw new InvalidOperationException("stp.db attachment snapshot smoke test failed: no Motor_Y records loaded.");
         }
 
+        var recordAttachments = snapshots
+            .Where(snapshot => snapshot.Record.Attachments.Count > 0)
+            .SelectMany(snapshot => snapshot.Record.Attachments, (snapshot, attachment) => new { snapshot.Record.Code, Attachment = attachment })
+            .ToArray();
+
         var itemsWithAttachments = snapshots
             .SelectMany(snapshot => snapshot.Items, (snapshot, item) => new { snapshot.Record.Code, Item = item })
             .Where(x => x.Item.Attachments.Count > 0)
             .ToArray();
 
-        if (itemsWithAttachments.Length == 0)
+        if (recordAttachments.Length == 0 && itemsWithAttachments.Length == 0)
         {
-            throw new InvalidOperationException("stp.db attachment snapshot smoke test failed: no Motor_Y item attachments loaded.");
+            throw new InvalidOperationException("stp.db attachment snapshot smoke test failed: no Motor_Y record/item attachments loaded.");
+        }
+
+        foreach (var entry in recordAttachments)
+        {
+            var attachment = entry.Attachment;
+            if (string.IsNullOrWhiteSpace(attachment.Id) || string.IsNullOrWhiteSpace(attachment.FileName))
+            {
+                throw new InvalidOperationException($"stp.db attachment snapshot smoke test failed: record {entry.Code} has record attachment with missing id/fileName.");
+            }
+
+            if (attachment.Length <= 0)
+            {
+                throw new InvalidOperationException($"stp.db attachment snapshot smoke test failed: record {entry.Code} record attachment {attachment.FileName} length invalid.");
+            }
         }
 
         foreach (var entry in itemsWithAttachments)
