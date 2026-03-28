@@ -120,6 +120,7 @@
 - 本轮继续把这套方法决策能力向 App 查询闭环前推：`MotorYMethodDecisionContract` / `MotorYMethodDecisionSnapshot` 新增 `Distributions`，`TestRecordViewMapper` 会从同一记录内的 `BuildProfile` 聚合出各 Method 的次数与占比，`TestRecordQueryGatewayAdapter` 也已把该分布明细投影到 App detail contract，并由 smoke test 锁定 `detail -> MotorYMethodDecisions -> Distributions` 的数值与 baseline 标记一致，方便后续 App/报表直接按“基线 + 主流 + 全量分布”消费真实 Method 口径。
 - 本轮又把同一能力补到 `stp.db` 真实快照决策层：`StpDbSnapshotQueryService.ListMotorYMethodDecisions()` 现在也直接返回每个核心业务项的 `Distributions(MethodValue/Count/Share/Route)`，不再只有 baseline/dominant 两个点；并补强 `StpDbMotorYMethodDecisionSmokeTests` 校验分布条数、占比与 route 投影一致性。这样后续做 Motor_Y 算法适配、报表默认方法选择时，可直接复用 `stp.db -> method decision` 的统一结构，而不是在 snapshot/app/builder 三处重复聚合。
 - 本轮继续把这套“基线 vs 主流”决策结果收敛成更适合算法适配层直接消费的摘要：`MotorYMethodDecisionSnapshot/Contract` 新增 `BaselineShare / DominantLeadCount / DominantLeadPercentagePoints / RecommendationReason`，并同步打通 `StpDbSnapshotQueryService`、`TestRecordViewMapper`、`TestRecordQueryGatewayAdapter` 与 smoke test，保证无论来自 `stp.db` 真实分布还是 builder->query 闭环，App/后续适配层都能直接拿到统一的推荐原因与领先幅度，而不必再次手算 baseline/dominant 差值。
+- 本轮又把同一批 share/gap 摘要补进 `MotorYMethodAdaptationPlanContract`：适配计划现在除 `DominantShare` 外，也直接暴露 `BaselineShare / SelectedShare / SelectedLeadCountVsBaseline / SelectedLeadPercentagePointsVsBaseline`，并由 query smoke test 锁定 NoLoad 场景下的数值。这样后续 Motor_Y 算法适配器、报表默认方法选择或 UI 提示，可直接消费“基线 vs 主流 vs 实际选中”三路占比与领先幅度，无需在 App 侧再次手算。
 
 ## 6. 参考范围
 

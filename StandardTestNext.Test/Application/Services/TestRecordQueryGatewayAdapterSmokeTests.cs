@@ -412,6 +412,16 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test comparison summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.BaselineDominantComparisonSummary}'");
         }
+
+        if (Math.Abs(noLoadPlan.BaselineShare - 0.25d) > 0.0001d
+            || Math.Abs(noLoadPlan.DominantShare - 0.75d) > 0.0001d
+            || Math.Abs(noLoadPlan.SelectedShare - 0.75d) > 0.0001d
+            || Math.Abs(noLoadPlan.SelectedLeadCountVsBaseline - 2d) > 0.0001d
+            || noLoadPlan.SelectedLeadPercentagePointsVsBaseline != 50)
+        {
+            throw new InvalidOperationException(
+                $"Motor_Y method adaptation plan query smoke test share summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. baselineShare={noLoadPlan.BaselineShare}, dominantShare={noLoadPlan.DominantShare}, selectedShare={noLoadPlan.SelectedShare}, leadCount={noLoadPlan.SelectedLeadCountVsBaseline}, leadPp={noLoadPlan.SelectedLeadPercentagePointsVsBaseline}");
+        }
     }
 
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)

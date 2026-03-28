@@ -6,16 +6,20 @@ public sealed class MotorYMethodAdaptationPlanContract
     public int TotalCount { get; init; }
     public MotorYBuildProfileContract? BaselineProfile { get; init; }
     public int BaselineCount { get; init; }
+    public double BaselineShare { get; init; }
     public MotorYBuildProfileContract? DominantProfile { get; init; }
     public int DominantCount { get; init; }
+    public double DominantShare { get; init; }
     public MotorYBuildProfileContract? SelectedProfile { get; init; }
     public int SelectedCount { get; init; }
+    public double SelectedShare { get; init; }
     public string SelectionStrategy { get; init; } = string.Empty;
     public bool ShouldUseDominantRoute { get; init; }
-    public double DominantShare { get; init; }
     public double DominantOverrideThreshold { get; init; }
     public int DominantLeadCount { get; init; }
     public int DominantLeadPercentagePoints { get; init; }
+    public double SelectedLeadCountVsBaseline { get; init; }
+    public int SelectedLeadPercentagePointsVsBaseline { get; init; }
     public string SelectionReason { get; init; } = string.Empty;
     public string AlgorithmEntry { get; init; } = string.Empty;
     public string SettingsMethodName { get; init; } = string.Empty;

@@ -14,11 +14,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var selectedCount = snapshot.ShouldPrioritizeDominantOverBaseline
             ? snapshot.DominantCount
             : snapshot.BaselineCount;
-        var baselineShare = snapshot.TotalCount <= 0
+        var baselineShare = snapshot.BaselineShare;
+        var selectedShare = snapshot.TotalCount <= 0
             ? 0d
-            : Math.Round((double)snapshot.BaselineCount / snapshot.TotalCount, 4, MidpointRounding.AwayFromZero);
+            : Math.Round((double)selectedCount / snapshot.TotalCount, 4, MidpointRounding.AwayFromZero);
         var dominantLeadCount = Math.Max(0, snapshot.DominantCount - snapshot.BaselineCount);
         var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((snapshot.DominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
+        var selectedLeadCountVsBaseline = Math.Max(0, selectedCount - snapshot.BaselineCount);
+        var selectedLeadPercentagePointsVsBaseline = Math.Max(0, (int)Math.Round((selectedShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -26,16 +29,20 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             TotalCount = snapshot.TotalCount,
             BaselineProfile = profileMapper(snapshot.BaselineRoute),
             BaselineCount = snapshot.BaselineCount,
+            BaselineShare = baselineShare,
             DominantProfile = profileMapper(snapshot.DominantRoute),
             DominantCount = snapshot.DominantCount,
+            DominantShare = snapshot.DominantShare,
             SelectedProfile = profileMapper(selectedProfile),
             SelectedCount = selectedCount,
+            SelectedShare = selectedShare,
             SelectionStrategy = snapshot.RecommendedStrategy,
             ShouldUseDominantRoute = snapshot.ShouldPrioritizeDominantOverBaseline,
-            DominantShare = snapshot.DominantShare,
             DominantOverrideThreshold = snapshot.DominantOverrideThreshold,
             DominantLeadCount = dominantLeadCount,
             DominantLeadPercentagePoints = dominantLeadPercentagePoints,
+            SelectedLeadCountVsBaseline = selectedLeadCountVsBaseline,
+            SelectedLeadPercentagePointsVsBaseline = selectedLeadPercentagePointsVsBaseline,
             SelectionReason = BuildSelectionReason(snapshot, selectedProfile, dominantLeadCount, dominantLeadPercentagePoints),
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
