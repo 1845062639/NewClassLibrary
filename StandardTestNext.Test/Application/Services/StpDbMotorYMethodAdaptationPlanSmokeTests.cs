@@ -125,6 +125,8 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: distribution count mismatch for {row.CanonicalCode}.");
             }
 
+            AssertLegacyCodeSelection(snapshot, connection, row.CanonicalCode);
+
             foreach (var distribution in row.Distributions)
             {
                 var actualDistribution = snapshot.Distributions.FirstOrDefault(x => x.MethodValue == distribution.MethodValue);
@@ -144,6 +146,82 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 }
 
                 AssertRoute(actualDistribution.Route, row.CanonicalCode, distribution.MethodValue, $"distribution/{row.CanonicalCode}:{distribution.MethodValue}");
+            }
+        }
+    }
+
+    private static void AssertLegacyCodeSelection(
+        MotorYMethodAdaptationPlanSnapshot snapshot,
+        SqliteConnection connection,
+        string canonicalCode)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT COALESCE(Code, ''), COUNT(*)
+FROM TestRecordItems
+WHERE Code IN (
+    '直流电阻测定',
+    '空载试验',
+    '空载特性试验',
+    '热试验',
+    'A法负载试验',
+    'B法负载试验',
+    '堵转试验',
+    '堵转特性试验')
+GROUP BY COALESCE(Code, '');";
+
+        var rows = new List<(string LegacyCode, int Count)>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.GetString(0);
+            if (!string.Equals(MotorYLegacyItemCodeNormalizer.Normalize(legacyCode), canonicalCode, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            rows.Add((legacyCode, reader.GetInt32(1)));
+        }
+
+        var total = rows.Sum(x => x.Count);
+        var ordered = rows
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
+            .ToArray();
+        var expected = ordered.FirstOrDefault();
+        var expectedShare = total <= 0
+            ? 0d
+            : Math.Round((double)expected.Count / total, 4, MidpointRounding.AwayFromZero);
+        var expectedSummary = expected == default
+            ? $"legacy code selection unavailable for {canonicalCode}"
+            : $"recommended legacy code '{expected.LegacyCode}' for {canonicalCode} ({expected.Count}/{total}, {(int)Math.Round(expectedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+
+        if (!string.Equals(snapshot.RecommendedLegacyCode, expected.LegacyCode, StringComparison.Ordinal)
+            || !string.Equals(snapshot.DominantLegacyCode, expected.LegacyCode, StringComparison.Ordinal)
+            || snapshot.RecommendedLegacyCodeCount != expected.Count
+            || Math.Abs(snapshot.RecommendedLegacyCodeShare - expectedShare) > 0.0001d
+            || !string.Equals(snapshot.LegacyCodeSelectionSummary, expectedSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code selection mismatch for {canonicalCode}. expectedCode={expected.LegacyCode}, actualCode={snapshot.RecommendedLegacyCode}, expectedCount={expected.Count}, actualCount={snapshot.RecommendedLegacyCodeCount}, expectedShare={expectedShare}, actualShare={snapshot.RecommendedLegacyCodeShare}, expectedSummary='{expectedSummary}', actualSummary='{snapshot.LegacyCodeSelectionSummary}'");
+        }
+
+        if (snapshot.LegacyCodeDistributions.Count != ordered.Length)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code distribution count mismatch for {canonicalCode}. expected={ordered.Length}, actual={snapshot.LegacyCodeDistributions.Count}");
+        }
+
+        foreach (var row in ordered)
+        {
+            var actual = snapshot.LegacyCodeDistributions.FirstOrDefault(x => string.Equals(x.LegacyCode, row.LegacyCode, StringComparison.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing legacy-code distribution {canonicalCode}/{row.LegacyCode}.");
+            }
+
+            var share = total <= 0 ? 0d : Math.Round((double)row.Count / total, 4, MidpointRounding.AwayFromZero);
+            if (actual.Count != row.Count || Math.Abs(actual.Share - share) > 0.0001d)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code distribution mismatch for {canonicalCode}/{row.LegacyCode}. expectedCount={row.Count}, actualCount={actual.Count}, expectedShare={share}, actualShare={actual.Share}");
             }
         }
     }

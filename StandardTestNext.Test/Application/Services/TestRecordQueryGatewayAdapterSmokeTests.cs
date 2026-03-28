@@ -496,6 +496,16 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException(
                 $"Motor_Y method adaptation plan query smoke test share summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. baselineShare={noLoadPlan.BaselineShare}, dominantShare={noLoadPlan.DominantShare}, selectedShare={noLoadPlan.SelectedShare}, leadCount={noLoadPlan.SelectedLeadCountVsBaseline}, leadPp={noLoadPlan.SelectedLeadPercentagePointsVsBaseline}");
         }
+
+        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "legacy code selection unavailable in builder-only route planning", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions.Count != 0
+            || !string.IsNullOrEmpty(noLoadPlan.RecommendedLegacyCode)
+            || !string.IsNullOrEmpty(noLoadPlan.DominantLegacyCode)
+            || noLoadPlan.RecommendedLegacyCodeCount != 0
+            || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test legacy-code summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. summary='{noLoadPlan.LegacyCodeSelectionSummary}', recommended='{noLoadPlan.RecommendedLegacyCode}', count={noLoadPlan.RecommendedLegacyCodeCount}, share={noLoadPlan.RecommendedLegacyCodeShare}");
+        }
     }
 
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)

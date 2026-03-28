@@ -34,6 +34,12 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string AlgorithmEntry { get; init; } = string.Empty;
     public string SettingsMethodName { get; init; } = string.Empty;
     public string LegacyMethodName { get; init; } = string.Empty;
+    public string RecommendedLegacyCode { get; init; } = string.Empty;
+    public string DominantLegacyCode { get; init; } = string.Empty;
+    public int RecommendedLegacyCodeCount { get; init; }
+    public double RecommendedLegacyCodeShare { get; init; }
+    public string LegacyCodeSelectionSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYLegacyCodeDistributionContract> LegacyCodeDistributions { get; init; } = Array.Empty<MotorYLegacyCodeDistributionContract>();
     public bool RequiresRatedParams { get; init; }
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public int ObservedUpstreamCanonicalCodeCount { get; init; }

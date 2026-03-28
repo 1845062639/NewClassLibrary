@@ -460,6 +460,46 @@ ORDER BY COALESCE(Code, ''), Method;";
             .ToArray();
     }
 
+    private static Dictionary<string, MotorYLegacyCodeSelectionSnapshot> LoadMotorYLegacyCodeSelections(SqliteConnection connection)
+    {
+        var distributions = LoadMotorYLegacyCodeDistribution(connection)
+            .GroupBy(row => row.CanonicalCode, StringComparer.Ordinal)
+            .ToDictionary(
+                group => group.Key,
+                group =>
+                {
+                    var items = group
+                        .GroupBy(row => row.LegacyCode, StringComparer.Ordinal)
+                        .Select(codeGroup => new MotorYLegacyCodeDistributionSnapshot
+                        {
+                            CanonicalCode = group.Key,
+                            LegacyCode = codeGroup.Key,
+                            Count = codeGroup.Sum(x => x.Count),
+                            Share = Math.Round((double)codeGroup.Sum(x => x.Count) / Math.Max(1, group.Sum(x => x.Count)), 4, MidpointRounding.AwayFromZero)
+                        })
+                        .OrderByDescending(x => x.Count)
+                        .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
+                        .ToArray();
+
+                    var recommended = items.FirstOrDefault();
+                    return new MotorYLegacyCodeSelectionSnapshot
+                    {
+                        CanonicalCode = group.Key,
+                        RecommendedLegacyCode = recommended?.LegacyCode ?? string.Empty,
+                        DominantLegacyCode = recommended?.LegacyCode ?? string.Empty,
+                        RecommendedLegacyCodeCount = recommended?.Count ?? 0,
+                        RecommendedLegacyCodeShare = recommended?.Share ?? 0d,
+                        Distributions = items,
+                        Summary = recommended is null
+                            ? $"legacy code selection unavailable for {group.Key}"
+                            : $"recommended legacy code '{recommended.LegacyCode}' for {group.Key} ({recommended.Count}/{group.Sum(x => x.Count)}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp)"
+                    };
+                },
+                StringComparer.Ordinal);
+
+        return distributions;
+    }
+
     private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadMotorRatedParamsValueDistribution(SqliteConnection connection)
     {
         var snapshots = new List<StpDbMotorRatedParamsValueDistributionSnapshot>();
@@ -477,6 +517,7 @@ ORDER BY COALESCE(Code, ''), Method;";
     {
         var samplePayloads = LoadMotorYSamplePayloadByCanonicalCode(connection);
         var sampleRatedParams = LoadMotorYSampleRatedParamsByCanonicalCode(connection);
+        var legacyCodeDistributions = LoadMotorYLegacyCodeSelections(connection);
 
         return LoadMotorYMethodDecisions(connection)
             .Select(decision =>
@@ -484,6 +525,7 @@ ORDER BY COALESCE(Code, ''), Method;";
                 var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
                 var selectedRoute = selection.SelectedRoute;
                 var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
+                legacyCodeDistributions.TryGetValue(selection.CanonicalCode, out var legacyCodeSelection);
                 var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
                 var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
                     selection.CanonicalCode,
@@ -577,6 +619,12 @@ ORDER BY COALESCE(Code, ''), Method;";
                     AlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty,
                     SettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty,
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
+                    RecommendedLegacyCode = legacyCodeSelection?.RecommendedLegacyCode ?? string.Empty,
+                    DominantLegacyCode = legacyCodeSelection?.DominantLegacyCode ?? string.Empty,
+                    RecommendedLegacyCodeCount = legacyCodeSelection?.RecommendedLegacyCodeCount ?? 0,
+                    RecommendedLegacyCodeShare = legacyCodeSelection?.RecommendedLegacyCodeShare ?? 0d,
+                    LegacyCodeSelectionSummary = legacyCodeSelection?.Summary ?? string.Empty,
+                    LegacyCodeDistributions = legacyCodeSelection?.Distributions ?? Array.Empty<MotorYLegacyCodeDistributionSnapshot>(),
                     RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
                     UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
                     ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,

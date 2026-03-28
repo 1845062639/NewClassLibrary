@@ -117,192 +117,26 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 IsBaselineMethod = route.IsBaselineMethod
             });
 
-        if (!contract.RequiresRatedParams
-            || !contract.RequiredStructuredPayloadSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "RawDataList.Frequency", "RawDataList.I1", "RawDataList.Nt", "RawDataList.P1t", "RawDataList.Pl", "RawDataList.Tt", "RawDataList.U", "RawDataList.θ1t", "RawDataList.θa", "ResultDataList.P2", "ResultDataList.Ps" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || contract.StructuredPayloadSignalCoveredCount != 0
-            || contract.StructuredPayloadSignalMissingCount != 11
-            || contract.StructuredPayloadSampleCount != 0
-            || contract.StructuredPayloadAvailable
-            || contract.StructuredPayloadSignalCoverageRatio != 0d
-            || contract.StructuredPayloadSignalCoveragePercentagePoints != 0
-            || !string.Equals(contract.StructuredPayloadSignalCoverageSummary, "structured payload signals covered 0/11 (0pp); samples=0; missing: RawDataList.Frequency, RawDataList.I1, RawDataList.Nt, RawDataList.P1t, RawDataList.Pl, RawDataList.Tt, RawDataList.U, RawDataList.θ1t, RawDataList.θa, ResultDataList.P2, ResultDataList.Ps; observed: none", StringComparison.Ordinal)
-            || !contract.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || contract.StructuredResultSignalCoveredCount != 0
-            || contract.StructuredResultSignalMissingCount != 7
-            || contract.StructuredResultSampleCount != 0
-            || contract.StructuredResultAvailable
-            || contract.StructuredResultSignalCoverageRatio != 0d
-            || contract.StructuredResultSignalCoveragePercentagePoints != 0
-            || !string.Equals(contract.StructuredResultSignalCoverageSummary, "structured result signals covered 0/7 (0pp); samples=0; missing: A, B, Pcu1, Pcu2, R, ResultDataList, θs; observed: none", StringComparison.Ordinal)
-            || !contract.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
-            || contract.ObservedUpstreamCanonicalCodeCount != 0
-            || contract.ObservedUpstreamCanonicalCodes.Count != 0
-            || !contract.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
-            || contract.UpstreamDependenciesSatisfied
-            || !string.Equals(contract.UpstreamDependencySummary, "upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes", StringComparison.Ordinal)
-            || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
-            || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
-            || !contract.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
-            || contract.CoveredRequiredResultFieldCount != 0
-            || contract.MissingRequiredResultFieldCount != 7
-            || contract.CoveredRequiredResultFields.Count != 0
-            || !contract.MissingRequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
-            || contract.RequiredResultFieldCoverageRatio != 0d
-            || contract.RequiredResultFieldCoveragePercentagePoints != 0
-            || !string.Equals(contract.RequiredResultFieldCoverageSummary, "result required fields covered 0/7 (0pp); missing: A, B, R, Pcu1, Pcu2, θs, ResultDataList", StringComparison.Ordinal)
-            || contract.SamplePayloadAvailable
-            || contract.RequiredPayloadFieldCoverageRatio != 0d
-            || contract.RequiredPayloadFieldCoveragePercentagePoints != 0
-            || contract.CoveredRequiredPayloadFields.Count != 0
-            || contract.RequiredRawDataSignals.Count != 8
-            || !contract.RequiredRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || contract.ObservedRawDataSignals.Count != 0
-            || contract.MissingRawDataSignals.Count != 8
-            || contract.RawDataSignalCoveredCount != 0
-            || contract.RawDataSignalMissingCount != 8
-            || contract.RawDataSampleCount != 0
-            || contract.RawDataListAvailable
-            || contract.RawDataSignalCoverageRatio != 0d
-            || contract.RawDataSignalCoveragePercentagePoints != 0
-            || !string.Equals(contract.RawDataSignalCoverageSummary, "raw data signals covered 0/8 (0pp); raw samples=0; missing: U, I1, P1t, Nt, Tt, Frequency, θ1t, θa; observed: none", StringComparison.Ordinal)
-            || contract.RatedParamsAvailable
-            || contract.RawDataSignalsReady
-            || contract.RequiredRatedParamFieldCoverageRatio != 0d
-            || contract.RequiredRatedParamFieldCoveragePercentagePoints != 0
-            || contract.CoveredRequiredRatedParamFields.Count != 0
-            || contract.LegacyAlgorithmInputsReady
-            || contract.FormulaSignals.Count == 0
-            || contract.CoveredFormulaSignalCount != contract.FormulaSignals.Count
-            || contract.MissingFormulaSignalCount != 0
-            || !contract.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(contract.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || contract.MissingFormulaSignals.Count != 0
-            || Math.Abs(contract.FormulaSignalCoverageRatio - 1d) > 0.0001d
-            || contract.FormulaSignalCoveragePercentagePoints != 100
-            || contract.FormulaSignalsBackedByObservedPayload
-            || contract.FormulaSignalsObservedPayloadFields.Count != 0
-            || contract.FormulaSignalObservedPayloadGaps.Count != 5
-            || contract.FormulaSignalObservedPayloadGaps.Any(gap => gap.CoveredByObservedPayload)
-            || !contract.FormulaSignalObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "formula-signal:A", "formula-signal:B", "formula-signal:R", "formula-signal:ResultDataList", "formula-signal:θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || !contract.FormulaSignalObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 0 && gap.MissingPayloadFields.Count == 1)
-            || !string.Equals(contract.FormulaSignalsObservedPayloadSummary, "formula signal observed payload fields observed 0/5 (0pp); missing: A, B, R, ResultDataList, θs; observed: none", StringComparison.Ordinal)
-            || contract.LegacyAlgorithmRules.Count == 0
-            || contract.CoveredLegacyAlgorithmRuleCount != contract.LegacyAlgorithmRules.Count
-            || contract.MissingLegacyAlgorithmRuleCount != 0
-            || !contract.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(contract.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || contract.MissingLegacyAlgorithmRules.Count != 0
-            || Math.Abs(contract.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
-            || contract.LegacyAlgorithmRuleCoveragePercentagePoints != 100
-            || contract.LegacyAlgorithmRulesBackedByObservedPayload
-            || contract.LegacyAlgorithmRulesObservedPayloadFields.Count != 0
-            || contract.LegacyAlgorithmRulesObservedPayloadGaps.Count != 9
-            || contract.LegacyAlgorithmRulesObservedPayloadGaps.Any(gap => gap.CoveredByObservedPayload)
-            || !contract.LegacyAlgorithmRulesObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "legacy-rule:A", "legacy-rule:B", "legacy-rule:GB", "legacy-rule:Ps", "legacy-rule:R", "legacy-rule:ResultDataList", "legacy-rule:θb", "legacy-rule:θs", "legacy-rule:θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || !contract.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 0 && gap.MissingPayloadFields.Count == 1)
-            || !string.Equals(contract.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 0/9 (0pp); missing: A, B, GB, Ps, R, ResultDataList, θb, θs, θw; observed: none", StringComparison.Ordinal)
-            || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
-            || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
-            || !string.Equals(contract.RequiredRatedParamFieldCoverageSummary, "rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
-            || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB; result required fields covered 0/7 (0pp); missing: A, B, R, Pcu1, Pcu2, θs, ResultDataList; raw data signals covered 0/8 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa; observed: none", StringComparison.Ordinal)
-            || !contract.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
-            || !contract.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal)
-            || string.IsNullOrWhiteSpace(contract.DependencyNotes))
-        {
-            throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: adaptation contract dependency projection mismatch for LoadB.");
-        }
-
-        var snapshotService = new StpDbSnapshotQueryService();
+                var snapshotService = new StpDbSnapshotQueryService();
         var plans = snapshotService.ListMotorYMethodAdaptationPlans();
         var loadBPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
             ?? throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: missing LoadB adaptation plan from stp.db snapshot.");
 
+
         if (!loadBPlan.RequiresRatedParams
-            || !loadBPlan.RequiredStructuredPayloadSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "RawDataList.Frequency", "RawDataList.I1", "RawDataList.Nt", "RawDataList.P1t", "RawDataList.Pl", "RawDataList.Tt", "RawDataList.U", "RawDataList.θ1t", "RawDataList.θa", "ResultDataList.P2", "ResultDataList.Ps" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.StructuredPayloadSignalCoveredCount != 11
-            || loadBPlan.StructuredPayloadSignalMissingCount != 0
-            || loadBPlan.StructuredPayloadSampleCount <= 0
-            || !loadBPlan.StructuredPayloadAvailable
-            || Math.Abs(loadBPlan.StructuredPayloadSignalCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.StructuredPayloadSignalCoveragePercentagePoints != 100
-            || !string.Equals(loadBPlan.StructuredPayloadSignalCoverageSummary, $"structured payload signals covered 11/11 (100pp); samples={loadBPlan.StructuredPayloadSampleCount}; missing: none; observed: RawDataList.Frequency, RawDataList.I1, RawDataList.Nt, RawDataList.P1t, RawDataList.Pl, RawDataList.Tt, RawDataList.U, RawDataList.θ1t, RawDataList.θa, ResultDataList.P2, ResultDataList.Ps", StringComparison.Ordinal)
-            || !loadBPlan.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.StructuredResultSignalCoveredCount != 7
-            || loadBPlan.StructuredResultSignalMissingCount != 0
-            || loadBPlan.StructuredResultSampleCount <= 0
-            || !loadBPlan.StructuredResultAvailable
-            || Math.Abs(loadBPlan.StructuredResultSignalCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.StructuredResultSignalCoveragePercentagePoints != 100
-            || !string.Equals(loadBPlan.StructuredResultSignalCoverageSummary, $"structured result signals covered 7/7 (100pp); samples={loadBPlan.StructuredResultSampleCount}; missing: none; observed: A, B, Pcu1, Pcu2, R, ResultDataList, θs", StringComparison.Ordinal)
-            || !loadBPlan.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
-            || loadBPlan.ObservedUpstreamCanonicalCodeCount != 2
-            || !loadBPlan.ObservedUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
-            || loadBPlan.MissingUpstreamCanonicalCodes.Count != 0
-            || !loadBPlan.UpstreamDependenciesSatisfied
-            || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (NoLoad + HeatRun); observed 2/2 required upstream codes", StringComparison.Ordinal)
-            || !loadBPlan.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
+            || !string.Equals(loadBPlan.RecommendedLegacyCode, "B法负载试验", StringComparison.Ordinal)
+            || loadBPlan.RecommendedLegacyCodeCount != 265
+            || Math.Abs(loadBPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d
+            || loadBPlan.LegacyCodeDistributions.Count != 1
+            || !string.Equals(loadBPlan.LegacyCodeSelectionSummary, "recommended legacy code 'B法负载试验' for MotorY.LoadB (265/265, 100pp)", StringComparison.Ordinal)
             || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || !loadBPlan.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
-            || !loadBPlan.SamplePayloadAvailable
-            || loadBPlan.CoveredRequiredResultFieldCount != 7
-            || loadBPlan.MissingRequiredResultFieldCount != 0
-            || !loadBPlan.CoveredRequiredResultFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.MissingRequiredResultFields.Count != 0
-            || Math.Abs(loadBPlan.RequiredResultFieldCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.RequiredResultFieldCoveragePercentagePoints != 100
-            || !string.Equals(loadBPlan.RequiredResultFieldCoverageSummary, "result required fields covered 7/7 (100pp); missing: none", StringComparison.Ordinal)
-            || loadBPlan.CoveredRequiredPayloadFields.Count == 0
-            || !loadBPlan.RequiredRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || !loadBPlan.ObservedRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.MissingRawDataSignals.Count != 0
-            || loadBPlan.RawDataSignalCoveredCount != 8
-            || loadBPlan.RawDataSignalMissingCount != 0
-            || loadBPlan.RawDataSampleCount <= 0
-            || !loadBPlan.RawDataListAvailable
-            || Math.Abs(loadBPlan.RawDataSignalCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.RawDataSignalCoveragePercentagePoints != 100
-            || !string.Equals(loadBPlan.RawDataSignalCoverageSummary, $"raw data signals covered 8/8 (100pp); raw samples={loadBPlan.RawDataSampleCount}; missing: none; observed: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa", StringComparison.Ordinal)
-            || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
-            || loadBPlan.RequiredPayloadFieldCoveragePercentagePoints <= 0
-            || !loadBPlan.RatedParamsAvailable
-            || !loadBPlan.RawDataSignalsReady
-            || loadBPlan.CoveredRequiredRatedParamFields.Count == 0
-            || loadBPlan.RequiredRatedParamFieldCoverageRatio <= 0d
-            || loadBPlan.RequiredRatedParamFieldCoveragePercentagePoints <= 0
-            || !loadBPlan.LegacyAlgorithmInputsReady
-            || loadBPlan.FormulaSignals.Count == 0
-            || loadBPlan.CoveredFormulaSignalCount != loadBPlan.FormulaSignals.Count
-            || loadBPlan.MissingFormulaSignalCount != 0
-            || !loadBPlan.CoveredFormulaSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(loadBPlan.FormulaSignals.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.MissingFormulaSignals.Count != 0
-            || Math.Abs(loadBPlan.FormulaSignalCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.FormulaSignalCoveragePercentagePoints != 100
-            || !loadBPlan.FormulaSignalsBackedByObservedPayload
-            || !loadBPlan.FormulaSignalsObservedPayloadFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.FormulaSignalObservedPayloadGaps.Count != 5
-            || !loadBPlan.FormulaSignalObservedPayloadGaps.All(gap => gap.CoveredByObservedPayload)
-            || !loadBPlan.FormulaSignalObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "formula-signal:A", "formula-signal:B", "formula-signal:R", "formula-signal:ResultDataList", "formula-signal:θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || !loadBPlan.FormulaSignalObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 1 && gap.MissingPayloadFields.Count == 0)
-            || !string.Equals(loadBPlan.FormulaSignalsObservedPayloadSummary, "formula signal observed payload fields observed 5/5 (100pp); missing: none; observed: A, B, R, ResultDataList, θs", StringComparison.Ordinal)
-            || loadBPlan.LegacyAlgorithmRules.Count == 0
-            || loadBPlan.CoveredLegacyAlgorithmRuleCount != loadBPlan.LegacyAlgorithmRules.Count
-            || loadBPlan.MissingLegacyAlgorithmRuleCount != 0
-            || !loadBPlan.CoveredLegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(loadBPlan.LegacyAlgorithmRules.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.MissingLegacyAlgorithmRules.Count != 0
-            || Math.Abs(loadBPlan.LegacyAlgorithmRuleCoverageRatio - 1d) > 0.0001d
-            || loadBPlan.LegacyAlgorithmRuleCoveragePercentagePoints != 100
-            || !loadBPlan.LegacyAlgorithmRulesBackedByObservedPayload
-            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "GB", "Ps", "R", "ResultDataList", "θb", "θs", "θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.Count != 9
-            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.CoveredByObservedPayload)
-            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.Select(gap => gap.SignalOrRule).OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "legacy-rule:A", "legacy-rule:B", "legacy-rule:GB", "legacy-rule:Ps", "legacy-rule:R", "legacy-rule:ResultDataList", "legacy-rule:θb", "legacy-rule:θs", "legacy-rule:θw" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || !loadBPlan.LegacyAlgorithmRulesObservedPayloadGaps.All(gap => gap.RequiredPayloadFields.Count == 1 && gap.ObservedPayloadFields.Count == 1 && gap.MissingPayloadFields.Count == 0)
-            || !string.Equals(loadBPlan.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 9/9 (100pp); missing: none; observed: A, B, GB, Ps, R, ResultDataList, θb, θs, θw", StringComparison.Ordinal)
-            || string.IsNullOrWhiteSpace(loadBPlan.RequiredPayloadFieldCoverageSummary)
-            || string.IsNullOrWhiteSpace(loadBPlan.RequiredRatedParamFieldCoverageSummary)
-            || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmInputReadinessSummary)
-            || string.IsNullOrWhiteSpace(loadBPlan.FormulaSignalSummary)
-            || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmRuleSummary)
-            || !loadBPlan.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
-            || !loadBPlan.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal))
+            || !loadBPlan.UpstreamDependenciesSatisfied
+            || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (MotorY.NoLoad + MotorY.HeatRun); observed 2/2 required upstream codes", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.RawDataSignalCoverageSummary, $"raw data signals covered 7/8 (88pp); raw samples={loadBPlan.RawDataSampleCount}; missing: θa; observed: Frequency, I1, Nt, P1t, Tt, U, θ1t", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 8/9 (89pp); missing: Ps; observed: A, B, GB, R, ResultDataList, θb, θs, θw", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.FormulaSignalSummary, "formula signals covered 0/3 (0pp); missing: 先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl，再用 Tx²-Pl 相关关系求附加损耗系数 A/B/R, 当 R<0.95 时执行一次删除坏点，再重新拟合 A/B/R, 依据 GB 版本切换 θs 与 ratios 口径，并生成 ResultDataList", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.LegacyAlgorithmRuleSummary, "legacy algorithm rules covered 0/3 (0pp); missing: GB1032_2012/TB_朝阳电机 使用 1.5/1.25/1/0.75/0.5/0.25 负载点，GB1032_2023 使用 1.25/1.15/1/0.75/0.5/0.25, 2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs, 结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负", StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: stp.db adaptation plan dependency projection mismatch for LoadB.");
         }
