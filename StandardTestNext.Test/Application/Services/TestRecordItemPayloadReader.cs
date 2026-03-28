@@ -112,6 +112,7 @@ public static class TestRecordItemPayloadReader
             "Ruv", "Rvw", "Rwu", "R1",
             "P0", "I0", "Pfw", "Pfe",
             "Ikn", "Pkn", "Tkn",
+            "Uk", "Ik", "Pk", "Tk",
             "θw", "Δθ", "Δθn",
             "P1", "P2", "η", "Cosφ")
             ? 1
