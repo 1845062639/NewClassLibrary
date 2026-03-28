@@ -534,13 +534,24 @@ ORDER BY COALESCE(Code, ''), Method;";
                     sampleDataJson,
                     "structured result signals");
                 var rawDataSignalsReady = rawDataSignalCoverage.MissingSignals.Count == 0;
+                var structuredSignalsReady = structuredPayloadCoverage.MissingSignalCount == 0
+                    && structuredResultCoverage.MissingSignalCount == 0;
+                var requiredResultFieldsReady = resultCoverage.MissingRequiredResultFieldCount == 0;
                 var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
                     && coverage.MissingRequiredPayloadFieldCount == 0
                     && ratedCoverage.MissingRequiredRatedParamFieldCount == 0
-                    && rawDataSignalsReady;
-                var legacyAlgorithmInputReadinessSummary = legacyAlgorithmInputsReady
-                    ? $"legacy algorithm inputs ready; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}; {rawDataSignalCoverage.Summary}"
-                    : $"legacy algorithm inputs incomplete; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}; {rawDataSignalCoverage.Summary}";
+                    && requiredResultFieldsReady
+                    && rawDataSignalsReady
+                    && structuredSignalsReady;
+                var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
+                    upstream,
+                    coverage,
+                    ratedCoverage,
+                    resultCoverage,
+                    rawDataSignalCoverage,
+                    structuredPayloadCoverage,
+                    structuredResultCoverage,
+                    legacyAlgorithmInputsReady);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -683,6 +694,29 @@ ORDER BY COALESCE(Code, ''), Method;";
                 };
             })
             .ToArray();
+    }
+
+    private static string BuildLegacyAlgorithmInputReadinessSummary(
+        MotorYUpstreamDependencySnapshot upstream,
+        MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
+        MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
+        bool legacyAlgorithmInputsReady)
+    {
+        var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
+        var ratedStatus = ratedCoverage.RequiredRatedParamFieldCoverageSummary;
+        var resultStatus = resultCoverage.RequiredResultFieldCoverageSummary;
+        var upstreamStatus = upstream.UpstreamDependencySummary;
+        var rawDataStatus = rawDataCoverage.Summary;
+        var structuredPayloadStatus = structuredPayloadCoverage.Summary;
+        var structuredResultStatus = structuredResultCoverage.Summary;
+
+        return legacyAlgorithmInputsReady
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
     }
 
     private static IReadOnlyList<MotorYMethodRouteSelectionSnapshot> LoadMotorYMethodRouteSelections(SqliteConnection connection)
