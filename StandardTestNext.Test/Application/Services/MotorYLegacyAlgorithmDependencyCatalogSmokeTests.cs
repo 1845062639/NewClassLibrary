@@ -41,9 +41,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: rated param fields mismatch for {row.Item1}.");
             }
 
-            if (string.IsNullOrWhiteSpace(profile.Notes) || string.IsNullOrWhiteSpace(profile.AlgorithmEntry))
+            if (string.IsNullOrWhiteSpace(profile.Notes)
+                || string.IsNullOrWhiteSpace(profile.AlgorithmEntry)
+                || profile.FormulaSignals.Count == 0
+                || profile.LegacyAlgorithmRules.Count == 0)
             {
-                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: notes/algorithm entry missing for {row.Item1}.");
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: notes/algorithm entry/formula rules missing for {row.Item1}.");
             }
         }
 
@@ -119,8 +122,14 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.RequiredRatedParamFieldCoveragePercentagePoints != 0
             || contract.CoveredRequiredRatedParamFields.Count != 0
             || contract.LegacyAlgorithmInputsReady
+            || contract.FormulaSignals.Count == 0
+            || contract.LegacyAlgorithmRules.Count == 0
+            || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
+            || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
             || !string.Equals(contract.RequiredRatedParamFieldCoverageSummary, "rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
             || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
+            || !contract.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
+            || !contract.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(contract.DependencyNotes))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: adaptation contract dependency projection mismatch for LoadB.");
@@ -147,9 +156,15 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.RequiredRatedParamFieldCoverageRatio <= 0d
             || loadBPlan.RequiredRatedParamFieldCoveragePercentagePoints <= 0
             || !loadBPlan.LegacyAlgorithmInputsReady
+            || loadBPlan.FormulaSignals.Count == 0
+            || loadBPlan.LegacyAlgorithmRules.Count == 0
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredPayloadFieldCoverageSummary)
             || string.IsNullOrWhiteSpace(loadBPlan.RequiredRatedParamFieldCoverageSummary)
-            || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmInputReadinessSummary))
+            || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmInputReadinessSummary)
+            || string.IsNullOrWhiteSpace(loadBPlan.FormulaSignalSummary)
+            || string.IsNullOrWhiteSpace(loadBPlan.LegacyAlgorithmRuleSummary)
+            || !loadBPlan.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
+            || !loadBPlan.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: stp.db adaptation plan dependency projection mismatch for LoadB.");
         }

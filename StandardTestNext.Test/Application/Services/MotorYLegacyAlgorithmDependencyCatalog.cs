@@ -1,9 +1,9 @@
 namespace StandardTestNext.Test.Application.Services;
 
 /// <summary>
-/// 结构化沉淀旧 Motor_Y 算法入口对前置试验数据、额定参数与关键字段的依赖画像，
+/// 结构化沉淀旧 Motor_Y 算法入口对前置试验数据、额定参数、关键字段与核心公式语义的依赖画像，
 /// 供 next-gen 适配计划 / App 提示 / 后续算法 adapter 直接消费。
-/// 目标不是现在就重写算法，而是先把“要对齐旧算法至少需要什么输入”显式化并锁进闭环。
+/// 目标不是现在就重写算法，而是先把“要对齐旧算法至少需要什么输入、会走什么关键计算规则”显式化并锁进闭环。
 /// </summary>
 public sealed class MotorYLegacyAlgorithmDependencyProfile
 {
@@ -14,6 +14,8 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public string Notes { get; init; } = string.Empty;
 }
 
@@ -30,6 +32,16 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = Array.Empty<string>(),
                 RequiredPayloadFields = new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" },
                 RequiredRatedParamFields = Array.Empty<string>(),
+                FormulaSignals = new[]
+                {
+                    "输出 R1/θ1c 作为空载、热试验等后续算法入口的基础状态量",
+                    "三相电阻 Ruv/Rvw/Rwu 归并后形成后续引用的冷态电阻口径"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "该项本身更偏采集/整理，不依赖上游试验项",
+                    "后续算法默认把这里产出的 R1/θ1c 视为冷态绕组参考量"
+                },
                 Notes = "旧 FrmMotor_Y_Direct_Current_Resistance 页面直接采集/整理后入库，供空载/热试验继续引用 R1/θ1c。"
             },
             [MotorYTestMethodCodes.NoLoad] = new()
@@ -40,6 +52,18 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
                 RequiredPayloadFields = new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" },
                 RequiredRatedParamFields = Array.Empty<string>(),
+                FormulaSignals = new[]
+                {
+                    "按 R0/R1c/K1/θ1c 反推 θ0，或反向由 θ0 推算 R0",
+                    "逐点计算 U0/Un、P0cu1、Pcon，再对低压区 Pcon-U² 做线性拟合求 Pfw",
+                    "对各点 Pfe 做多项式拟合，形成 CoefficientOfPfe 供堵转/负载算法复用"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "当 RConverseType=1 时优先由 R0 反算 θ0，否则取热态温度最大值再回算 R0",
+                    "风摩损耗仅取 U0/Un<0.51 的样本做线性拟合",
+                    "额定点 I0/ΔI0/P0/Pcu/Pfe 均由多项式在 1.0 pu 电压处回归得到"
+                },
                 Notes = "旧 FrmMotor_Y_NoLoad 会先读取直流电阻结果补 R1c/θ1c，再拟合空载曲线得到 Pfe/Pfw/CoefficientOfPfe。"
             },
             [MotorYTestMethodCodes.HeatRun] = new()
@@ -50,6 +74,18 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
                 RequiredPayloadFields = new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" },
                 RequiredRatedParamFields = new[] { "GB" },
+                FormulaSignals = new[]
+                {
+                    "按额定功率 Pn 决定第一测量时间间隔 firstSecondsInterval（30/90/120s）",
+                    "电阻-时间曲线拟合得到 Rw/Rn，再结合 Rc/θc 推导 Δθ、Δθn、θw、θs、Rws",
+                    "θb 取试验末段 1/4 时间窗内环境温度均值"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "HotStateType=0 时优先使用首个实测热点电阻点，不满足间隔则外推至 firstSecondsInterval",
+                    "GB1032_2012/TB_朝阳电机 与 GB1032_2023 的温升公式不同，2023 版直接使用 Rn/Rc 比值口径",
+                    "θs 在热电偶/外推模式下采用不同来源：实测 θ1 或 θw+25-θb"
+                },
                 Notes = "旧 FrmMotor_Y_Thermal 先读取直流电阻结果补 Rc/θc；Algorithm_Motor_Y.Thermal 再按额定功率与 GB 版本计算 Rn/Rw/Δθ/θw。"
             },
             [MotorYTestMethodCodes.LoadA] = new()
@@ -60,6 +96,18 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" },
                 RequiredRatedParamFields = Array.Empty<string>(),
+                FormulaSignals = new[]
+                {
+                    "逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx，再折算到 θa 条件下得到 Pcu1x/Pcu2x/Sx/Nx/P2x/η",
+                    "按 P2x 对 P1t/Sx/Cosφ/I1/η 做多项式拟合，生成 ResultDataList",
+                    "A法结果表固定回归 125%、100%、75%、50%、25% 五个额定负载点"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "铁耗一律通过空载试验给出的 CoefficientOfPfe 在 Ub/Un 上回归求得",
+                    "温度修正显式依赖 θa，而不是像 B 法那样再分 GB 版本处理 θs",
+                    "该算法不直接依赖额定参数对象，但要求 payload 内已有 Pn/Un/PolePairs 等额定量"
+                },
                 Notes = "旧 FrmMotor_Y_Load_A 会先校验空载试验的铁耗系数，且从热试验引用 θa；转矩修正还依赖耦接空载/单空载结果。"
             },
             [MotorYTestMethodCodes.LoadB] = new()
@@ -70,6 +118,18 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" },
                 RequiredRatedParamFields = new[] { "GB" },
+                FormulaSignals = new[]
+                {
+                    "先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl，再用 Tx²-Pl 相关关系求附加损耗系数 A/B/R",
+                    "当 R<0.95 时执行一次删除坏点，再重新拟合 A/B/R",
+                    "依据 GB 版本切换 θs 与 ratios 口径，并生成 ResultDataList"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "GB1032_2012/TB_朝阳电机 使用 1.5/1.25/1/0.75/0.5/0.25 负载点，GB1032_2023 使用 1.25/1.15/1/0.75/0.5/0.25",
+                    "2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs",
+                    "结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负"
+                },
                 Notes = "旧 FrmMotor_Y_Load_B 同时依赖空载试验的 Pfe/Pfw/R1c/θ1c 与热试验的 θw/θb；算法还按 GB 版本切换 ratios/θs 口径。"
             },
             [MotorYTestMethodCodes.LockedRotor] = new()
@@ -80,6 +140,18 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad },
                 RequiredPayloadFields = new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" },
                 RequiredRatedParamFields = Array.Empty<string>(),
+                FormulaSignals = new[]
+                {
+                    "逐点计算 θ1s/R/Pkcu1/Pfe/ns/Tk，再外推/回归得到 Ikn/Pkn/Tkn",
+                    "当最大试验电压 <0.9Un 时走 log-log 拟合并用最大电流点做等比换算",
+                    "当试验电压落在 0.9-1.1Un 时直接对 Uk-I/P/T 曲线做多项式拟合"
+                },
+                LegacyAlgorithmRules = new[]
+                {
+                    "TorqueCalType=1 时才会先补算温升电阻与转矩相关中间量",
+                    "RCalType 决定是由 R1c/θ1c/K1 动态换算电阻，还是直接使用 R1s",
+                    "最终除返回 Ikn/Pkn/Tkn 外，还会同步输出 Ikn/In 与 Tkn/Tn 比值"
+                },
                 Notes = "旧 FrmMotor_Y_Lock_Rotor 会从空载试验引用 R1c/θ1c/K1；堵转算法再结合铁耗系数与额定量推导 Ikn/Pkn/Tkn。"
             }
         };

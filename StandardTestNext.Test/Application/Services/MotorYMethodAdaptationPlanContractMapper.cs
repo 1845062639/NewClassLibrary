@@ -79,6 +79,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
             LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
             DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
+            FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
+            LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
+            FormulaSignalSummary = BuildListSummary("formula signals", dependencyProfile?.FormulaSignals),
+            LegacyAlgorithmRuleSummary = BuildListSummary("legacy algorithm rules", dependencyProfile?.LegacyAlgorithmRules),
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
             Distributions = selection.Distributions
@@ -100,6 +104,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         return legacyAlgorithmInputsReady
             ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}"
             : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}";
+    }
+
+    private static string BuildListSummary(string label, IReadOnlyList<string>? items)
+    {
+        if (items is null || items.Count == 0)
+        {
+            return $"{label}: none";
+        }
+
+        return $"{label} ({items.Count}): {string.Join(" | ", items)}";
     }
 
     private static MotorYMethodDistributionContract MapDistribution(MotorYMethodDistributionSnapshot snapshot)

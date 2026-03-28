@@ -556,6 +556,10 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
                     LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
+                    FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
+                    LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
+                    FormulaSignalSummary = BuildListSummary("formula signals", dependencyProfile?.FormulaSignals),
+                    LegacyAlgorithmRuleSummary = BuildListSummary("legacy algorithm rules", dependencyProfile?.LegacyAlgorithmRules),
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
                     Distributions = selection.Distributions
@@ -570,6 +574,16 @@ ORDER BY COALESCE(Code, ''), Method;";
             .Select(MotorYMethodRouteSelectionSnapshotFactory.Create)
             .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static string BuildListSummary(string label, IReadOnlyList<string>? items)
+    {
+        if (items is null || items.Count == 0)
+        {
+            return $"{label}: none";
+        }
+
+        return $"{label} ({items.Count}): {string.Join(" | ", items)}";
     }
 
     private static Dictionary<string, string> LoadMotorYSamplePayloadByCanonicalCode(SqliteConnection connection)

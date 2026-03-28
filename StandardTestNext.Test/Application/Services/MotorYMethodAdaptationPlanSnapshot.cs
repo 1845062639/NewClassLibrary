@@ -50,6 +50,10 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public bool LegacyAlgorithmInputsReady { get; init; }
     public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
+    public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
+    public string FormulaSignalSummary { get; init; } = string.Empty;
+    public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYMethodDistributionSnapshot> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionSnapshot>();
