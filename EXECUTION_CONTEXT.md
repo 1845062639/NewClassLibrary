@@ -18,6 +18,21 @@
 - `app = StandardTestApp = 现场项目定制适配层`
 - 不得再反向理解。
 
+### 3.1.1 旧系统目录职责补充（高优先级）
+- `StandardTest.Library/Algorithm`：放的是国标计算方法，重要性极高；其中 `Algorithm/Motor/Algorithm_Motor_Y.cs` 是 Motor_Y 算法迁移的核心基线。
+- `StandardTest.Library` 主要负责定义对象结构。
+- `Data`：原始数据结构。
+- `RatedParams`：型号对应额定参数结构。
+- `TestData`：试验参数/试验数据结构。
+- `Model` / `ViewModel`：主要是数据库相关对象。
+- `StandTest` 文件夹：主要负责前端显示。
+- 做 next-gen 算法迁移时，应优先围绕 `RatedParams + Data + TestData + Algorithm` 理解与映射，不要把前端显示层或数据库对象层误当算法权威来源。
+
+### 3.1.2 数据库实体设计基线（高优先级）
+- 做数据库实体设计时，优先直接查看 `stp.db` 的真实表结构与真实数据，不要先依赖代码里的数据库对象定义。
+- `stp.db` 不只是结构样板，里面还有实际数据；应优先从中提炼实体、字段口径、关系、值域与历史兼容情况。
+- `Model` / `ViewModel` 可作为辅助手段参考，但数据库实体设计以 `stp.db` 为一手基线。
+
 ### 3.2 app / test 通讯方式
 - app 与 test 之间使用 **ModbusTcp** 交互
 - **app 为 client**
