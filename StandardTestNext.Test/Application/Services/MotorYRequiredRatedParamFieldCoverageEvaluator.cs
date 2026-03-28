@@ -74,7 +74,7 @@ internal static class MotorYRequiredRatedParamFieldCoverageEvaluator
     {
         return fieldName switch
         {
-            "GB" => !string.IsNullOrWhiteSpace(ratedParams.StandardCode),
+            "GB" => !string.IsNullOrWhiteSpace(ratedParams.StandardCode) || !string.IsNullOrWhiteSpace(ratedParams.StandardCodeRaw),
             "RatedPower" => ratedParams.RatedPower > 0 || ratedParams.RatedPowerRaw > 0,
             "PolePairs" => ratedParams.PolePairs > 0,
             "Connection" => !string.IsNullOrWhiteSpace(ratedParams.Connection) || !string.IsNullOrWhiteSpace(ratedParams.ConnectionRaw),

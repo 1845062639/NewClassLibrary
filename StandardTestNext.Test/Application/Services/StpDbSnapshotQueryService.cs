@@ -989,12 +989,14 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
 
             var rawDuty = ReadStringish(root, "Duty");
             var rawConnection = ReadStringish(root, "Connection");
+            var rawStandardCode = ReadStringish(root, "GB");
 
             return new MotorRatedParamsContract
             {
                 ProductKind = "Motor_Y",
                 Model = productTypeCode,
-                StandardCode = string.Empty,
+                StandardCode = NormalizeStandardCode(rawStandardCode),
+                StandardCodeRaw = rawStandardCode,
                 RatedPowerRaw = ReadDouble(root, "RatedPower"),
                 RatedPower = NormalizeRatedPower(ReadDouble(root, "RatedPower")),
                 RatedCurrent = ReadDouble(root, "RatedCurrent"),
@@ -1073,6 +1075,22 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
             JsonValueKind.True => bool.TrueString,
             JsonValueKind.False => bool.FalseString,
             _ => string.Empty
+        };
+    }
+
+    private static string NormalizeStandardCode(string rawStandardCode)
+    {
+        if (string.IsNullOrWhiteSpace(rawStandardCode))
+        {
+            return string.Empty;
+        }
+
+        return rawStandardCode switch
+        {
+            "0" => "GB1032_2012",
+            "1" => "TB_朝阳电机",
+            "2" => "GB1032_2023",
+            _ => rawStandardCode
         };
     }
 
