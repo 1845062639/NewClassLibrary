@@ -6,6 +6,17 @@ public static class StpDbMotorYPayloadSmokeTests
 {
     private static readonly string DbPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../..", "stp.db"));
 
+    private static readonly IReadOnlyDictionary<string, int[]> ExpectedMethodsByCanonicalCode =
+        new Dictionary<string, int[]>(StringComparer.Ordinal)
+        {
+            [MotorYTestMethodCodes.DcResistance] = new[] { 1, 35, 53, 54 },
+            [MotorYTestMethodCodes.NoLoad] = new[] { 0, 59 },
+            [MotorYTestMethodCodes.HeatRun] = new[] { 3, 47, 48 },
+            [MotorYTestMethodCodes.LoadA] = new[] { 4, 60, 61 },
+            [MotorYTestMethodCodes.LoadB] = new[] { 5, 51, 52 },
+            [MotorYTestMethodCodes.LockedRotor] = new[] { 11, 46, 47 }
+        };
+
     public static void Run()
     {
         if (!File.Exists(DbPath))
@@ -15,6 +26,8 @@ public static class StpDbMotorYPayloadSmokeTests
 
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
+
+        AssertMethodCoverage(connection);
 
         var command = connection.CreateCommand();
         command.CommandText = @"
@@ -73,6 +86,60 @@ ORDER BY rowid DESC;";
         if (missing.Length > 0)
         {
             throw new InvalidOperationException($"stp.db Motor_Y smoke test missing items: {string.Join(", ", missing)}");
+        }
+    }
+
+    private static void AssertMethodCoverage(SqliteConnection connection)
+    {
+        var actualMethodsByCanonicalCode = new Dictionary<string, HashSet<int>>(StringComparer.Ordinal);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT Code, Method
+FROM TestRecordItems
+WHERE Code IN (
+    '直流电阻测定',
+    '空载试验',
+    '空载特性试验',
+    '热试验',
+    'A法负载试验',
+    'B法负载试验',
+    '堵转试验',
+    '堵转特性试验');";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var method = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
+            {
+                continue;
+            }
+
+            if (!actualMethodsByCanonicalCode.TryGetValue(canonicalCode, out var methods))
+            {
+                methods = new HashSet<int>();
+                actualMethodsByCanonicalCode[canonicalCode] = methods;
+            }
+
+            methods.Add(method);
+        }
+
+        foreach (var (canonicalCode, expectedMethods) in ExpectedMethodsByCanonicalCode)
+        {
+            if (!actualMethodsByCanonicalCode.TryGetValue(canonicalCode, out var actualMethods))
+            {
+                throw new InvalidOperationException($"stp.db method coverage missing canonical item '{canonicalCode}'.");
+            }
+
+            var missingMethods = expectedMethods.Where(expected => !actualMethods.Contains(expected)).ToArray();
+            if (missingMethods.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    $"stp.db method coverage mismatch for {canonicalCode}. Missing methods: {string.Join(", ", missingMethods)}. Actual methods: {string.Join(", ", actualMethods.OrderBy(x => x))}");
+            }
         }
     }
 
@@ -192,7 +259,7 @@ ORDER BY rowid DESC;";
             throw new InvalidOperationException($"DC resistance should not infer record mode, got '{payload.RecordMode}'.");
         }
 
-        if (!dataJson.Contains("Ruv", StringComparison.Ordinal) || method != 1)
+        if (!dataJson.Contains("Ruv", StringComparison.Ordinal) || !MatchesMethod(method, 1, 35, 53, 54))
         {
             throw new InvalidOperationException("DC resistance payload/method shape mismatch against stp.db baseline.");
         }
@@ -200,7 +267,7 @@ ORDER BY rowid DESC;";
 
     private static void AssertNoLoad(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
     {
-        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 0, 2))
+        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 0, 59))
         {
             throw new InvalidOperationException($"No-load payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
         }
@@ -221,7 +288,7 @@ ORDER BY rowid DESC;";
 
     private static void AssertHeatRun(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
     {
-        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 3))
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 3, 47, 48))
         {
             throw new InvalidOperationException($"Heat-run payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
         }
@@ -263,7 +330,7 @@ ORDER BY rowid DESC;";
 
     private static void AssertLoadB(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
     {
-        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 5))
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 5, 51, 52))
         {
             throw new InvalidOperationException($"Load-B payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
         }
@@ -284,7 +351,7 @@ ORDER BY rowid DESC;";
 
     private static void AssertLockedRotor(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
     {
-        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 11, 47))
+        if (payload.RecordMode != TestRecordSampleModes.KeyPointOnly || !MatchesMethod(method, 11, 46, 47))
         {
             throw new InvalidOperationException($"Locked-rotor payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
         }
