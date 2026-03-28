@@ -84,6 +84,16 @@ public static class StpDbMotorYMethodDecisionSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
             }
 
+            if (!string.Equals(snapshot.RecommendedMethodSummary, row.RecommendedMethodSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: recommended summary mismatch for {row.CanonicalCode}. expected={row.RecommendedMethodSummary}, actual={snapshot.RecommendedMethodSummary}");
+            }
+
+            if (!string.Equals(snapshot.BaselineDominantComparisonSummary, row.BaselineDominantComparisonSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: baseline/dominant summary mismatch for {row.CanonicalCode}. expected={row.BaselineDominantComparisonSummary}, actual={snapshot.BaselineDominantComparisonSummary}");
+            }
+
             if (snapshot.Distributions.Count != row.Distributions.Count)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: distribution count mismatch for {row.CanonicalCode}.");
@@ -139,7 +149,7 @@ public static class StpDbMotorYMethodDecisionSmokeTests
         }
     }
 
-    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount, IReadOnlyList<(int MethodValue, int Count, double Share)> Distributions) BuildExpected(
+    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount, int RecommendedMethod, string RecommendedStrategy, string RecommendedMethodSummary, string BaselineDominantComparisonSummary, IReadOnlyList<(int MethodValue, int Count, double Share)> Distributions) BuildExpected(
         SqliteConnection connection,
         string canonicalCode,
         int baselineMethod)
@@ -156,6 +166,30 @@ public static class StpDbMotorYMethodDecisionSmokeTests
             .ThenBy(x => x.Key)
             .First();
         var totalCount = rows.Values.Sum();
+        var dominantShare = totalCount <= 0
+            ? 0d
+            : Math.Round((double)dominant.Value / totalCount, 4, MidpointRounding.AwayFromZero);
+        var shouldPrioritizeDominant = baselineMethod != dominant.Key
+            && dominantShare >= DominantOverrideThreshold;
+        var recommendedMethod = shouldPrioritizeDominant ? dominant.Key : baselineMethod;
+        var recommendedStrategy = shouldPrioritizeDominant
+            ? "dominant-threshold-over-baseline"
+            : "baseline";
+        var selectedCount = shouldPrioritizeDominant ? dominant.Value : baselineCount;
+        var selectedShare = totalCount <= 0
+            ? 0d
+            : Math.Round((double)selectedCount / totalCount, 4, MidpointRounding.AwayFromZero);
+        var baselineShare = totalCount <= 0
+            ? 0d
+            : Math.Round((double)baselineCount / totalCount, 4, MidpointRounding.AwayFromZero);
+        var recommendedRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, recommendedMethod)
+            ?? throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: recommended route missing for {canonicalCode}:{recommendedMethod}.");
+        var baselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, baselineMethod)
+            ?? throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: baseline route missing for {canonicalCode}:{baselineMethod}.");
+        var dominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, dominant.Key)
+            ?? throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: dominant route missing for {canonicalCode}:{dominant.Key}.");
+        var recommendedMethodSummary = $"selected {recommendedRoute.LegacyMethodName} method {recommendedMethod} ({recommendedRoute.VariantKind}) covering {selectedCount}/{totalCount} items ({selectedShare:P2})";
+        var baselineDominantComparisonSummary = $"baseline {baselineMethod} ({baselineRoute.VariantKind})={baselineCount}/{totalCount} ({baselineShare:P2}), dominant {dominant.Key} ({dominantRoute.VariantKind})={dominant.Value}/{totalCount} ({dominantShare:P2})";
         var distributions = rows
             .OrderByDescending(x => x.Value)
             .ThenBy(x => x.Key)
@@ -167,7 +201,7 @@ public static class StpDbMotorYMethodDecisionSmokeTests
                     : Math.Round((double)x.Value / totalCount, 4, MidpointRounding.AwayFromZero)))
             .ToArray();
 
-        return (canonicalCode, totalCount, baselineMethod, baselineCount, dominant.Key, dominant.Value, distributions);
+        return (canonicalCode, totalCount, baselineMethod, baselineCount, dominant.Key, dominant.Value, recommendedMethod, recommendedStrategy, recommendedMethodSummary, baselineDominantComparisonSummary, distributions);
     }
 
     private static Dictionary<int, int> LoadCounts(SqliteConnection connection, string canonicalCode)

@@ -130,7 +130,7 @@ public static class TestRecordViewMapper
                     ? "dominant-threshold-over-baseline"
                     : "baseline";
 
-                return new MotorYMethodDecisionSnapshot
+                var decision = new MotorYMethodDecisionSnapshot
                 {
                     CanonicalCode = group.Key,
                     TotalCount = totalCount,
@@ -152,6 +152,29 @@ public static class TestRecordViewMapper
                             ? $"kept baseline method {baseline.MethodValue} because baseline already matches dominant distribution ({dominantShare:P2})"
                             : $"kept baseline method {baseline.MethodValue} because dominant method {dominant.MethodValue} share {dominantShare:P2} did not reach threshold {MotorYDominantOverrideThreshold:P0}",
                     Distributions = distributions
+                };
+
+                var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
+                return new MotorYMethodDecisionSnapshot
+                {
+                    CanonicalCode = decision.CanonicalCode,
+                    TotalCount = decision.TotalCount,
+                    BaselineRoute = decision.BaselineRoute,
+                    BaselineCount = decision.BaselineCount,
+                    DominantRoute = decision.DominantRoute,
+                    DominantCount = decision.DominantCount,
+                    RecommendedRoute = decision.RecommendedRoute,
+                    RecommendedStrategy = decision.RecommendedStrategy,
+                    ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
+                    DominantShare = decision.DominantShare,
+                    BaselineShare = decision.BaselineShare,
+                    DominantOverrideThreshold = decision.DominantOverrideThreshold,
+                    DominantLeadCount = decision.DominantLeadCount,
+                    DominantLeadPercentagePoints = decision.DominantLeadPercentagePoints,
+                    RecommendationReason = decision.RecommendationReason,
+                    RecommendedMethodSummary = selection.SelectedMethodSummary,
+                    BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
+                    Distributions = decision.Distributions
                 };
             })
             .OrderBy(x => x.CanonicalCode, StringComparer.Ordinal)

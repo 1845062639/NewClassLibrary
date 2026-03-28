@@ -589,7 +589,7 @@ ORDER BY COALESCE(Code, ''), Method;";
                 ? "dominant-threshold-over-baseline"
                 : "baseline";
 
-            result.Add(new MotorYMethodDecisionSnapshot
+            var decision = new MotorYMethodDecisionSnapshot
             {
                 CanonicalCode = group.Key,
                 TotalCount = totalCount,
@@ -625,6 +625,29 @@ ORDER BY COALESCE(Code, ''), Method;";
                         Route = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, row.Method)
                     })
                     .ToArray()
+            };
+
+            var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
+            result.Add(new MotorYMethodDecisionSnapshot
+            {
+                CanonicalCode = decision.CanonicalCode,
+                TotalCount = decision.TotalCount,
+                BaselineRoute = decision.BaselineRoute,
+                BaselineCount = decision.BaselineCount,
+                DominantRoute = decision.DominantRoute,
+                DominantCount = decision.DominantCount,
+                RecommendedRoute = decision.RecommendedRoute,
+                RecommendedStrategy = decision.RecommendedStrategy,
+                ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
+                DominantShare = decision.DominantShare,
+                BaselineShare = decision.BaselineShare,
+                DominantOverrideThreshold = decision.DominantOverrideThreshold,
+                DominantLeadCount = decision.DominantLeadCount,
+                DominantLeadPercentagePoints = decision.DominantLeadPercentagePoints,
+                RecommendationReason = decision.RecommendationReason,
+                RecommendedMethodSummary = selection.SelectedMethodSummary,
+                BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
+                Distributions = decision.Distributions
             });
         }
 

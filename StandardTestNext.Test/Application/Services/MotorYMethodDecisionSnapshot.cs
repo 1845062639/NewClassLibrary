@@ -25,5 +25,7 @@ public sealed class MotorYMethodDecisionSnapshot
     public int DominantLeadCount { get; init; }
     public int DominantLeadPercentagePoints { get; init; }
     public string RecommendationReason { get; init; } = string.Empty;
+    public string RecommendedMethodSummary { get; init; } = string.Empty;
+    public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYMethodDistributionSnapshot> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionSnapshot>();
 }
