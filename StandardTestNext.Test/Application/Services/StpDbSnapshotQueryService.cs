@@ -134,6 +134,19 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorYMethodRecommendations(connection);
     }
 
+    public IReadOnlyList<MotorYMethodDecisionSnapshot> ListMotorYMethodDecisions()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorYMethodDecisions(connection);
+    }
+
     private static IReadOnlyList<StpDbTestRecordSnapshot> LoadRecentMotorYRecords(SqliteConnection connection, int take)
     {
         using var command = connection.CreateCommand();
@@ -386,8 +399,37 @@ ORDER BY COALESCE(Code, ''), Method;";
 
     private static IReadOnlyList<MotorYMethodRecommendationSnapshot> LoadMotorYMethodRecommendations(SqliteConnection connection)
     {
+        return LoadMotorYMethodDecisions(connection)
+            .Select(decision => new MotorYMethodRecommendationSnapshot
+            {
+                CanonicalCode = decision.CanonicalCode,
+                TotalCount = decision.TotalCount,
+                BaselineMethod = decision.BaselineRoute?.MethodValue ?? 0,
+                BaselineCount = decision.BaselineCount,
+                BaselineMethodKey = decision.BaselineRoute?.MethodKey ?? string.Empty,
+                BaselineProfileKey = decision.BaselineRoute?.ProfileKey,
+                DominantMethod = decision.DominantRoute?.MethodValue ?? 0,
+                DominantCount = decision.DominantCount,
+                DominantMethodKey = decision.DominantRoute?.MethodKey ?? string.Empty,
+                DominantProfileKey = decision.DominantRoute?.ProfileKey,
+                DominantVariantKind = decision.DominantRoute?.VariantKind,
+                DominantAlgorithmFamily = decision.DominantRoute?.AlgorithmFamily,
+                DominantLegacyEnumName = decision.DominantRoute?.LegacyEnumName,
+                DominantLegacyFormName = decision.DominantRoute?.LegacyFormName,
+                DominantLegacyAlgorithmEntry = decision.DominantRoute?.LegacyAlgorithmEntry,
+                DominantLegacyMethodName = decision.DominantRoute?.LegacyMethodName,
+                DominantLegacySettingsMethodName = decision.DominantRoute?.LegacySettingsMethodName,
+                DominantIsBaselineMethod = decision.DominantRoute?.IsBaselineMethod == true,
+                ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
+                DominantShare = decision.DominantShare
+            })
+            .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYMethodDecisionSnapshot> LoadMotorYMethodDecisions(SqliteConnection connection)
+    {
         var distribution = LoadMotorYMethodDistribution(connection);
-        var result = new List<MotorYMethodRecommendationSnapshot>();
+        var result = new List<MotorYMethodDecisionSnapshot>();
 
         foreach (var group in distribution.GroupBy(row => row.CanonicalCode, StringComparer.Ordinal))
         {
@@ -409,26 +451,14 @@ ORDER BY COALESCE(Code, ''), Method;";
                 ? 0d
                 : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
 
-            result.Add(new MotorYMethodRecommendationSnapshot
+            result.Add(new MotorYMethodDecisionSnapshot
             {
                 CanonicalCode = group.Key,
                 TotalCount = totalCount,
-                BaselineMethod = baseline.Method,
+                BaselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, baseline.Method),
                 BaselineCount = baseline.Count,
-                BaselineMethodKey = baseline.MethodKey,
-                BaselineProfileKey = baseline.MethodProfileKey,
-                DominantMethod = dominant.Method,
+                DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, dominant.Method),
                 DominantCount = dominant.Count,
-                DominantMethodKey = dominant.MethodKey,
-                DominantProfileKey = dominant.MethodProfileKey,
-                DominantVariantKind = dominant.VariantKind,
-                DominantAlgorithmFamily = dominant.AlgorithmFamily,
-                DominantLegacyEnumName = dominant.LegacyEnumName,
-                DominantLegacyFormName = dominant.LegacyFormName,
-                DominantLegacyAlgorithmEntry = dominant.LegacyAlgorithmEntry,
-                DominantLegacyMethodName = dominant.LegacyMethodName,
-                DominantLegacySettingsMethodName = dominant.LegacySettingsMethodName,
-                DominantIsBaselineMethod = dominant.IsBaselineMethod,
                 ShouldPrioritizeDominantOverBaseline = dominant.Method != baseline.Method,
                 DominantShare = dominantShare
             });

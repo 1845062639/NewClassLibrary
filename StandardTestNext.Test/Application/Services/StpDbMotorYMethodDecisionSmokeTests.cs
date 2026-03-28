@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 
 namespace StandardTestNext.Test.Application.Services;
 
-public static class StpDbMotorYMethodRecommendationSmokeTests
+public static class StpDbMotorYMethodDecisionSmokeTests
 {
     private static readonly string DbPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../..", "stp.db"));
 
@@ -10,14 +10,14 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
     {
         if (!File.Exists(DbPath))
         {
-            throw new InvalidOperationException($"stp.db not found for method recommendation smoke test: {DbPath}");
+            throw new InvalidOperationException($"stp.db not found for method decision smoke test: {DbPath}");
         }
 
         var service = new StpDbSnapshotQueryService(DbPath);
-        var actual = service.ListMotorYMethodRecommendations();
+        var actual = service.ListMotorYMethodDecisions();
         if (actual.Count == 0)
         {
-            throw new InvalidOperationException("stp.db Motor_Y method recommendation smoke test failed: no rows returned.");
+            throw new InvalidOperationException("stp.db Motor_Y method decision smoke test failed: no rows returned.");
         }
 
         using var connection = new SqliteConnection($"Data Source={DbPath}");
@@ -38,51 +38,59 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
             var snapshot = actual.FirstOrDefault(x => string.Equals(x.CanonicalCode, row.CanonicalCode, StringComparison.Ordinal));
             if (snapshot is null)
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: missing row for {row.CanonicalCode}.");
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: missing row for {row.CanonicalCode}.");
             }
 
             if (snapshot.TotalCount != row.TotalCount
-                || snapshot.BaselineMethod != row.BaselineMethod
                 || snapshot.BaselineCount != row.BaselineCount
-                || snapshot.DominantMethod != row.DominantMethod
                 || snapshot.DominantCount != row.DominantCount)
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: numeric mismatch for {row.CanonicalCode}.");
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: numeric mismatch for {row.CanonicalCode}.");
             }
 
-            if (!string.Equals(snapshot.BaselineMethodKey, $"{row.CanonicalCode}:{row.BaselineMethod}", StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantMethodKey, $"{row.CanonicalCode}:{row.DominantMethod}", StringComparison.Ordinal))
-            {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: method key mismatch for {row.CanonicalCode}.");
-            }
-
-            var dominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(row.CanonicalCode, row.DominantMethod);
-            if (!string.Equals(snapshot.DominantProfileKey, dominantRoute?.ProfileKey, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantVariantKind, dominantRoute?.VariantKind, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantAlgorithmFamily, dominantRoute?.AlgorithmFamily, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantLegacyEnumName, dominantRoute?.LegacyEnumName, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantLegacyFormName, dominantRoute?.LegacyFormName, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantLegacyAlgorithmEntry, dominantRoute?.LegacyAlgorithmEntry, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantLegacyMethodName, dominantRoute?.LegacyMethodName, StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantLegacySettingsMethodName, dominantRoute?.LegacySettingsMethodName, StringComparison.Ordinal)
-                || snapshot.DominantIsBaselineMethod != (dominantRoute?.IsBaselineMethod == true))
-            {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: dominant route projection mismatch for {row.CanonicalCode}.");
-            }
+            AssertRoute(snapshot.BaselineRoute, row.CanonicalCode, row.BaselineMethod, $"baseline/{row.CanonicalCode}");
+            AssertRoute(snapshot.DominantRoute, row.CanonicalCode, row.DominantMethod, $"dominant/{row.CanonicalCode}");
 
             var expectedShare = row.TotalCount <= 0
                 ? 0d
                 : Math.Round((double)row.DominantCount / row.TotalCount, 4, MidpointRounding.AwayFromZero);
             if (Math.Abs(snapshot.DominantShare - expectedShare) > 0.0001d)
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: dominant share mismatch for {row.CanonicalCode}. expected={expectedShare}, actual={snapshot.DominantShare}");
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: dominant share mismatch for {row.CanonicalCode}. expected={expectedShare}, actual={snapshot.DominantShare}");
             }
 
             var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod;
             if (snapshot.ShouldPrioritizeDominantOverBaseline != shouldPrioritizeDominant)
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
             }
+        }
+    }
+
+    private static void AssertRoute(MotorYLegacyAlgorithmRoute? route, string canonicalCode, int methodValue, string context)
+    {
+        var expected = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue)
+            ?? throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: expected route missing for {context}.");
+
+        if (route is null)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: route missing for {context}.");
+        }
+
+        if (!string.Equals(route.CanonicalCode, expected.CanonicalCode, StringComparison.Ordinal)
+            || route.MethodValue != expected.MethodValue
+            || !string.Equals(route.MethodKey, expected.MethodKey, StringComparison.Ordinal)
+            || !string.Equals(route.ProfileKey, expected.ProfileKey, StringComparison.Ordinal)
+            || !string.Equals(route.VariantKind, expected.VariantKind, StringComparison.Ordinal)
+            || !string.Equals(route.AlgorithmFamily, expected.AlgorithmFamily, StringComparison.Ordinal)
+            || !string.Equals(route.LegacyEnumName, expected.LegacyEnumName, StringComparison.Ordinal)
+            || !string.Equals(route.LegacyFormName, expected.LegacyFormName, StringComparison.Ordinal)
+            || !string.Equals(route.LegacyAlgorithmEntry, expected.LegacyAlgorithmEntry, StringComparison.Ordinal)
+            || !string.Equals(route.LegacyMethodName, expected.LegacyMethodName, StringComparison.Ordinal)
+            || !string.Equals(route.LegacySettingsMethodName, expected.LegacySettingsMethodName, StringComparison.Ordinal)
+            || route.IsBaselineMethod != expected.IsBaselineMethod)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: route projection mismatch for {context}.");
         }
     }
 
@@ -94,7 +102,7 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
         var rows = LoadCounts(connection, canonicalCode);
         if (rows.Count == 0)
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: no source rows for {canonicalCode}.");
+            throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: no source rows for {canonicalCode}.");
         }
 
         var baselineCount = rows.TryGetValue(baselineMethod, out var baseline) ? baseline : 0;
