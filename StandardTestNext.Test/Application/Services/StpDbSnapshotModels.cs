@@ -16,7 +16,7 @@ public sealed class StpDbProductTypeSnapshot
 public sealed class StpDbTestRecordSnapshot
 {
     public string Id { get; init; } = string.Empty;
-    public string Code { get; init; } = string.Empty;
+    public string? Code { get; init; }
     public string? SerialNumber { get; init; }
     public string? TestProductTypeId { get; init; }
     public string? AccompanyProductTypeId { get; init; }
@@ -38,6 +38,20 @@ public sealed class StpDbTestRecordItemSnapshot
     public string? Remark { get; init; }
     public string? TestRecordId { get; init; }
     public bool IsValid { get; init; }
+    public IReadOnlyList<StpDbFileAttachmentSnapshot> Attachments { get; init; } = Array.Empty<StpDbFileAttachmentSnapshot>();
+}
+
+public sealed class StpDbFileAttachmentSnapshot
+{
+    public string Id { get; init; } = string.Empty;
+    public string FileName { get; init; } = string.Empty;
+    public string FileExt { get; init; } = string.Empty;
+    public string? Path { get; init; }
+    public long Length { get; init; }
+    public string? UploadTimeRaw { get; init; }
+    public string? SaveMode { get; init; }
+    public string? ExtraInfo { get; init; }
+    public string? HandlerInfo { get; init; }
 }
 
 public sealed class StpDbMotorYRecordSnapshot

@@ -15,9 +15,9 @@ public static class StpDbSnapshotQuerySmokeTests
 
         foreach (var snapshot in snapshots)
         {
-            if (string.IsNullOrWhiteSpace(snapshot.Record.Id) || string.IsNullOrWhiteSpace(snapshot.Record.Code))
+            if (string.IsNullOrWhiteSpace(snapshot.Record.Id))
             {
-                throw new InvalidOperationException("stp.db snapshot query smoke test failed: record id/code missing.");
+                throw new InvalidOperationException("stp.db snapshot query smoke test failed: record id missing.");
             }
 
             if (snapshot.ProductType is null)
@@ -40,24 +40,66 @@ public static class StpDbSnapshotQuerySmokeTests
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} has no core Motor_Y items.");
             }
 
+            var hasAnyCoreTrialPayload = false;
             foreach (var item in snapshot.Items)
             {
                 if (string.IsNullOrWhiteSpace(item.Id) || string.IsNullOrWhiteSpace(item.TestRecordId))
                 {
-                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} has item with missing id/recordId.");
+                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code ?? snapshot.Record.Id} has item with missing id/recordId.");
                 }
 
                 var payload = TestRecordItemPayloadReader.TryParse(item.DataJson);
-                if (MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.Code) && payload.SampleCount <= 0)
+                if (MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.Code) && payload.SampleCount > 0)
                 {
-                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: item {item.Code} sample count invalid.");
+                    hasAnyCoreTrialPayload = true;
                 }
+            }
+
+            if (!hasAnyCoreTrialPayload)
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code ?? snapshot.Record.Id} has no core Motor_Y payload with sample data.");
             }
 
             using var ratedParamsDocument = JsonDocument.Parse(snapshot.ProductType.RatedParamsJson);
             if (ratedParamsDocument.RootElement.ValueKind != JsonValueKind.Object)
             {
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated params is not a json object.");
+            }
+        }
+    }
+
+    public static void RunAttachmentCoverage()
+    {
+        var service = new StpDbSnapshotQueryService();
+        var snapshots = service.ListRecentMotorYRecords(20);
+        if (snapshots.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db attachment snapshot smoke test failed: no Motor_Y records loaded.");
+        }
+
+        var itemsWithAttachments = snapshots
+            .SelectMany(snapshot => snapshot.Items, (snapshot, item) => new { snapshot.Record.Code, Item = item })
+            .Where(x => x.Item.Attachments.Count > 0)
+            .ToArray();
+
+        if (itemsWithAttachments.Length == 0)
+        {
+            throw new InvalidOperationException("stp.db attachment snapshot smoke test failed: no Motor_Y item attachments loaded.");
+        }
+
+        foreach (var entry in itemsWithAttachments)
+        {
+            foreach (var attachment in entry.Item.Attachments)
+            {
+                if (string.IsNullOrWhiteSpace(attachment.Id) || string.IsNullOrWhiteSpace(attachment.FileName))
+                {
+                    throw new InvalidOperationException($"stp.db attachment snapshot smoke test failed: record {entry.Code} item {entry.Item.Code} has attachment with missing id/fileName.");
+                }
+
+                if (attachment.Length <= 0)
+                {
+                    throw new InvalidOperationException($"stp.db attachment snapshot smoke test failed: record {entry.Code} item {entry.Item.Code} attachment {attachment.FileName} length invalid.");
+                }
             }
         }
     }

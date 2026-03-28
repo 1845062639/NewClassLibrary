@@ -19,6 +19,7 @@ if (testOptions.RunSmokeTests)
     StpDbMotorYFieldMappingSmokeTests.Run();
     MotorYStpDbShapeAlignmentSmokeTests.Run();
     StpDbSnapshotQuerySmokeTests.Run();
+    StpDbSnapshotQuerySmokeTests.RunAttachmentCoverage();
     Console.WriteLine("[Test] Smoke tests passed.");
     return;
 }
