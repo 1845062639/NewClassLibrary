@@ -143,6 +143,19 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorYMethodAdaptationPlans(connection);
     }
 
+    public IReadOnlyList<MotorYMethodRouteSelectionSnapshot> ListMotorYMethodRouteSelections()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorYMethodRouteSelections(connection);
+    }
+
     public IReadOnlyList<MotorYMethodRecommendationSnapshot> ListMotorYMethodRecommendations()
     {
         if (!File.Exists(_dbPath))
@@ -498,6 +511,14 @@ ORDER BY COALESCE(Code, ''), Method;";
                     Distributions = decision.Distributions
                 };
             })
+            .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYMethodRouteSelectionSnapshot> LoadMotorYMethodRouteSelections(SqliteConnection connection)
+    {
+        return LoadMotorYMethodDecisions(connection)
+            .Select(MotorYMethodRouteSelectionSnapshotFactory.Create)
+            .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
     }
 
