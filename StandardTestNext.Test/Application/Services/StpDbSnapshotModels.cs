@@ -80,6 +80,23 @@ public sealed class StpDbFileAttachmentSnapshot
     public string? HandlerInfo { get; init; }
 }
 
+public sealed class StpDbMotorYMethodDistributionSnapshot
+{
+    public string CanonicalCode { get; init; } = string.Empty;
+    public int Method { get; init; }
+    public int Count { get; init; }
+    public string MethodKey { get; init; } = string.Empty;
+    public string? MethodProfileKey { get; init; }
+    public string? VariantKind { get; init; }
+    public string? AlgorithmFamily { get; init; }
+    public string? LegacyEnumName { get; init; }
+    public string? LegacyFormName { get; init; }
+    public string? LegacyAlgorithmEntry { get; init; }
+    public string? LegacyMethodName { get; init; }
+    public string? LegacySettingsMethodName { get; init; }
+    public bool IsBaselineMethod { get; init; }
+}
+
 public sealed class StpDbMotorYRecordSnapshot
 {
     public StpDbTestRecordSnapshot Record { get; init; } = new();

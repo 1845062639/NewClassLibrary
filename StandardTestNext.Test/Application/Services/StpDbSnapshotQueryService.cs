@@ -95,6 +95,19 @@ public sealed class StpDbSnapshotQueryService
             .ToArray();
     }
 
+    public IReadOnlyList<StpDbMotorYMethodDistributionSnapshot> ListMotorYMethodDistribution()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorYMethodDistribution(connection);
+    }
+
     private static IReadOnlyList<StpDbTestRecordSnapshot> LoadRecentMotorYRecords(SqliteConnection connection, int take)
     {
         using var command = connection.CreateCommand();
@@ -271,6 +284,56 @@ ORDER BY tra.TestRecordId, COALESCE(tra.[Order], 0), fa.UploadTime, fa.ID;";
         }
 
         return result;
+    }
+
+    private static IReadOnlyList<StpDbMotorYMethodDistributionSnapshot> LoadMotorYMethodDistribution(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+SELECT COALESCE(Code, ''), Method, COUNT(*)
+FROM TestRecordItems
+WHERE Code IN ({BuildInlineQuotedList(MotorYLegacyItemCodes)})
+  AND Method IS NOT NULL
+GROUP BY COALESCE(Code, ''), Method
+ORDER BY COALESCE(Code, ''), Method;";
+
+        var snapshots = new List<StpDbMotorYMethodDistributionSnapshot>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.GetString(0);
+            var method = reader.GetInt32(1);
+            var count = reader.GetInt32(2);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
+            {
+                continue;
+            }
+
+            var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, method);
+            snapshots.Add(new StpDbMotorYMethodDistributionSnapshot
+            {
+                CanonicalCode = canonicalCode,
+                Method = method,
+                Count = count,
+                MethodKey = $"{canonicalCode}:{method}",
+                MethodProfileKey = route?.ProfileKey,
+                VariantKind = route?.VariantKind,
+                AlgorithmFamily = route?.AlgorithmFamily,
+                LegacyEnumName = route?.LegacyEnumName,
+                LegacyFormName = route?.LegacyFormName,
+                LegacyAlgorithmEntry = route?.LegacyAlgorithmEntry,
+                LegacyMethodName = route?.LegacyMethodName,
+                LegacySettingsMethodName = route?.LegacySettingsMethodName,
+                IsBaselineMethod = route?.IsBaselineMethod == true
+            });
+        }
+
+        return snapshots
+            .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
+            .ThenByDescending(snapshot => snapshot.Count)
+            .ThenBy(snapshot => snapshot.Method)
+            .ToArray();
     }
 
     private static IReadOnlyList<StpDbTestRecordItemSnapshot> LoadMotorYItems(

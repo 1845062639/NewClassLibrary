@@ -18,6 +18,7 @@ if (testOptions.RunSmokeTests)
     StpDbMotorYPayloadSmokeTests.Run();
     StpDbMotorYFieldMappingSmokeTests.Run();
     StpDbMotorYMethodMappingSmokeTests.Run();
+    StpDbMotorYMethodDistributionSmokeTests.Run();
     MotorYMethodProfileCatalogSmokeTests.Run();
     MotorYTrialItemProfileCatalogSmokeTests.Run();
     MotorYStpDbShapeAlignmentSmokeTests.Run();
