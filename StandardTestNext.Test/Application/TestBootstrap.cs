@@ -95,6 +95,7 @@ public sealed class TestBootstrap
         ITestReportQueryService reportQueryService = new TestReportQueryService(reportRepository);
         ITestProductDefinitionService productDefinitionService = new TestProductDefinitionService(productRepository);
         IProductDefinitionQueryService productDefinitionQueryService = new ProductDefinitionQueryService(productRepository);
+        var stpDbSnapshotQueryService = new StpDbSnapshotQueryService();
 
         var productDefinition = productDefinitionService.GetOrCreateAsync(rated).GetAwaiter().GetResult();
         var buildResult = aggregateBuilder.BuildDemoRecord(rated, samples, legacySamples: null, productDefinition);
@@ -133,6 +134,7 @@ public sealed class TestBootstrap
         var reloadedProductDefinition = productDefinitionQueryService.GetByKindAsync(rated.ProductKind).GetAwaiter().GetResult();
         var lightweightReport = recordReports.FirstOrDefault(x => x.IsLightweightEntry);
         var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
+        var stpMethodAdaptationPlans = LoadStpMethodAdaptationPlans(stpDbSnapshotQueryService);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
         var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
@@ -185,6 +187,10 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] LoadA legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadA(loadALegacyShape)}");
         Console.WriteLine($"[Test] LoadB legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadB(loadBLegacyShape)}");
         Console.WriteLine($"[Test] Real stp alias normalization: {string.Join(", ", normalizedRealStpAliases)}");
+        if (stpMethodAdaptationPlans.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y adaptation plans: {FormatMethodAdaptationPlans(stpMethodAdaptationPlans)}");
+        }
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)
@@ -212,6 +218,42 @@ public sealed class TestBootstrap
         return string.IsNullOrWhiteSpace(mode)
             ? "memory"
             : mode.Trim().ToLowerInvariant();
+    }
+
+    private static IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> LoadStpMethodAdaptationPlans(StpDbSnapshotQueryService snapshotQueryService)
+    {
+        try
+        {
+            return snapshotQueryService.ListMotorYMethodAdaptationPlans();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y adaptation plans unavailable: {ex.Message}");
+            return Array.Empty<MotorYMethodAdaptationPlanSnapshot>();
+        }
+    }
+
+    private static string FormatMethodAdaptationPlans(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
+    {
+        return string.Join(", ", plans.Select(FormatMethodAdaptationPlanSnapshot));
+    }
+
+    private static string FormatMethodAdaptationPlanSnapshot(MotorYMethodAdaptationPlanSnapshot plan)
+    {
+        var baseline = plan.BaselineRoute is null
+            ? "baseline=<none>"
+            : $"baseline={plan.BaselineRoute.MethodValue}/{plan.BaselineRoute.ProfileKey}:{plan.BaselineCount}";
+        var dominant = plan.DominantRoute is null
+            ? "dominant=<none>"
+            : $"dominant={plan.DominantRoute.MethodValue}/{plan.DominantRoute.ProfileKey}:{plan.DominantCount}:{plan.DominantShare:P1}";
+        var selected = plan.SelectedRoute is null
+            ? $"selected={plan.SelectionStrategy}:<none>"
+            : $"selected={plan.SelectionStrategy}:{plan.SelectedRoute.MethodValue}/{plan.SelectedRoute.ProfileKey}:{plan.SelectedCount}";
+        var distributions = plan.Distributions.Count == 0
+            ? "dist=<none>"
+            : "dist=" + string.Join("|", plan.Distributions.Select(x => $"{x.MethodValue}:{x.Count}:{x.Share:P1}:{x.Route?.VariantKind ?? "unknown"}"));
+
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{distributions}]";
     }
 
     private static string FormatMethodDecisions(IReadOnlyList<MotorYMethodDecisionSnapshot> decisions)
