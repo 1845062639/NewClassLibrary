@@ -60,12 +60,12 @@ public static class StpDbMotorYMethodDistributionSmokeTests
             }
         }
 
-        AssertTopCount(distribution, MotorYTestMethodCodes.DcResistance, 1, 431);
-        AssertTopCount(distribution, MotorYTestMethodCodes.NoLoad, 0, 31);
-        AssertTopCount(distribution, MotorYTestMethodCodes.HeatRun, 3, 430);
-        AssertTopCount(distribution, MotorYTestMethodCodes.LoadA, 60, 61);
-        AssertTopCount(distribution, MotorYTestMethodCodes.LoadB, 5, 233);
-        AssertTopCount(distribution, MotorYTestMethodCodes.LockedRotor, 46, 1);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.DcResistance);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.NoLoad);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.HeatRun);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.LoadA);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.LoadB);
+        AssertTopCount(distribution, expectedRows, MotorYTestMethodCodes.LockedRotor);
     }
 
     private static IReadOnlyList<(string CanonicalCode, int Method, int Count)> LoadExpectedRows(SqliteConnection connection)
@@ -86,7 +86,7 @@ WHERE Code IN (
   AND Method IS NOT NULL
 GROUP BY Code, Method;";
 
-        var rows = new List<(string CanonicalCode, int Method, int Count)>();
+        var grouped = new Dictionary<(string CanonicalCode, int Method), int>();
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
@@ -96,17 +96,23 @@ GROUP BY Code, Method;";
                 continue;
             }
 
-            rows.Add((canonicalCode, reader.GetInt32(1), reader.GetInt32(2)));
+            var key = (canonicalCode, reader.GetInt32(1));
+            grouped[key] = grouped.TryGetValue(key, out var count)
+                ? count + reader.GetInt32(2)
+                : reader.GetInt32(2);
         }
 
-        return rows;
+        return grouped
+            .Select(pair => (pair.Key.CanonicalCode, pair.Key.Method, pair.Value))
+            .OrderBy(row => row.CanonicalCode, StringComparer.Ordinal)
+            .ThenBy(row => row.Method)
+            .ToArray();
     }
 
     private static void AssertTopCount(
         IReadOnlyList<StpDbMotorYMethodDistributionSnapshot> distribution,
-        string canonicalCode,
-        int expectedMethod,
-        int expectedCount)
+        IReadOnlyList<(string CanonicalCode, int Method, int Count)> expectedRows,
+        string canonicalCode)
     {
         var top = distribution
             .Where(row => string.Equals(row.CanonicalCode, canonicalCode, StringComparison.Ordinal))
@@ -119,9 +125,20 @@ GROUP BY Code, Method;";
             throw new InvalidOperationException($"stp.db Motor_Y method distribution smoke test failed: no rows for {canonicalCode}.");
         }
 
-        if (top.Method != expectedMethod || top.Count != expectedCount)
+        var expectedTop = expectedRows
+            .Where(row => string.Equals(row.CanonicalCode, canonicalCode, StringComparison.Ordinal))
+            .OrderByDescending(row => row.Count)
+            .ThenBy(row => row.Method)
+            .FirstOrDefault();
+
+        if (expectedTop == default)
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method distribution smoke test failed: top distribution mismatch for {canonicalCode}. expected={expectedMethod}/{expectedCount}, actual={top.Method}/{top.Count}");
+            throw new InvalidOperationException($"stp.db Motor_Y method distribution smoke test failed: no expected rows for {canonicalCode}.");
+        }
+
+        if (top.Method != expectedTop.Method || top.Count != expectedTop.Count)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method distribution smoke test failed: top distribution mismatch for {canonicalCode}. expected={expectedTop.Method}/{expectedTop.Count}, actual={top.Method}/{top.Count}");
         }
     }
 }

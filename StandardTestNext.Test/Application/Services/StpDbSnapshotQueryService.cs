@@ -108,6 +108,19 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorYMethodDistribution(connection);
     }
 
+    public IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> ListMotorRatedParamsValueDistribution()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorRatedParamsValueDistribution(connection);
+    }
+
     private static IReadOnlyList<StpDbTestRecordSnapshot> LoadRecentMotorYRecords(SqliteConnection connection, int take)
     {
         using var command = connection.CreateCommand();
@@ -297,7 +310,7 @@ WHERE Code IN ({BuildInlineQuotedList(MotorYLegacyItemCodes)})
 GROUP BY COALESCE(Code, ''), Method
 ORDER BY COALESCE(Code, ''), Method;";
 
-        var snapshots = new List<StpDbMotorYMethodDistributionSnapshot>();
+        var grouped = new Dictionary<(string CanonicalCode, int Method), int>();
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
@@ -310,13 +323,22 @@ ORDER BY COALESCE(Code, ''), Method;";
                 continue;
             }
 
-            var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, method);
+            var key = (canonicalCode, method);
+            grouped[key] = grouped.TryGetValue(key, out var currentCount)
+                ? currentCount + count
+                : count;
+        }
+
+        var snapshots = new List<StpDbMotorYMethodDistributionSnapshot>();
+        foreach (var pair in grouped)
+        {
+            var route = MotorYLegacyAlgorithmRouteResolver.Resolve(pair.Key.CanonicalCode, pair.Key.Method);
             snapshots.Add(new StpDbMotorYMethodDistributionSnapshot
             {
-                CanonicalCode = canonicalCode,
-                Method = method,
-                Count = count,
-                MethodKey = $"{canonicalCode}:{method}",
+                CanonicalCode = pair.Key.CanonicalCode,
+                Method = pair.Key.Method,
+                Count = pair.Value,
+                MethodKey = $"{pair.Key.CanonicalCode}:{pair.Key.Method}",
                 MethodProfileKey = route?.ProfileKey,
                 VariantKind = route?.VariantKind,
                 AlgorithmFamily = route?.AlgorithmFamily,
@@ -334,6 +356,48 @@ ORDER BY COALESCE(Code, ''), Method;";
             .ThenByDescending(snapshot => snapshot.Count)
             .ThenBy(snapshot => snapshot.Method)
             .ToArray();
+    }
+
+    private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadMotorRatedParamsValueDistribution(SqliteConnection connection)
+    {
+        var snapshots = new List<StpDbMotorRatedParamsValueDistributionSnapshot>();
+        snapshots.AddRange(LoadRatedParamsFieldDistribution(connection, "Duty", NormalizeDuty));
+        snapshots.AddRange(LoadRatedParamsFieldDistribution(connection, "Connection", NormalizeConnection));
+
+        return snapshots
+            .OrderBy(snapshot => snapshot.FieldName, StringComparer.Ordinal)
+            .ThenByDescending(snapshot => snapshot.Count)
+            .ThenBy(snapshot => snapshot.RawValue, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadRatedParamsFieldDistribution(
+        SqliteConnection connection,
+        string fieldName,
+        Func<string, string> normalizer)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+SELECT CAST(json_extract(RatedParams, '$.{fieldName}') AS TEXT) AS RawValue, COUNT(*)
+FROM ProductTypes
+GROUP BY CAST(json_extract(RatedParams, '$.{fieldName}') AS TEXT)
+ORDER BY COUNT(*) DESC, RawValue;";
+
+        var snapshots = new List<StpDbMotorRatedParamsValueDistributionSnapshot>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var rawValue = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            snapshots.Add(new StpDbMotorRatedParamsValueDistributionSnapshot
+            {
+                FieldName = fieldName,
+                RawValue = rawValue,
+                Count = reader.GetInt32(1),
+                NormalizedValue = normalizer(rawValue)
+            });
+        }
+
+        return snapshots;
     }
 
     private static IReadOnlyList<StpDbTestRecordItemSnapshot> LoadMotorYItems(

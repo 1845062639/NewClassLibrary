@@ -115,6 +115,7 @@
 - 本轮继续把 Motor_Y 的旧方法分支语义再结构化一层：`MotorYMethodProfile` / `LegacyAlgorithmRoute` / `StpDbTestRecordItemSnapshot` 已新增 `VariantKind + AlgorithmFamily`，把 stp.db 里的 baseline / delivery / companion / legacy-alias 等真实变体标签与 DirectCurrentResistance / NoLoad / Thermal / LoadA / LoadB / LockedRotor 算法家族直接沉到 next-gen 查询模型；并补 smoke test 锁定 profile -> route -> snapshot 三层投影一致，便于后续 builder / adapter / 报表直接按真实旧方法分支做适配。
 - 本轮已把这套结构化旧方法语义从 `stp.db` 快照层继续打通到 demo/builder/query 闭环：`MotorYTrialRecordBuilder` 产出的业务试验项经 `BuildProfile` 携带 baseline `MethodKey/ProfileKey/LegacyEnumName/LegacyFormName/LegacyAlgorithmEntry/LegacySettingsMethodName`，`TestRecordQueryGatewayAdapter` 也已把这些字段投影到 App 查询 contract，并由 smoke test 锁定 `builder -> query detail` 一致性，后续 App/报表可直接消费旧算法路由而不必只靠 snapshot 或字符串猜测。
 - 本轮又把 `stp.db` 的真实 Method 分布次数直接沉到 next-gen 查询层：`StpDbSnapshotQueryService` 新增 `ListMotorYMethodDistribution()`，按 `CanonicalCode + Method` 输出真实出现次数及结构化 legacy route 元数据（ProfileKey / VariantKind / AlgorithmFamily / Enum/Form/Algorithm 入口），并新增 `StpDbMotorYMethodDistributionSmokeTests` 锁定当前旧库主分布（如直流电阻 1=431、热试验 3=430、A法负载 60=61 等），为后续按真实主流分支确定 Motor_Y 算法适配优先级与报表默认口径提供依据。
+- 本轮继续把 `stp.db` 真实额定参数口径沉到 next-gen 查询层：`StpDbSnapshotQueryService` 新增 `ListMotorRatedParamsValueDistribution()`，直接统计 `ProductTypes.RatedParams` 中 `Duty / Connection` 的原始值与归一化值分布，并新增 `StpDbMotorRatedParamsDistributionSmokeTests` 锁定当前旧库真实值域（如 `Duty=0 -> ""`、`Connection=0/1 -> Y/Δ`），避免后续 Motor_Y builder / 算法适配只凭单条样本假设额定参数枚举口径。
 
 ## 6. 参考范围
 
