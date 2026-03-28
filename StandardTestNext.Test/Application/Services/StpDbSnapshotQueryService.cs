@@ -507,10 +507,21 @@ ORDER BY COALESCE(Code, ''), Method;";
                     dependencyProfile?.FormulaSignals,
                     dependencyProfile?.FormulaSignals,
                     "formula signals");
+                var formulaEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildFormulaSignalEvidence(
+                    selection.CanonicalCode,
+                    resultCoverage.CoveredRequiredResultFields);
                 var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
                     dependencyProfile?.LegacyAlgorithmRules,
                     dependencyProfile?.LegacyAlgorithmRules,
                     "legacy algorithm rules");
+                var ruleObservedFields = coverage.CoveredRequiredPayloadFields
+                    .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
+                    .Concat(resultCoverage.CoveredRequiredResultFields)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                var ruleEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyRuleEvidence(
+                    selection.CanonicalCode,
+                    ruleObservedFields);
                 var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
                     && coverage.MissingRequiredPayloadFieldCount == 0
                     && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
@@ -585,6 +596,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                     MissingFormulaSignals = formulaCoverage.MissingItems,
                     FormulaSignalCoverageRatio = formulaCoverage.CoverageRatio,
                     FormulaSignalCoveragePercentagePoints = formulaCoverage.CoveragePercentagePoints,
+                    FormulaSignalsBackedByObservedPayload = formulaEvidence.BackedByObservedPayload,
+                    FormulaSignalsObservedPayloadFields = formulaEvidence.ObservedPayloadFields,
+                    FormulaSignalsObservedPayloadSummary = formulaEvidence.Summary,
                     LegacyAlgorithmRules = dependencyProfile?.LegacyAlgorithmRules ?? Array.Empty<string>(),
                     CoveredLegacyAlgorithmRuleCount = ruleCoverage.CoveredCount,
                     MissingLegacyAlgorithmRuleCount = ruleCoverage.MissingCount,
@@ -592,6 +606,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                     MissingLegacyAlgorithmRules = ruleCoverage.MissingItems,
                     LegacyAlgorithmRuleCoverageRatio = ruleCoverage.CoverageRatio,
                     LegacyAlgorithmRuleCoveragePercentagePoints = ruleCoverage.CoveragePercentagePoints,
+                    LegacyAlgorithmRulesBackedByObservedPayload = ruleEvidence.BackedByObservedPayload,
+                    LegacyAlgorithmRulesObservedPayloadFields = ruleEvidence.ObservedPayloadFields,
+                    LegacyAlgorithmRulesObservedPayloadSummary = ruleEvidence.Summary,
                     FormulaSignalSummary = formulaCoverage.Summary,
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
                     SelectedMethodSummary = selection.SelectedMethodSummary,

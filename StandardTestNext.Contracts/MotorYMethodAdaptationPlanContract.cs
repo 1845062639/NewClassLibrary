@@ -67,6 +67,9 @@ public sealed class MotorYMethodAdaptationPlanContract
     public IReadOnlyList<string> MissingFormulaSignals { get; init; } = Array.Empty<string>();
     public double FormulaSignalCoverageRatio { get; init; }
     public int FormulaSignalCoveragePercentagePoints { get; init; }
+    public bool FormulaSignalsBackedByObservedPayload { get; init; }
+    public IReadOnlyList<string> FormulaSignalsObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public string FormulaSignalsObservedPayloadSummary { get; init; } = string.Empty;
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public int CoveredLegacyAlgorithmRuleCount { get; init; }
     public int MissingLegacyAlgorithmRuleCount { get; init; }
@@ -74,6 +77,9 @@ public sealed class MotorYMethodAdaptationPlanContract
     public IReadOnlyList<string> MissingLegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public double LegacyAlgorithmRuleCoverageRatio { get; init; }
     public int LegacyAlgorithmRuleCoveragePercentagePoints { get; init; }
+    public bool LegacyAlgorithmRulesBackedByObservedPayload { get; init; }
+    public IReadOnlyList<string> LegacyAlgorithmRulesObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public string LegacyAlgorithmRulesObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
