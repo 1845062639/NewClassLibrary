@@ -16,6 +16,7 @@ if (testOptions.RunSmokeTests)
     TestRecordLegacyPayloadReaderSmokeTests.Run();
     TestRecordQueryGatewayAdapterSmokeTests.Run();
     StpDbMotorYPayloadSmokeTests.Run();
+    StpDbMotorYFieldMappingSmokeTests.Run();
     MotorYStpDbShapeAlignmentSmokeTests.Run();
     Console.WriteLine("[Test] Smoke tests passed.");
     return;
