@@ -27,6 +27,12 @@ public sealed class MotorYTrialRecordBuilder
         return items;
     }
 
+    private static TestRecordItemAggregate ApplyBaselineProfile(TestRecordItemAggregate item, string canonicalCode)
+    {
+        MotorYTrialItemProfileCatalog.ApplyBaseline(item, canonicalCode);
+        return item;
+    }
+
     private static TestRecordItemAggregate BuildDcResistanceItem(MotorRatedParamsContract rated)
     {
         var ruv = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.118, 4);
@@ -36,7 +42,7 @@ public sealed class MotorYTrialRecordBuilder
         var deltaR = Math.Round((new[] { ruv, rvw, rwu }.Max() - new[] { ruv, rvw, rwu }.Min()) / Math.Max(r1, 0.0001) * 100, 4);
         var convertedR = Math.Round(r1 * (235 + 25) / (235 + 26.5), 4);
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.DcResistance",
             MethodCode = MotorYTestMethodCodes.DcResistance,
@@ -54,7 +60,7 @@ public sealed class MotorYTrialRecordBuilder
                 IsAnalysis = false
             }),
             Remark = "Motor_Y 直流电阻试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.DcResistance);
     }
 
     private static TestRecordItemAggregate BuildNoLoadItem(
@@ -85,7 +91,7 @@ public sealed class MotorYTrialRecordBuilder
             })
             .ToArray();
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.NoLoad",
             MethodCode = MotorYTestMethodCodes.NoLoad,
@@ -113,7 +119,7 @@ public sealed class MotorYTrialRecordBuilder
                 U0DivideUnIsEquesToOne_P0 = dataList.Length == 0 ? 0 : dataList.Last().P0
             }),
             Remark = "Motor_Y 空载试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.NoLoad);
     }
 
     private static TestRecordItemAggregate BuildHeatRunItem(
@@ -165,7 +171,7 @@ public sealed class MotorYTrialRecordBuilder
             new { Time = 2.0, R = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.134, 4) }
         };
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.HeatRun",
             MethodCode = MotorYTestMethodCodes.HeatRun,
@@ -195,7 +201,7 @@ public sealed class MotorYTrialRecordBuilder
                 IsManual = false
             }),
             Remark = "Motor_Y 热试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.HeatRun);
     }
 
     private static TestRecordItemAggregate BuildLoadAItem(
@@ -253,7 +259,7 @@ public sealed class MotorYTrialRecordBuilder
             })
             .ToArray();
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.LoadA",
             MethodCode = MotorYTestMethodCodes.LoadA,
@@ -278,7 +284,7 @@ public sealed class MotorYTrialRecordBuilder
                 IsAnalysis = false
             }),
             Remark = "Motor_Y A法负载试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.LoadA);
     }
 
     private static TestRecordItemAggregate BuildLoadBItem(
@@ -360,7 +366,7 @@ public sealed class MotorYTrialRecordBuilder
             })
             .ToArray();
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.LoadB",
             MethodCode = MotorYTestMethodCodes.LoadB,
@@ -396,7 +402,7 @@ public sealed class MotorYTrialRecordBuilder
                 θaChanelSelect = 0
             }),
             Remark = "Motor_Y B法负载试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.LoadB);
     }
 
     private static TestRecordItemAggregate BuildLockedRotorItem(
@@ -423,7 +429,7 @@ public sealed class MotorYTrialRecordBuilder
             })
             .ToArray();
 
-        return new TestRecordItemAggregate
+        return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.LockedRotor",
             MethodCode = MotorYTestMethodCodes.LockedRotor,
@@ -454,6 +460,6 @@ public sealed class MotorYTrialRecordBuilder
                 IsAnalysis = false
             }),
             Remark = "Motor_Y 堵转试验骨架数据（旧 TestData 结构对齐版）。"
-        };
+        }, MotorYTestMethodCodes.LockedRotor);
     }
 }

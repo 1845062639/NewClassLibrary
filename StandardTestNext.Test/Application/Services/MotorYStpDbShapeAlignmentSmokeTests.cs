@@ -71,6 +71,30 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
         AssertLoadA(items[MotorYTestMethodCodes.LoadA]);
         AssertLoadB(items[MotorYTestMethodCodes.LoadB]);
         AssertLockedRotor(items[MotorYTestMethodCodes.LockedRotor]);
+        AssertBaselineMethodRouting(items.Values);
+    }
+
+    private static void AssertBaselineMethodRouting(IEnumerable<TestRecordItemAggregate> items)
+    {
+        foreach (var item in items)
+        {
+            if (!MotorYTrialItemProfileCatalog.BaselineProfiles.TryGetValue(item.MethodCode, out var expectedProfile))
+            {
+                throw new InvalidOperationException($"Motor_Y builder 输出出现未知 MethodCode: {item.MethodCode}");
+            }
+
+            if (item.MethodValue != expectedProfile.MethodValue
+                || item.BuildProfile is null
+                || !item.BuildProfile.IsBaselineMethod
+                || !string.Equals(item.BuildProfile.MethodKey, expectedProfile.MethodKey, StringComparison.Ordinal)
+                || !string.Equals(item.BuildProfile.LegacyAlgorithmEntry, expectedProfile.LegacyAlgorithmEntry, StringComparison.Ordinal)
+                || !string.Equals(item.BuildProfile.LegacyFormName, expectedProfile.LegacyFormName, StringComparison.Ordinal)
+                || !string.Equals(item.BuildProfile.LegacyEnumName, expectedProfile.LegacyEnumName, StringComparison.Ordinal)
+                || !string.Equals(item.BuildProfile.VariantKind, MotorYLegacyVariantKinds.Baseline, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y builder 未把 baseline Method/旧路由元数据稳定沉到记录项：{item.ItemCode}");
+            }
+        }
     }
 
     private static void AssertDcResistance(TestRecordItemAggregate item)

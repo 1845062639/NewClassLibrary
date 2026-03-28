@@ -19,6 +19,7 @@ if (testOptions.RunSmokeTests)
     StpDbMotorYFieldMappingSmokeTests.Run();
     StpDbMotorYMethodMappingSmokeTests.Run();
     MotorYMethodProfileCatalogSmokeTests.Run();
+    MotorYTrialItemProfileCatalogSmokeTests.Run();
     MotorYStpDbShapeAlignmentSmokeTests.Run();
     StpDbSnapshotQuerySmokeTests.Run();
     StpDbSnapshotQuerySmokeTests.RunAttachmentCoverage();
