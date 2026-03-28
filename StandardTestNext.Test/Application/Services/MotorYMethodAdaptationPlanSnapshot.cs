@@ -26,6 +26,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string LegacyMethodName { get; init; } = string.Empty;
     public bool RequiresRatedParams { get; init; }
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public int ObservedUpstreamCanonicalCodeCount { get; init; }
+    public IReadOnlyList<string> ObservedUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public bool UpstreamDependenciesSatisfied { get; init; }
     public string UpstreamDependencySummary { get; init; } = string.Empty;

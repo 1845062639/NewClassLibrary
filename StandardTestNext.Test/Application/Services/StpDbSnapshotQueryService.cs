@@ -532,6 +532,8 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
                     RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
                     UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                    ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
+                    ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
                     MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
                     UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
                     UpstreamDependencySummary = upstream.UpstreamDependencySummary,

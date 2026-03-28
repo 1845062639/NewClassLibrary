@@ -108,9 +108,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
 
         if (!contract.RequiresRatedParams
             || !contract.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+            || contract.ObservedUpstreamCanonicalCodeCount != 0
+            || contract.ObservedUpstreamCanonicalCodes.Count != 0
             || !contract.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
             || contract.UpstreamDependenciesSatisfied
-            || !string.Equals(contract.UpstreamDependencySummary, "upstream dependencies missing 2/2: NoLoad, HeatRun", StringComparison.Ordinal)
+            || !string.Equals(contract.UpstreamDependencySummary, "upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes", StringComparison.Ordinal)
             || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || contract.SamplePayloadAvailable
@@ -127,7 +129,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
             || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
             || !string.Equals(contract.RequiredRatedParamFieldCoverageSummary, "rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
-            || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
+            || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
             || !contract.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
             || !contract.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(contract.DependencyNotes))
@@ -142,9 +144,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
 
         if (!loadBPlan.RequiresRatedParams
             || !loadBPlan.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+            || loadBPlan.ObservedUpstreamCanonicalCodeCount != 2
+            || !loadBPlan.ObservedUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
             || loadBPlan.MissingUpstreamCanonicalCodes.Count != 0
             || !loadBPlan.UpstreamDependenciesSatisfied
-            || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (NoLoad + HeatRun)", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (NoLoad + HeatRun); observed 2/2 required upstream codes", StringComparison.Ordinal)
             || !loadBPlan.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || !loadBPlan.SamplePayloadAvailable

@@ -126,6 +126,7 @@
 - 本轮又把这套摘要能力继续补到 `stp.db -> MotorYMethodAdaptationPlanSnapshot`：适配计划快照现在也直接暴露 `BaselineShare / SelectedShare / SelectedLeadCountVsBaseline / SelectedLeadPercentagePointsVsBaseline / SelectedMethodSummary / BaselineDominantComparisonSummary`，并改为复用 `MotorYMethodRouteSelectionSnapshotFactory` 统一产出，`StpDbMotorYMethodAdaptationPlanSmokeTests` 已锁定真实库下 6 个核心试验项的数值与摘要，避免 snapshot/contract/app 三层再次各自手算、各自拼文案。
 - 本轮继续把 Motor_Y 方法选择逻辑从“多处各写一遍”收敛成共享工厂：新增 `MotorYMethodDecisionFactory`，统一产出 `Baseline/Dominant/Recommended/Share/Lead/Reason/Summary` 全套决策字段，并让 `stp.db` 真实快照层与 `builder -> query detail` 闭环同时复用同一实现；同时把阈值口径收敛为共享常量，避免后续算法适配、报表提示或 App 查询层在 70% override 规则上出现漂移。
 - 本轮继续把旧 `Algorithm_Motor_Y.cs` 的“算法入口依赖什么上游试验/额定参数/关键字段”从代码隐式逻辑沉成显式模型：新增 `MotorYLegacyAlgorithmDependencyCatalog`，为 6 个核心试验项结构化记录 `RequiresRatedParams / UpstreamCanonicalCodes / RequiredPayloadFields / RequiredRatedParamFields / Notes`；同时把这些依赖画像投影进 `MotorYMethodAdaptationPlanSnapshot/Contract` 与 `stp.db` 适配计划查询结果，并新增 smoke test 锁定。例如 Load_B 现可直接在 next-gen 适配计划中看出其依赖 `NoLoad + HeatRun`、需要 `θw/θb/Pfw/CoefficientOfPfe` 与额定参数 `GB`，为后续真正迁移算法 adapter 做输入清单基线。
+- 本轮又把上游依赖画像从“只看缺没缺”前推到“看见了哪些已满足上游”：`MotorYMethodAdaptationPlanSnapshot/Contract` 新增 `ObservedUpstreamCanonicalCodeCount / ObservedUpstreamCanonicalCodes`，`MotorYUpstreamDependencySnapshotFactory` 与 `stp.db / builder->query` 两条链路统一输出 `observed x/y required upstream codes` 摘要；并由 smoke test 锁定 builder 场景下 `NoLoad` 缺 `DcResistance`、stp.db 场景下 `Load_B` 已观测到 `NoLoad + HeatRun`。这样后续做 Motor_Y 算法适配时，能直接区分是 demo/build 闭环没挂上游项，还是历史实库本身缺依赖数据。
 
 ## 6. 参考范围
 

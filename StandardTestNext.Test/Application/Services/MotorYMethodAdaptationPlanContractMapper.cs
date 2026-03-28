@@ -55,6 +55,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+            ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
+            ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
             MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
             UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = upstream.UpstreamDependencySummary,

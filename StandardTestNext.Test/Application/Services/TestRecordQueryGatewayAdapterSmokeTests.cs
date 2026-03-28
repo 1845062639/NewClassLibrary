@@ -403,6 +403,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, 4, 1, false, 1d, "baseline");
 
         var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        if (noLoadPlan.ObservedUpstreamCanonicalCodeCount != 0
+            || noLoadPlan.ObservedUpstreamCanonicalCodes.Count != 0
+            || !noLoadPlan.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: DcResistance; observed 0/1 required upstream codes", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
+        }
+
         if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
