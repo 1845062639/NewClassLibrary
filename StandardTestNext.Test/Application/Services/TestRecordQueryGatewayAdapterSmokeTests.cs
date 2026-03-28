@@ -403,6 +403,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, 4, 1, false, 1d, "baseline");
 
         var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        var loadAPlan = plans[MotorYTestMethodCodes.LoadA];
         if (noLoadPlan.ObservedUpstreamCanonicalCodeCount != 0
             || noLoadPlan.ObservedUpstreamCanonicalCodes.Count != 0
             || !noLoadPlan.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
@@ -441,6 +442,20 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
+        }
+
+        if (!loadAPlan.RequiredRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadAPlan.ObservedRawDataSignals.Count != 0
+            || loadAPlan.MissingRawDataSignals.Count != 6
+            || loadAPlan.RawDataSignalCoveredCount != 0
+            || loadAPlan.RawDataSignalMissingCount != 6
+            || loadAPlan.RawDataSampleCount != 0
+            || loadAPlan.RawDataListAvailable
+            || loadAPlan.RawDataSignalCoverageRatio != 0d
+            || loadAPlan.RawDataSignalCoveragePercentagePoints != 0
+            || !string.Equals(loadAPlan.RawDataSignalCoverageSummary, "raw data signals covered 0/6 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U; observed: none", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test raw-data signal coverage mismatch for '{MotorYTestMethodCodes.LoadA}'. summary='{loadAPlan.RawDataSignalCoverageSummary}'");
         }
 
         if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00%), dominant 59 (delivery)=3/4 (75.00%)", StringComparison.Ordinal))

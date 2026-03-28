@@ -24,6 +24,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             null);
+        var rawDataSignalCoverage = MotorYRawDataSignalCoverageEvaluator.Evaluate(
+            selection.CanonicalCode,
+            null);
         var resultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
@@ -101,6 +104,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RequiredPayloadFieldCoveragePercentagePoints = coverage.RequiredPayloadFieldCoveragePercentagePoints,
             SamplePayloadAvailable = coverage.SamplePayloadAvailable,
             RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
+            RequiredRawDataSignals = rawDataSignalCoverage.RequiredSignals,
+            ObservedRawDataSignals = rawDataSignalCoverage.ObservedSignals,
+            MissingRawDataSignals = rawDataSignalCoverage.MissingSignals,
+            RawDataSignalCoveredCount = rawDataSignalCoverage.ObservedSignals.Count,
+            RawDataSignalMissingCount = rawDataSignalCoverage.MissingSignals.Count,
+            RawDataSampleCount = rawDataSignalCoverage.RawSampleCount,
+            RawDataListAvailable = rawDataSignalCoverage.RawDataListAvailable,
+            RawDataSignalCoverageRatio = rawDataSignalCoverage.CoverageRatio,
+            RawDataSignalCoveragePercentagePoints = rawDataSignalCoverage.CoveragePercentagePoints,
+            RawDataSignalCoverageSummary = rawDataSignalCoverage.Summary,
             CoveredRequiredRatedParamFieldCount = ratedCoverage.CoveredRequiredRatedParamFieldCount,
             MissingRequiredRatedParamFieldCount = ratedCoverage.MissingRequiredRatedParamFieldCount,
             MissingRequiredRatedParamFields = ratedCoverage.MissingRequiredRatedParamFields,

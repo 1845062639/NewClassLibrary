@@ -499,6 +499,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                     selection.CanonicalCode,
                     dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     sampleRatedParamsContract);
+                var rawDataSignalCoverage = MotorYRawDataSignalCoverageEvaluator.Evaluate(
+                    selection.CanonicalCode,
+                    sampleDataJson);
                 var resultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
                     selection.CanonicalCode,
                     dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
@@ -578,6 +581,16 @@ ORDER BY COALESCE(Code, ''), Method;";
                     RequiredPayloadFieldCoveragePercentagePoints = coverage.RequiredPayloadFieldCoveragePercentagePoints,
                     SamplePayloadAvailable = coverage.SamplePayloadAvailable,
                     RequiredPayloadFieldCoverageSummary = coverage.RequiredPayloadFieldCoverageSummary,
+                    RequiredRawDataSignals = rawDataSignalCoverage.RequiredSignals,
+                    ObservedRawDataSignals = rawDataSignalCoverage.ObservedSignals,
+                    MissingRawDataSignals = rawDataSignalCoverage.MissingSignals,
+                    RawDataSignalCoveredCount = rawDataSignalCoverage.ObservedSignals.Count,
+                    RawDataSignalMissingCount = rawDataSignalCoverage.MissingSignals.Count,
+                    RawDataSampleCount = rawDataSignalCoverage.RawSampleCount,
+                    RawDataListAvailable = rawDataSignalCoverage.RawDataListAvailable,
+                    RawDataSignalCoverageRatio = rawDataSignalCoverage.CoverageRatio,
+                    RawDataSignalCoveragePercentagePoints = rawDataSignalCoverage.CoveragePercentagePoints,
+                    RawDataSignalCoverageSummary = rawDataSignalCoverage.Summary,
                     CoveredRequiredRatedParamFieldCount = ratedCoverage.CoveredRequiredRatedParamFieldCount,
                     MissingRequiredRatedParamFieldCount = ratedCoverage.MissingRequiredRatedParamFieldCount,
                     MissingRequiredRatedParamFields = ratedCoverage.MissingRequiredRatedParamFields,

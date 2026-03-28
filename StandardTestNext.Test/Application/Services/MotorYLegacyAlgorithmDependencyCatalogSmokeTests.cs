@@ -132,6 +132,17 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.RequiredPayloadFieldCoverageRatio != 0d
             || contract.RequiredPayloadFieldCoveragePercentagePoints != 0
             || contract.CoveredRequiredPayloadFields.Count != 0
+            || contract.RequiredRawDataSignals.Count != 8
+            || !contract.RequiredRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || contract.ObservedRawDataSignals.Count != 0
+            || contract.MissingRawDataSignals.Count != 8
+            || contract.RawDataSignalCoveredCount != 0
+            || contract.RawDataSignalMissingCount != 8
+            || contract.RawDataSampleCount != 0
+            || contract.RawDataListAvailable
+            || contract.RawDataSignalCoverageRatio != 0d
+            || contract.RawDataSignalCoveragePercentagePoints != 0
+            || !string.Equals(contract.RawDataSignalCoverageSummary, "raw data signals covered 0/8 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa; observed: none", StringComparison.Ordinal)
             || contract.RatedParamsAvailable
             || contract.RequiredRatedParamFieldCoverageRatio != 0d
             || contract.RequiredRatedParamFieldCoveragePercentagePoints != 0
@@ -192,6 +203,16 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.RequiredResultFieldCoveragePercentagePoints != 100
             || !string.Equals(loadBPlan.RequiredResultFieldCoverageSummary, "result required fields covered 7/7 (100pp); missing: none", StringComparison.Ordinal)
             || loadBPlan.CoveredRequiredPayloadFields.Count == 0
+            || !loadBPlan.RequiredRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || !loadBPlan.ObservedRawDataSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "Frequency", "I1", "Nt", "P1t", "Tt", "U", "θ1t", "θa" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.MissingRawDataSignals.Count != 0
+            || loadBPlan.RawDataSignalCoveredCount != 8
+            || loadBPlan.RawDataSignalMissingCount != 0
+            || loadBPlan.RawDataSampleCount <= 0
+            || !loadBPlan.RawDataListAvailable
+            || Math.Abs(loadBPlan.RawDataSignalCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.RawDataSignalCoveragePercentagePoints != 100
+            || !string.Equals(loadBPlan.RawDataSignalCoverageSummary, $"raw data signals covered 8/8 (100pp); raw samples={loadBPlan.RawDataSampleCount}; missing: none; observed: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa", StringComparison.Ordinal)
             || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
             || loadBPlan.RequiredPayloadFieldCoveragePercentagePoints <= 0
             || !loadBPlan.RatedParamsAvailable
