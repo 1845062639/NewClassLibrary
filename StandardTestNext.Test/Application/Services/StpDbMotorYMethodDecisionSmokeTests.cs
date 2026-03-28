@@ -64,6 +64,32 @@ public static class StpDbMotorYMethodDecisionSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
             }
+
+            if (snapshot.Distributions.Count != row.Distributions.Count)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: distribution count mismatch for {row.CanonicalCode}.");
+            }
+
+            foreach (var distribution in row.Distributions)
+            {
+                var actualDistribution = snapshot.Distributions.FirstOrDefault(x => x.MethodValue == distribution.MethodValue);
+                if (actualDistribution is null)
+                {
+                    throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: missing distribution {row.CanonicalCode}:{distribution.MethodValue}.");
+                }
+
+                if (actualDistribution.Count != distribution.Count)
+                {
+                    throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: distribution count mismatch for {row.CanonicalCode}:{distribution.MethodValue}.");
+                }
+
+                if (Math.Abs(actualDistribution.Share - distribution.Share) > 0.0001d)
+                {
+                    throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: distribution share mismatch for {row.CanonicalCode}:{distribution.MethodValue}. expected={distribution.Share}, actual={actualDistribution.Share}");
+                }
+
+                AssertRoute(actualDistribution.Route, row.CanonicalCode, distribution.MethodValue, $"distribution/{row.CanonicalCode}:{distribution.MethodValue}");
+            }
         }
     }
 
@@ -94,7 +120,7 @@ public static class StpDbMotorYMethodDecisionSmokeTests
         }
     }
 
-    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount) BuildExpected(
+    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount, IReadOnlyList<(int MethodValue, int Count, double Share)> Distributions) BuildExpected(
         SqliteConnection connection,
         string canonicalCode,
         int baselineMethod)
@@ -110,8 +136,19 @@ public static class StpDbMotorYMethodDecisionSmokeTests
             .OrderByDescending(x => x.Value)
             .ThenBy(x => x.Key)
             .First();
+        var totalCount = rows.Values.Sum();
+        var distributions = rows
+            .OrderByDescending(x => x.Value)
+            .ThenBy(x => x.Key)
+            .Select(x => (
+                MethodValue: x.Key,
+                Count: x.Value,
+                Share: totalCount <= 0
+                    ? 0d
+                    : Math.Round((double)x.Value / totalCount, 4, MidpointRounding.AwayFromZero)))
+            .ToArray();
 
-        return (canonicalCode, rows.Values.Sum(), baselineMethod, baselineCount, dominant.Key, dominant.Value);
+        return (canonicalCode, totalCount, baselineMethod, baselineCount, dominant.Key, dominant.Value, distributions);
     }
 
     private static Dictionary<int, int> LoadCounts(SqliteConnection connection, string canonicalCode)

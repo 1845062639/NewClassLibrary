@@ -460,7 +460,18 @@ ORDER BY COALESCE(Code, ''), Method;";
                 DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, dominant.Method),
                 DominantCount = dominant.Count,
                 ShouldPrioritizeDominantOverBaseline = dominant.Method != baseline.Method,
-                DominantShare = dominantShare
+                DominantShare = dominantShare,
+                Distributions = ordered
+                    .Select(row => new MotorYMethodDistributionSnapshot
+                    {
+                        MethodValue = row.Method,
+                        Count = row.Count,
+                        Share = totalCount <= 0
+                            ? 0d
+                            : Math.Round((double)row.Count / totalCount, 4, MidpointRounding.AwayFromZero),
+                        Route = MotorYLegacyAlgorithmRouteResolver.Resolve(group.Key, row.Method)
+                    })
+                    .ToArray()
             });
         }
 
