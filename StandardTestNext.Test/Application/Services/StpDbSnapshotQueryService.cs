@@ -121,6 +121,19 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorRatedParamsValueDistribution(connection);
     }
 
+    public IReadOnlyList<MotorYMethodRecommendationSnapshot> ListMotorYMethodRecommendations()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorYMethodRecommendations(connection);
+    }
+
     private static IReadOnlyList<StpDbTestRecordSnapshot> LoadRecentMotorYRecords(SqliteConnection connection, int take)
     {
         using var command = connection.CreateCommand();
@@ -368,6 +381,61 @@ ORDER BY COALESCE(Code, ''), Method;";
             .OrderBy(snapshot => snapshot.FieldName, StringComparer.Ordinal)
             .ThenByDescending(snapshot => snapshot.Count)
             .ThenBy(snapshot => snapshot.RawValue, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYMethodRecommendationSnapshot> LoadMotorYMethodRecommendations(SqliteConnection connection)
+    {
+        var distribution = LoadMotorYMethodDistribution(connection);
+        var result = new List<MotorYMethodRecommendationSnapshot>();
+
+        foreach (var group in distribution.GroupBy(row => row.CanonicalCode, StringComparer.Ordinal))
+        {
+            var ordered = group
+                .OrderByDescending(row => row.Count)
+                .ThenBy(row => row.Method)
+                .ToArray();
+            if (ordered.Length == 0)
+            {
+                continue;
+            }
+
+            var dominant = ordered[0];
+            var baseline = group.FirstOrDefault(row => row.IsBaselineMethod)
+                ?? ordered.FirstOrDefault(row => string.Equals(row.MethodProfileKey, "baseline", StringComparison.Ordinal))
+                ?? ordered.OrderBy(row => row.Method).First();
+            var totalCount = group.Sum(row => row.Count);
+            var dominantShare = totalCount <= 0
+                ? 0d
+                : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+
+            result.Add(new MotorYMethodRecommendationSnapshot
+            {
+                CanonicalCode = group.Key,
+                TotalCount = totalCount,
+                BaselineMethod = baseline.Method,
+                BaselineCount = baseline.Count,
+                BaselineMethodKey = baseline.MethodKey,
+                BaselineProfileKey = baseline.MethodProfileKey,
+                DominantMethod = dominant.Method,
+                DominantCount = dominant.Count,
+                DominantMethodKey = dominant.MethodKey,
+                DominantProfileKey = dominant.MethodProfileKey,
+                DominantVariantKind = dominant.VariantKind,
+                DominantAlgorithmFamily = dominant.AlgorithmFamily,
+                DominantLegacyEnumName = dominant.LegacyEnumName,
+                DominantLegacyFormName = dominant.LegacyFormName,
+                DominantLegacyAlgorithmEntry = dominant.LegacyAlgorithmEntry,
+                DominantLegacyMethodName = dominant.LegacyMethodName,
+                DominantLegacySettingsMethodName = dominant.LegacySettingsMethodName,
+                DominantIsBaselineMethod = dominant.IsBaselineMethod,
+                ShouldPrioritizeDominantOverBaseline = dominant.Method != baseline.Method,
+                DominantShare = dominantShare
+            });
+        }
+
+        return result
+            .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
     }
 
