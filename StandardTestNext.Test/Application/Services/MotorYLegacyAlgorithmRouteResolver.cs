@@ -10,6 +10,8 @@ public sealed class MotorYLegacyAlgorithmRoute
     public int MethodValue { get; init; }
     public string MethodKey { get; init; } = string.Empty;
     public string ProfileKey { get; init; } = string.Empty;
+    public string VariantKind { get; init; } = string.Empty;
+    public string AlgorithmFamily { get; init; } = string.Empty;
     public string LegacyEnumName { get; init; } = string.Empty;
     public string LegacyFormName { get; init; } = string.Empty;
     public string LegacyAlgorithmEntry { get; init; } = string.Empty;
@@ -34,6 +36,8 @@ public static class MotorYLegacyAlgorithmRouteResolver
             MethodValue = methodValue.Value,
             MethodKey = $"{canonicalCode}:{methodValue.Value}",
             ProfileKey = profile.ProfileKey,
+            VariantKind = profile.VariantKind,
+            AlgorithmFamily = profile.AlgorithmFamily,
             LegacyEnumName = profile.LegacyEnumName,
             LegacyFormName = profile.LegacyFormName,
             LegacyAlgorithmEntry = profile.LegacyAlgorithmEntry,

@@ -17,6 +17,7 @@ public static class MotorYMethodProfileCatalogSmokeTests
         ShouldExposeMethodProfileMetadataOnSnapshots();
         ShouldExposeLegacyMethodRoutingNames();
         ShouldExposeLegacyEnumAndFormRoutingNames();
+        ShouldExposeVariantAndFamilyTags();
         ShouldResolveStructuredLegacyAlgorithmRoutes();
     }
 
@@ -176,6 +177,52 @@ WHERE Code IN (
         }
     }
 
+    private static void ShouldExposeVariantAndFamilyTags()
+    {
+        var expected = new (string CanonicalCode, int Method, string VariantKind, string AlgorithmFamily)[]
+        {
+            (MotorYTestMethodCodes.DcResistance, 1, MotorYLegacyVariantKinds.Baseline, MotorYLegacyAlgorithmFamilies.DirectCurrentResistance),
+            (MotorYTestMethodCodes.DcResistance, 54, MotorYLegacyVariantKinds.DeliveryCompanion, MotorYLegacyAlgorithmFamilies.DirectCurrentResistance),
+            (MotorYTestMethodCodes.NoLoad, 59, MotorYLegacyVariantKinds.Delivery, MotorYLegacyAlgorithmFamilies.NoLoad),
+            (MotorYTestMethodCodes.HeatRun, 48, MotorYLegacyVariantKinds.OtherVariant, MotorYLegacyAlgorithmFamilies.Thermal),
+            (MotorYTestMethodCodes.LoadA, 60, MotorYLegacyVariantKinds.Delivery, MotorYLegacyAlgorithmFamilies.LoadA),
+            (MotorYTestMethodCodes.LoadB, 52, MotorYLegacyVariantKinds.OtherVariant, MotorYLegacyAlgorithmFamilies.LoadB),
+            (MotorYTestMethodCodes.LockedRotor, 47, MotorYLegacyVariantKinds.LegacyAlias, MotorYLegacyAlgorithmFamilies.LockedRotor)
+        };
+
+        foreach (var row in expected)
+        {
+            var profile = MotorYMethodProfileCatalog.TryGet(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y variant/family smoke test failed: missing profile for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(profile.VariantKind, row.VariantKind, StringComparison.Ordinal)
+                || !string.Equals(profile.AlgorithmFamily, row.AlgorithmFamily, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y variant/family smoke test failed: profile tag mismatch for {row.CanonicalCode}:{row.Method}.");
+            }
+
+            var route = MotorYLegacyAlgorithmRouteResolver.Resolve(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y variant/family smoke test failed: missing route for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(route.VariantKind, row.VariantKind, StringComparison.Ordinal)
+                || !string.Equals(route.AlgorithmFamily, row.AlgorithmFamily, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y variant/family smoke test failed: route tag mismatch for {row.CanonicalCode}:{row.Method}.");
+            }
+        }
+
+        var service = new StpDbSnapshotQueryService(DbPath);
+        var snapshots = service.ListRecentMotorYRecords(20);
+        foreach (var item in snapshots.SelectMany(x => x.Items).Where(x => x.LegacyAlgorithmRoute is not null))
+        {
+            if (!string.Equals(item.VariantKind, item.LegacyAlgorithmRoute?.VariantKind, StringComparison.Ordinal)
+                || !string.Equals(item.AlgorithmFamily, item.LegacyAlgorithmRoute?.AlgorithmFamily, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y variant/family smoke test failed: snapshot item {item.Id} route projection mismatch.");
+            }
+        }
+    }
+
     private static void ShouldResolveStructuredLegacyAlgorithmRoutes()
     {
         var expected = new (string CanonicalCode, int Method, string ProfileKey, bool IsBaselineMethod)[]
@@ -196,6 +243,8 @@ WHERE Code IN (
 
             if (!string.Equals(route.MethodKey, $"{row.CanonicalCode}:{row.Method}", StringComparison.Ordinal)
                 || !string.Equals(route.ProfileKey, row.ProfileKey, StringComparison.Ordinal)
+                || string.IsNullOrWhiteSpace(route.VariantKind)
+                || string.IsNullOrWhiteSpace(route.AlgorithmFamily)
                 || route.IsBaselineMethod != row.IsBaselineMethod)
             {
                 throw new InvalidOperationException($"Motor_Y legacy route smoke test failed: route payload mismatch for {row.CanonicalCode}:{row.Method}.");

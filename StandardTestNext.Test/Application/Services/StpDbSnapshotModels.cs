@@ -47,6 +47,8 @@ public sealed class StpDbTestRecordItemSnapshot
     public string? CanonicalCode { get; init; }
     public string MethodKey { get; init; } = string.Empty;
     public string? MethodProfileKey { get; init; }
+    public string? VariantKind { get; init; }
+    public string? AlgorithmFamily { get; init; }
     public MotorYLegacyAlgorithmRoute? LegacyAlgorithmRoute { get; init; }
     public string? LegacyEnumName { get; init; }
     public string? LegacyFormName { get; init; }

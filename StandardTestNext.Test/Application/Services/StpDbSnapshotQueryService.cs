@@ -318,6 +318,8 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
                 CanonicalCode = canonicalCode,
                 MethodKey = methodKey,
                 MethodProfileKey = legacyRoute?.ProfileKey,
+                VariantKind = legacyRoute?.VariantKind,
+                AlgorithmFamily = legacyRoute?.AlgorithmFamily,
                 LegacyAlgorithmRoute = legacyRoute,
                 LegacyEnumName = legacyRoute?.LegacyEnumName,
                 LegacyFormName = legacyRoute?.LegacyFormName,
