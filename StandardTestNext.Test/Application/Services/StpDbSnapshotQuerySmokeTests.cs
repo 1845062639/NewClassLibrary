@@ -30,6 +30,18 @@ public static class StpDbSnapshotQuerySmokeTests
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} product type code missing.");
             }
 
+            if (snapshot.ProductType.RatedParams is null)
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated params was not parsed into next-gen contract.");
+            }
+
+            if (snapshot.ProductType.RatedParams.RatedVoltage <= 0
+                || snapshot.ProductType.RatedParams.PolePairs <= 0
+                || string.IsNullOrWhiteSpace(snapshot.ProductType.RatedParams.Connection))
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated params key fields invalid after normalization.");
+            }
+
             if (snapshot.Items.Count == 0)
             {
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} missing Motor_Y items.");

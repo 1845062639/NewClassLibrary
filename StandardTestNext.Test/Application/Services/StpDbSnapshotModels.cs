@@ -1,3 +1,5 @@
+using StandardTestNext.Contracts;
+
 namespace StandardTestNext.Test.Application.Services;
 
 public sealed class StpDbProductTypeSnapshot
@@ -5,6 +7,7 @@ public sealed class StpDbProductTypeSnapshot
     public string Id { get; init; } = string.Empty;
     public string Code { get; init; } = string.Empty;
     public string RatedParamsJson { get; init; } = "{}";
+    public MotorRatedParamsContract? RatedParams { get; init; }
     public int? Category { get; init; }
     public string? Manufacturer { get; init; }
     public string? Remark { get; init; }

@@ -1,4 +1,6 @@
+using System.Text.Json;
 using Microsoft.Data.Sqlite;
+using StandardTestNext.Contracts;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -177,11 +179,13 @@ WHERE ID IN ({string.Join(", ", parameterNames)});";
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
+            var ratedParamsJson = reader.GetString(2);
             var snapshot = new StpDbProductTypeSnapshot
             {
                 Id = reader.GetString(0),
                 Code = reader.GetString(1),
-                RatedParamsJson = reader.GetString(2),
+                RatedParamsJson = ratedParamsJson,
+                RatedParams = TryParseMotorRatedParams(reader.GetString(1), ratedParamsJson),
                 Category = reader.IsDBNull(3) ? null : reader.GetInt32(3),
                 Manufacturer = reader.IsDBNull(4) ? null : reader.GetString(4),
                 Remark = reader.IsDBNull(5) ? null : reader.GetString(5),
@@ -393,6 +397,141 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
         }
 
         return result;
+    }
+
+    private static MotorRatedParamsContract? TryParseMotorRatedParams(string productTypeCode, string ratedParamsJson)
+    {
+        if (string.IsNullOrWhiteSpace(ratedParamsJson))
+        {
+            return null;
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(ratedParamsJson);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                return null;
+            }
+
+            var pole = ReadInt32(root, "Pole");
+            var polePairs = ReadInt32(root, "PolePairs");
+            if (polePairs == 0 && pole > 0)
+            {
+                polePairs = Math.Max(1, pole / 2);
+            }
+
+            return new MotorRatedParamsContract
+            {
+                ProductKind = "Motor_Y",
+                Model = productTypeCode,
+                StandardCode = string.Empty,
+                RatedPower = NormalizeRatedPower(ReadDouble(root, "RatedPower")),
+                RatedCurrent = ReadDouble(root, "RatedCurrent"),
+                RatedVoltage = ReadDouble(root, "RatedVoltage"),
+                RatedSpeed = ReadDouble(root, "RatedSpeed"),
+                RatedFrequency = ReadDouble(root, "RatedFrequency"),
+                Pole = pole,
+                PolePairs = polePairs,
+                Duty = NormalizeDuty(ReadStringish(root, "Duty")),
+                InsulationGrade = ReadStringish(root, "InsulationGrade"),
+                PowerFactor = ReadDouble(root, "PowerFactor"),
+                Weight = ReadDouble(root, "Weight"),
+                IngressProtection = ReadStringish(root, "IngressProtection"),
+                Connection = NormalizeConnection(ReadStringish(root, "Connection"))
+            };
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static double ReadDouble(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out var element))
+        {
+            return 0;
+        }
+
+        if (element.ValueKind == JsonValueKind.Number)
+        {
+            return element.GetDouble();
+        }
+
+        if (element.ValueKind == JsonValueKind.String && double.TryParse(element.GetString(), out var value))
+        {
+            return value;
+        }
+
+        return 0;
+    }
+
+    private static int ReadInt32(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out var element))
+        {
+            return 0;
+        }
+
+        if (element.ValueKind == JsonValueKind.Number)
+        {
+            return element.TryGetInt32(out var value) ? value : (int)Math.Round(element.GetDouble());
+        }
+
+        if (element.ValueKind == JsonValueKind.String && int.TryParse(element.GetString(), out var parsed))
+        {
+            return parsed;
+        }
+
+        return 0;
+    }
+
+    private static string ReadStringish(JsonElement root, string propertyName)
+    {
+        if (!root.TryGetProperty(propertyName, out var element))
+        {
+            return string.Empty;
+        }
+
+        return element.ValueKind switch
+        {
+            JsonValueKind.String => element.GetString() ?? string.Empty,
+            JsonValueKind.Number => element.TryGetInt32(out var intValue) ? intValue.ToString() : element.GetDouble().ToString("0.####"),
+            JsonValueKind.True => bool.TrueString,
+            JsonValueKind.False => bool.FalseString,
+            _ => string.Empty
+        };
+    }
+
+    private static double NormalizeRatedPower(double rawRatedPower)
+    {
+        if (rawRatedPower <= 0)
+        {
+            return 0;
+        }
+
+        return rawRatedPower >= 1000 ? Math.Round(rawRatedPower / 1000.0, 4) : Math.Round(rawRatedPower, 4);
+    }
+
+    private static string NormalizeDuty(string rawDuty)
+    {
+        return rawDuty switch
+        {
+            "0" => string.Empty,
+            _ => rawDuty
+        };
+    }
+
+    private static string NormalizeConnection(string rawConnection)
+    {
+        return rawConnection switch
+        {
+            "0" => "Y",
+            "1" => "Δ",
+            _ => rawConnection
+        };
     }
 
     private static string BuildInlineQuotedList(IEnumerable<string> values)
