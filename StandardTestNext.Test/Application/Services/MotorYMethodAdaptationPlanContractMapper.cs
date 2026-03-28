@@ -12,6 +12,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var selectedProfile = selection.SelectedRoute;
         var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
         var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
+        var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
+            selection.CanonicalCode,
+            dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+            Array.Empty<string>());
         var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             requiredPayloadFields,
@@ -43,6 +47,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+            MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
+            UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
+            UpstreamDependencySummary = upstream.UpstreamDependencySummary,
             RequiredPayloadFields = requiredPayloadFields,
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,

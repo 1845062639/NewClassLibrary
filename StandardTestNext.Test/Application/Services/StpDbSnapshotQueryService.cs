@@ -484,6 +484,10 @@ ORDER BY COALESCE(Code, ''), Method;";
                 var selectedRoute = selection.SelectedRoute;
                 var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
                 var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
+                var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
+                    selection.CanonicalCode,
+                    dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                    samplePayloads.Keys);
                 samplePayloads.TryGetValue(selection.CanonicalCode, out var sampleDataJson);
                 var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
                     selection.CanonicalCode,
@@ -516,6 +520,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
                     RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
                     UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                    MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
+                    UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
+                    UpstreamDependencySummary = upstream.UpstreamDependencySummary,
                     RequiredPayloadFields = requiredPayloadFields,
                     RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,

@@ -13,6 +13,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public string Notes { get; init; } = string.Empty;
 }
 

@@ -105,6 +105,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
 
         if (!contract.RequiresRatedParams
             || !contract.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+            || !contract.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+            || contract.UpstreamDependenciesSatisfied
+            || !string.Equals(contract.UpstreamDependencySummary, "upstream dependencies missing 2/2: NoLoad, HeatRun", StringComparison.Ordinal)
             || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || contract.SamplePayloadAvailable
@@ -123,6 +126,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
 
         if (!loadBPlan.RequiresRatedParams
             || !loadBPlan.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+            || loadBPlan.MissingUpstreamCanonicalCodes.Count != 0
+            || !loadBPlan.UpstreamDependenciesSatisfied
+            || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (NoLoad + HeatRun)", StringComparison.Ordinal)
             || !loadBPlan.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || !loadBPlan.SamplePayloadAvailable
