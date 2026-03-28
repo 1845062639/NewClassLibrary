@@ -68,6 +68,7 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public bool RatedParamsAvailable { get; init; }
     public string RequiredRatedParamFieldCoverageSummary { get; init; } = string.Empty;
     public bool LegacyAlgorithmInputsReady { get; init; }
+    public bool RawDataSignalsReady { get; init; }
     public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();

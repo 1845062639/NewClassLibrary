@@ -525,12 +525,14 @@ ORDER BY COALESCE(Code, ''), Method;";
                     dependencyProfile?.LegacyAlgorithmRules,
                     ruleEvidence.ObservedPayloadFields,
                     "legacy algorithm rules");
+                var rawDataSignalsReady = rawDataSignalCoverage.MissingSignals.Count == 0;
                 var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
                     && coverage.MissingRequiredPayloadFieldCount == 0
-                    && ratedCoverage.MissingRequiredRatedParamFieldCount == 0;
+                    && ratedCoverage.MissingRequiredRatedParamFieldCount == 0
+                    && rawDataSignalsReady;
                 var legacyAlgorithmInputReadinessSummary = legacyAlgorithmInputsReady
-                    ? $"legacy algorithm inputs ready; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}"
-                    : $"legacy algorithm inputs incomplete; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}";
+                    ? $"legacy algorithm inputs ready; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}; {rawDataSignalCoverage.Summary}"
+                    : $"legacy algorithm inputs incomplete; {upstream.UpstreamDependencySummary}; {coverage.RequiredPayloadFieldCoverageSummary}; {ratedCoverage.RequiredRatedParamFieldCoverageSummary}; {rawDataSignalCoverage.Summary}";
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -600,6 +602,7 @@ ORDER BY COALESCE(Code, ''), Method;";
                     RatedParamsAvailable = ratedCoverage.RatedParamsAvailable,
                     RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
                     LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
+                    RawDataSignalsReady = rawDataSignalsReady,
                     LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),

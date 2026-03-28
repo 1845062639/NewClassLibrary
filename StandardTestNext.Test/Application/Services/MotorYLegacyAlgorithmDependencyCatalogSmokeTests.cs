@@ -144,6 +144,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || contract.RawDataSignalCoveragePercentagePoints != 0
             || !string.Equals(contract.RawDataSignalCoverageSummary, "raw data signals covered 0/8 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa; observed: none", StringComparison.Ordinal)
             || contract.RatedParamsAvailable
+            || contract.RawDataSignalsReady
             || contract.RequiredRatedParamFieldCoverageRatio != 0d
             || contract.RequiredRatedParamFieldCoveragePercentagePoints != 0
             || contract.CoveredRequiredRatedParamFields.Count != 0
@@ -171,7 +172,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || string.IsNullOrWhiteSpace(contract.FormulaSignalSummary)
             || string.IsNullOrWhiteSpace(contract.LegacyAlgorithmRuleSummary)
             || !string.Equals(contract.RequiredRatedParamFieldCoverageSummary, "rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
-            || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB", StringComparison.Ordinal)
+            || !string.Equals(contract.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes; payload required fields covered 0/13 (0pp); missing: RawDataList, CoefficientOfPfe, Pfw, R1c, θ1c, θw, θb, PolePairs, Pn, Un, ΔT, K1, K2; rated param required fields covered 0/1 (0pp); missing: GB; raw data signals covered 0/8 (0pp); raw samples=0; missing: Frequency, I1, Nt, P1t, Tt, U, θ1t, θa; observed: none", StringComparison.Ordinal)
             || !contract.FormulaSignalSummary.Contains("Tx²-Pl", StringComparison.Ordinal)
             || !contract.LegacyAlgorithmRuleSummary.Contains("cuC", StringComparison.Ordinal)
             || string.IsNullOrWhiteSpace(contract.DependencyNotes))
@@ -216,6 +217,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
             || loadBPlan.RequiredPayloadFieldCoveragePercentagePoints <= 0
             || !loadBPlan.RatedParamsAvailable
+            || !loadBPlan.RawDataSignalsReady
             || loadBPlan.CoveredRequiredRatedParamFields.Count == 0
             || loadBPlan.RequiredRatedParamFieldCoverageRatio <= 0d
             || loadBPlan.RequiredRatedParamFieldCoveragePercentagePoints <= 0
