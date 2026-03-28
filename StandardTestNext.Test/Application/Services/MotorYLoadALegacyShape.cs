@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -21,6 +22,11 @@ public sealed class MotorYLoadALegacyShape
     public IReadOnlyList<MotorYLoadAResultDataShape> ResultDataList { get; init; } = Array.Empty<MotorYLoadAResultDataShape>();
     public int CorrectionType { get; init; }
     public bool IsAnalysis { get; init; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> ExtraFields { get; init; } = new(StringComparer.Ordinal);
+
+    public bool HasTorqueModifyFlag => ExtraFields.ContainsKey("IsTorqueModify");
 
     public static MotorYLoadALegacyShape? FromJson(string dataJson)
     {

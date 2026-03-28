@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -24,6 +25,11 @@ public sealed class MotorYNoLoadLegacyShape
     public bool IsAnalysis { get; init; }
     public double U0DivideUnIsEquesToOne_I0 { get; init; }
     public double U0DivideUnIsEquesToOne_P0 { get; init; }
+
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> ExtraFields { get; init; } = new(StringComparer.Ordinal);
+
+    public bool HasSinglePointSnapshot => ExtraFields.ContainsKey("U0") || ExtraFields.ContainsKey("P0cu1") || ExtraFields.ContainsKey("Frequency");
 
     public static MotorYNoLoadLegacyShape? FromJson(string dataJson)
     {

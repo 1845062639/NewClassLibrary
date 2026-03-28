@@ -244,21 +244,23 @@ WHERE Code IN (
 
             case var code when code == MotorYTestMethodCodes.NoLoad:
                 var noLoad = MotorYNoLoadLegacyShape.FromJson(dataJson);
-                return noLoad is not null && noLoad.DataList.Count > 0 && (noLoad.P0 > 0 || noLoad.I0 > 0 || noLoad.DataList.Any(x => x.P0 > 0 || x.I0 > 0));
+                return noLoad is not null
+                    && ((noLoad.DataList.Count > 0 && (noLoad.P0 > 0 || noLoad.I0 > 0 || noLoad.DataList.Any(x => x.P0 > 0 || x.I0 > 0)))
+                        || (noLoad.HasSinglePointSnapshot && (noLoad.P0 > 0 || noLoad.I0 > 0 || noLoad.ExtraFields.ContainsKey("U0"))));
 
             case var code when code == MotorYTestMethodCodes.HeatRun:
                 var heatRun = MotorYThermalLegacyShape.FromJson(dataJson);
                 return heatRun is not null
                     && heatRun.Data1List.Count > 0
                     && heatRun.Data2List.Count > 0
-                    && (heatRun.Δθ > 0 || heatRun.θw > 0 || heatRun.Rw > 0 || heatRun.Data1List.Any(x => x.θ1 > 0 || x.P1 > 0) || heatRun.Data2List.Any(x => x.R > 0));
+                    && (heatRun.DeltaThetaObserved > 0 || heatRun.θw > 0 || heatRun.Rw > 0 || heatRun.Data1List.Any(x => x.θ1 > 0 || x.P1 > 0) || heatRun.Data2List.Any(x => x.R > 0));
 
             case var code when code == MotorYTestMethodCodes.LoadA:
                 var loadA = MotorYLoadALegacyShape.FromJson(dataJson);
                 return loadA is not null
                     && loadA.RawDataList.Count > 0
                     && loadA.ResultDataList.Count > 0
-                    && (loadA.Un > 0 || loadA.Pn > 0 || loadA.RawDataList.Any(x => x.U > 0 || x.I1 > 0 || x.P1t > 0));
+                    && (loadA.Un > 0 || loadA.Pn > 0 || loadA.HasTorqueModifyFlag || loadA.RawDataList.Any(x => x.U > 0 || x.I1 > 0 || x.P1t > 0));
 
             case var code when code == MotorYTestMethodCodes.LoadB:
                 var loadB = MotorYLoadBLegacyShape.FromJson(dataJson);
@@ -340,9 +342,9 @@ WHERE Code IN (
         var shape = MotorYNoLoadLegacyShape.FromJson(dataJson)
             ?? throw new InvalidOperationException("No-load payload cannot deserialize to MotorYNoLoadLegacyShape.");
 
-        if (shape.DataList.Count <= 0)
+        if (shape.DataList.Count <= 0 && !shape.HasSinglePointSnapshot)
         {
-            throw new InvalidOperationException("No-load legacy shape should contain DataList baseline samples.");
+            throw new InvalidOperationException("No-load legacy shape should contain DataList baseline samples or single-point baseline fields.");
         }
 
         if (shape.P0 <= 0 || shape.I0 <= 0)
@@ -366,15 +368,15 @@ WHERE Code IN (
             throw new InvalidOperationException("Heat-run legacy shape should contain Data1List + Data2List baseline samples.");
         }
 
-        if (shape.Δθ <= 0 && shape.θw <= 0 && shape.Rw <= 0)
+        if (shape.DeltaThetaObserved <= 0 && shape.θw <= 0 && shape.Rw <= 0)
         {
-            throw new InvalidOperationException($"Heat-run baseline summary invalid. Δθ={shape.Δθ}, θw={shape.θw}, Rw={shape.Rw}");
+            throw new InvalidOperationException($"Heat-run baseline summary invalid. Δθobs={shape.DeltaThetaObserved}, θw={shape.θw}, Rw={shape.Rw}");
         }
     }
 
     private static void AssertLoadA(int method, TestRecordItemPayloadSnapshot payload, string dataJson)
     {
-        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 4, 60))
+        if (payload.RecordMode != TestRecordSampleModes.Continuous || !MatchesMethod(method, 4, 60, 61))
         {
             throw new InvalidOperationException($"Load-A payload/method mismatch. recordMode={payload.RecordMode}, method={method}");
         }
@@ -387,9 +389,9 @@ WHERE Code IN (
             throw new InvalidOperationException("Load-A legacy shape should contain RawDataList + ResultDataList baseline samples.");
         }
 
-        if (shape.Un <= 0 || shape.Pn <= 0)
+        if (shape.Un <= 0 && shape.Pn <= 0 && !shape.HasTorqueModifyFlag)
         {
-            throw new InvalidOperationException($"Load-A baseline rated summary invalid. Un={shape.Un}, Pn={shape.Pn}");
+            throw new InvalidOperationException($"Load-A baseline rated summary invalid. Un={shape.Un}, Pn={shape.Pn}, HasTorqueModifyFlag={shape.HasTorqueModifyFlag}");
         }
     }
 

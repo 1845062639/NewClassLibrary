@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -27,6 +28,17 @@ public sealed class MotorYThermalLegacyShape
     public bool IsAnalysis { get; init; }
     public bool IsManual { get; init; }
 
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> ExtraFields { get; init; } = new(StringComparer.Ordinal);
+
+    public double DeltaThetaObserved => Δθ > 0
+        ? Δθ
+        : ReadExtraDouble("Δθ1") > 0
+            ? ReadExtraDouble("Δθ1")
+            : ReadExtraDouble("Δθ0");
+
+    public bool HasLegacyDeltaThetaVariant => ExtraFields.ContainsKey("Δθ1") || ExtraFields.ContainsKey("Δθ0");
+
     public static MotorYThermalLegacyShape? FromJson(string dataJson)
     {
         if (string.IsNullOrWhiteSpace(dataJson)) return null;
@@ -41,6 +53,13 @@ public sealed class MotorYThermalLegacyShape
         {
             return null;
         }
+    }
+
+    private double ReadExtraDouble(string propertyName)
+    {
+        return ExtraFields.TryGetValue(propertyName, out var value) && value.ValueKind == JsonValueKind.Number
+            ? value.GetDouble()
+            : 0;
     }
 }
 
