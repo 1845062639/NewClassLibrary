@@ -478,37 +478,36 @@ ORDER BY COALESCE(Code, ''), Method;";
         return LoadMotorYMethodDecisions(connection)
             .Select(decision =>
             {
-                var selectedRoute = decision.RecommendedRoute;
-                var selectedCount = decision.ShouldPrioritizeDominantOverBaseline
-                    ? decision.DominantCount
-                    : decision.BaselineCount;
-                var baselineShare = decision.TotalCount <= 0
-                    ? 0d
-                    : Math.Round((double)decision.BaselineCount / decision.TotalCount, 4, MidpointRounding.AwayFromZero);
-                var dominantLeadCount = Math.Max(0, decision.DominantCount - decision.BaselineCount);
-                var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((decision.DominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
+                var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
+                var selectedRoute = selection.SelectedRoute;
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
-                    CanonicalCode = decision.CanonicalCode,
-                    TotalCount = decision.TotalCount,
-                    BaselineRoute = decision.BaselineRoute,
-                    BaselineCount = decision.BaselineCount,
-                    DominantRoute = decision.DominantRoute,
-                    DominantCount = decision.DominantCount,
+                    CanonicalCode = selection.CanonicalCode,
+                    TotalCount = selection.TotalCount,
+                    BaselineRoute = selection.BaselineRoute,
+                    BaselineCount = selection.BaselineCount,
+                    BaselineShare = selection.BaselineShare,
+                    DominantRoute = selection.DominantRoute,
+                    DominantCount = selection.DominantCount,
+                    DominantShare = selection.DominantShare,
                     SelectedRoute = selectedRoute,
-                    SelectedCount = selectedCount,
-                    SelectionStrategy = decision.RecommendedStrategy,
-                    ShouldUseDominantRoute = decision.ShouldPrioritizeDominantOverBaseline,
-                    DominantShare = decision.DominantShare,
-                    DominantOverrideThreshold = decision.DominantOverrideThreshold,
-                    DominantLeadCount = dominantLeadCount,
-                    DominantLeadPercentagePoints = dominantLeadPercentagePoints,
-                    SelectionReason = decision.RecommendationReason,
+                    SelectedCount = selection.SelectedCount,
+                    SelectedShare = selection.SelectedShare,
+                    SelectionStrategy = selection.SelectionStrategy,
+                    ShouldUseDominantRoute = selection.ShouldUseDominantRoute,
+                    DominantOverrideThreshold = selection.DominantOverrideThreshold,
+                    DominantLeadCount = selection.DominantLeadCount,
+                    DominantLeadPercentagePoints = selection.DominantLeadPercentagePoints,
+                    SelectedLeadCountVsBaseline = selection.SelectedLeadCountVsBaseline,
+                    SelectedLeadPercentagePointsVsBaseline = selection.SelectedLeadPercentagePointsVsBaseline,
+                    SelectionReason = selection.SelectionReason,
                     AlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty,
                     SettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty,
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
-                    Distributions = decision.Distributions
+                    SelectedMethodSummary = selection.SelectedMethodSummary,
+                    BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
+                    Distributions = selection.Distributions
                 };
             })
             .ToArray();
