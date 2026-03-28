@@ -304,13 +304,21 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
         while (reader.Read())
         {
             var id = reader.GetString(0);
+            var legacyCode = reader.GetString(1);
+            int? method = reader.IsDBNull(2) ? null : reader.GetInt32(2);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            var methodProfile = MotorYMethodProfileCatalog.TryGet(canonicalCode, method);
+
             items.Add(new StpDbTestRecordItemSnapshot
             {
                 Id = id,
-                Code = reader.GetString(1),
-                Method = reader.IsDBNull(2) ? null : reader.GetInt32(2),
-                CanonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(reader.GetString(1)),
-                MethodKey = BuildMotorYMethodKey(reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetInt32(2)),
+                Code = legacyCode,
+                Method = method,
+                CanonicalCode = canonicalCode,
+                MethodKey = BuildMotorYMethodKey(legacyCode, method),
+                MethodProfileKey = methodProfile?.ProfileKey,
+                LegacyAlgorithmEntry = methodProfile?.LegacyAlgorithmEntry,
+                IsBaselineMethod = methodProfile?.IsBaselineEnumValue == true,
                 DataJson = reader.GetString(3),
                 Remark = reader.IsDBNull(4) ? null : reader.GetString(4),
                 TestRecordId = reader.IsDBNull(5) ? null : reader.GetString(5),

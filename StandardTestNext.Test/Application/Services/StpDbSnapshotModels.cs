@@ -46,6 +46,9 @@ public sealed class StpDbTestRecordItemSnapshot
     public int? Method { get; init; }
     public string? CanonicalCode { get; init; }
     public string MethodKey { get; init; } = string.Empty;
+    public string? MethodProfileKey { get; init; }
+    public string? LegacyAlgorithmEntry { get; init; }
+    public bool IsBaselineMethod { get; init; }
     public string DataJson { get; init; } = "{}";
     public string? Remark { get; init; }
     public string? TestRecordId { get; init; }
