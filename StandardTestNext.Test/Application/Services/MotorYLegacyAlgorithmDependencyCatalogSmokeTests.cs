@@ -140,5 +140,30 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: stp.db adaptation plan dependency projection mismatch for LoadB.");
         }
+
+        var bucketMap = loadBPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
+        if (bucketMap.Count != 9
+            || !bucketMap.TryGetValue("upstream", out var upstreamBucket)
+            || upstreamBucket.CoveredCount != 2
+            || upstreamBucket.MissingCount != 0
+            || !bucketMap.TryGetValue("rated-params", out var ratedBucket)
+            || ratedBucket.CoveredCount != 1
+            || ratedBucket.MissingCount != 0
+            || !bucketMap.TryGetValue("raw-data-signals", out var rawBucket)
+            || rawBucket.RequiredCount != 8
+            || rawBucket.CoveredCount != 7
+            || rawBucket.MissingCount != 1
+            || !rawBucket.MissingItems.SequenceEqual(new[] { "θa" }, StringComparer.Ordinal)
+            || !bucketMap.TryGetValue("formula-signals", out var formulaBucket)
+            || formulaBucket.RequiredCount != 3
+            || formulaBucket.CoveredCount != 0
+            || formulaBucket.MissingCount != 3
+            || !bucketMap.TryGetValue("legacy-rules", out var ruleBucket)
+            || ruleBucket.RequiredCount != 3
+            || ruleBucket.CoveredCount != 0
+            || ruleBucket.MissingCount != 3)
+        {
+            throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: dependency bucket projection mismatch for LoadB.");
+        }
     }
 }

@@ -133,5 +133,6 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYDependencyBucketSummaryContract> DependencyBuckets { get; init; } = Array.Empty<MotorYDependencyBucketSummaryContract>();
     public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
 }

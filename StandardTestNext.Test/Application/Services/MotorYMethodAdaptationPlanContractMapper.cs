@@ -79,6 +79,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             structuredPayloadCoverage,
             structuredResultCoverage,
             legacyAlgorithmInputsReady);
+        var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
+            upstream,
+            coverage,
+            ratedCoverage,
+            resultCoverage,
+            rawDataSignalCoverage,
+            structuredPayloadCoverage,
+            structuredResultCoverage,
+            formulaCoverage,
+            ruleCoverage);
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -205,6 +215,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
             SelectedMethodSummary = selection.SelectedMethodSummary,
             BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
+            DependencyBuckets = dependencyBuckets.Select(MapDependencyBucket).ToArray(),
             Distributions = selection.Distributions
                 .Select(MapDistribution)
                 .ToArray()
@@ -244,6 +255,24 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             MissingPayloadFields = gap.MissingPayloadFields,
             CoveredByObservedPayload = gap.CoveredByObservedPayload,
             Summary = gap.Summary
+        };
+    }
+
+    private static MotorYDependencyBucketSummaryContract MapDependencyBucket(MotorYDependencyBucketSummarySnapshot snapshot)
+    {
+        return new MotorYDependencyBucketSummaryContract
+        {
+            BucketKey = snapshot.BucketKey,
+            DisplayName = snapshot.DisplayName,
+            RequiredCount = snapshot.RequiredCount,
+            CoveredCount = snapshot.CoveredCount,
+            MissingCount = snapshot.MissingCount,
+            CoverageRatio = snapshot.CoverageRatio,
+            CoveragePercentagePoints = snapshot.CoveragePercentagePoints,
+            RequiredItems = snapshot.RequiredItems,
+            CoveredItems = snapshot.CoveredItems,
+            MissingItems = snapshot.MissingItems,
+            Summary = snapshot.Summary
         };
     }
 

@@ -594,6 +594,16 @@ ORDER BY COALESCE(Code, ''), Method;";
                     structuredPayloadCoverage,
                     structuredResultCoverage,
                     legacyAlgorithmInputsReady);
+                var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
+                    upstream,
+                    coverage,
+                    ratedCoverage,
+                    resultCoverage,
+                    rawDataSignalCoverage,
+                    structuredPayloadCoverage,
+                    structuredResultCoverage,
+                    formulaCoverage,
+                    ruleCoverage);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -738,6 +748,7 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
+                    DependencyBuckets = dependencyBuckets,
                     Distributions = selection.Distributions
                 };
             })
