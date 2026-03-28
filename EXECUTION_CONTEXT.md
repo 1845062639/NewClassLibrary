@@ -109,6 +109,7 @@
 - 已继续把 `stp.db` 真实结构驱动往前推进：`StpDbSnapshotQueryService` 现在除返回 `ProductTypes.RatedParams` 原始 JSON 外，也会直接归一化解析为 next-gen `MotorRatedParamsContract`（含功率单位、接法枚举、极对数补全等），并通过 smoke test 强约束最近 Motor_Y 记录的额定参数必须可被 next-gen 查询层直接消费，为后续 `stp.db -> next-gen 实体/查询模型 -> builder/算法适配` 打基础。
 - 本轮进一步把旧库额定参数“归一化口径 + 原始枚举口径”同时保留下来：`MotorRatedParamsContract` 新增 `DutyRaw / ConnectionRaw`，`StpDbSnapshotQueryService` 会把 `RatedParams` 里的旧枚举值原样暴露，同时保留 next-gen 友好的 `Duty / Connection` 归一化字段，并由 smoke test 锁定，方便后续 Motor_Y 算法适配层直接按旧库枚举做映射校验。
 - 本轮继续把 `stp.db` 的真实方法枚举口径纳入 next-gen 查询模型：`StpDbTestRecordItemSnapshot` 新增 `CanonicalCode / MethodKey`，显式保留 `TestRecordItems.Method` 与归一化业务项编码的组合（如 `NoLoad:0`、`LoadA:60`、`LockedRotor:47`），并新增 `StpDbMotorYMethodMappingSmokeTests` + snapshot smoke 断言，锁定当前旧库中 Motor_Y 核心试验项的真实 Method 值域，为后续对齐旧 `Algorithm_Motor_Y.cs` 的方法分支映射做准备。
+- 本轮进一步把 `Algorithm_Motor_Y.cs` / `Settings_CYDJ.json` 的方法入口名沉到查询快照层：`MotorYMethodProfileCatalog` 现在除 `LegacyAlgorithmEntry` 外，还显式暴露 `LegacyMethodName / LegacySettingsMethodName`，`StpDbSnapshotQueryService` 会把它们挂到 `StpDbTestRecordItemSnapshot` 上，并由 `MotorYMethodProfileCatalogSmokeTests` 校验基线方法号（1/0/3/4/5/11）与旧算法入口、旧业务项名称、旧配置方法名三者一致，方便后续直接做 Motor_Y 算法/配置适配，不必再靠字符串猜测。
 
 ## 6. 参考范围
 

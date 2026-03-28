@@ -48,6 +48,8 @@ public sealed class StpDbTestRecordItemSnapshot
     public string MethodKey { get; init; } = string.Empty;
     public string? MethodProfileKey { get; init; }
     public string? LegacyAlgorithmEntry { get; init; }
+    public string? LegacyMethodName { get; init; }
+    public string? LegacySettingsMethodName { get; init; }
     public bool IsBaselineMethod { get; init; }
     public string DataJson { get; init; } = "{}";
     public string? Remark { get; init; }

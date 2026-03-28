@@ -318,6 +318,8 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
                 MethodKey = BuildMotorYMethodKey(legacyCode, method),
                 MethodProfileKey = methodProfile?.ProfileKey,
                 LegacyAlgorithmEntry = methodProfile?.LegacyAlgorithmEntry,
+                LegacyMethodName = methodProfile?.LegacyMethodName,
+                LegacySettingsMethodName = methodProfile?.LegacySettingsMethodName,
                 IsBaselineMethod = methodProfile?.IsBaselineEnumValue == true,
                 DataJson = reader.GetString(3),
                 Remark = reader.IsDBNull(4) ? null : reader.GetString(4),

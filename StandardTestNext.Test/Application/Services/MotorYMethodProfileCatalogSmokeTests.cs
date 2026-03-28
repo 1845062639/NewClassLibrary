@@ -15,6 +15,7 @@ public static class MotorYMethodProfileCatalogSmokeTests
 
         ShouldCoverRealMethodValuesFromStpDb();
         ShouldExposeMethodProfileMetadataOnSnapshots();
+        ShouldExposeLegacyMethodRoutingNames();
     }
 
     private static void ShouldCoverRealMethodValuesFromStpDb()
@@ -90,9 +91,45 @@ WHERE Code IN (
                 throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} legacy algorithm entry mismatch. expected={profile.LegacyAlgorithmEntry}, actual={item.LegacyAlgorithmEntry}");
             }
 
+            if (!string.Equals(item.LegacyMethodName, profile.LegacyMethodName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} legacy method name mismatch. expected={profile.LegacyMethodName}, actual={item.LegacyMethodName}");
+            }
+
+            if (!string.Equals(item.LegacySettingsMethodName, profile.LegacySettingsMethodName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} settings method name mismatch. expected={profile.LegacySettingsMethodName}, actual={item.LegacySettingsMethodName}");
+            }
+
             if (item.IsBaselineMethod != profile.IsBaselineEnumValue)
             {
                 throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} baseline flag mismatch.");
+            }
+        }
+    }
+
+    private static void ShouldExposeLegacyMethodRoutingNames()
+    {
+        var expected = new (string CanonicalCode, int Method, string AlgorithmEntry, string LegacyMethodName, string SettingsMethodName)[]
+        {
+            (MotorYTestMethodCodes.DcResistance, 1, MotorYLegacyAlgorithmEntrypoints.DcResistance, MotorYLegacyMethodNames.DcResistance, MotorYSettingsMethodNames.DcResistance),
+            (MotorYTestMethodCodes.NoLoad, 0, MotorYLegacyAlgorithmEntrypoints.NoLoad, MotorYLegacyMethodNames.NoLoad, MotorYSettingsMethodNames.NoLoad),
+            (MotorYTestMethodCodes.HeatRun, 3, MotorYLegacyAlgorithmEntrypoints.Thermal, MotorYLegacyMethodNames.Thermal, MotorYSettingsMethodNames.Thermal),
+            (MotorYTestMethodCodes.LoadA, 4, MotorYLegacyAlgorithmEntrypoints.LoadA, MotorYLegacyMethodNames.LoadA, MotorYSettingsMethodNames.LoadA),
+            (MotorYTestMethodCodes.LoadB, 5, MotorYLegacyAlgorithmEntrypoints.LoadB, MotorYLegacyMethodNames.LoadB, MotorYSettingsMethodNames.LoadB),
+            (MotorYTestMethodCodes.LockedRotor, 11, MotorYLegacyAlgorithmEntrypoints.LockRotor, MotorYLegacyMethodNames.LockRotor, MotorYSettingsMethodNames.LockRotor)
+        };
+
+        foreach (var row in expected)
+        {
+            var profile = MotorYMethodProfileCatalog.TryGet(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y method profile smoke test failed: missing baseline profile for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(profile.LegacyAlgorithmEntry, row.AlgorithmEntry, StringComparison.Ordinal)
+                || !string.Equals(profile.LegacyMethodName, row.LegacyMethodName, StringComparison.Ordinal)
+                || !string.Equals(profile.LegacySettingsMethodName, row.SettingsMethodName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: baseline routing name mismatch for {row.CanonicalCode}:{row.Method}.");
             }
         }
     }
