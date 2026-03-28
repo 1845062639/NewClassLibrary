@@ -652,6 +652,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selection reason mismatch for '{canonicalCode}'. expected='{expectedReason}', actual='{plan.SelectionReason}'");
         }
 
+        var expectedSelectedSummary = $"selected {selectedRoute.LegacyMethodName} method {expectedSelectedMethod} ({selectedRoute.VariantKind}) covering {expectedSelectedCount}/{expectedTotalCount} items ({(expectedTotalCount <= 0 ? 0d : Math.Round((double)expectedSelectedCount / expectedTotalCount, 4, MidpointRounding.AwayFromZero)):P2})";
+        if (!string.Equals(plan.SelectedMethodSummary, expectedSelectedSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{canonicalCode}'. expected='{expectedSelectedSummary}', actual='{plan.SelectedMethodSummary}'");
+        }
+
+        var expectedComparisonSummary = $"baseline {expectedBaselineMethod} ({plan.BaselineProfile?.VariantKind ?? string.Empty})={expectedBaselineCount}/{expectedTotalCount} ({(expectedTotalCount <= 0 ? 0d : Math.Round((double)expectedBaselineCount / expectedTotalCount, 4, MidpointRounding.AwayFromZero)):P2}), dominant {expectedDominantMethod} ({plan.DominantProfile?.VariantKind ?? string.Empty})={expectedDominantCount}/{expectedTotalCount} ({expectedDominantShare:P2})";
+        if (!string.Equals(plan.BaselineDominantComparisonSummary, expectedComparisonSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test comparison summary mismatch for '{canonicalCode}'. expected='{expectedComparisonSummary}', actual='{plan.BaselineDominantComparisonSummary}'");
+        }
+
         var distribution = plan.Distributions.Select(x => x.MethodValue).ToArray();
         if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
         {

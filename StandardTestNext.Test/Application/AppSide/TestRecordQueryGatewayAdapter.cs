@@ -134,6 +134,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
 
     private static MotorYMethodDecisionContract MapMotorYMethodDecision(MotorYMethodDecisionSnapshot snapshot)
     {
+        var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(snapshot);
+
         return new MotorYMethodDecisionContract
         {
             CanonicalCode = snapshot.CanonicalCode,
@@ -151,6 +153,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             DominantLeadCount = snapshot.DominantLeadCount,
             DominantLeadPercentagePoints = snapshot.DominantLeadPercentagePoints,
             RecommendationReason = snapshot.RecommendationReason,
+            RecommendedMethodSummary = selection.SelectedMethodSummary,
+            BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
         };
     }
