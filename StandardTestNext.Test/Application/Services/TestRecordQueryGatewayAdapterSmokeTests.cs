@@ -601,6 +601,24 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected metadata mismatch for '{canonicalCode}'.");
         }
 
+        var expectedLeadCount = Math.Max(0, expectedDominantCount - expectedBaselineCount);
+        var expectedLeadPercentagePoints = Math.Max(0, (int)Math.Round((expectedDominantShare - (expectedTotalCount <= 0 ? 0d : (double)expectedBaselineCount / expectedTotalCount)) * 100d, MidpointRounding.AwayFromZero));
+        if (plan.DominantLeadCount != expectedLeadCount
+            || plan.DominantLeadPercentagePoints != expectedLeadPercentagePoints)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test lead summary mismatch for '{canonicalCode}'.");
+        }
+
+        var expectedReason = expectedShouldUseDominant
+            ? $"selected dominant method {expectedDominantMethod} over baseline {expectedBaselineMethod} because dominant share {expectedDominantShare:P2} reached threshold {0.7d:P0} (+{expectedLeadCount} items, +{expectedLeadPercentagePoints}pp)"
+            : expectedBaselineMethod == expectedDominantMethod
+                ? $"kept baseline method {expectedBaselineMethod} because baseline already matches dominant distribution ({expectedDominantShare:P2})"
+                : $"kept baseline method {expectedBaselineMethod} because dominant method {expectedDominantMethod} share {expectedDominantShare:P2} did not reach threshold {0.7d:P0}";
+        if (!string.Equals(plan.SelectionReason, expectedReason, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selection reason mismatch for '{canonicalCode}'. expected='{expectedReason}', actual='{plan.SelectionReason}'");
+        }
+
         var distribution = plan.Distributions.Select(x => x.MethodValue).ToArray();
         if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
         {

@@ -168,6 +168,11 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
         var selectedCount = snapshot.ShouldPrioritizeDominantOverBaseline
             ? snapshot.DominantCount
             : snapshot.BaselineCount;
+        var baselineShare = snapshot.TotalCount <= 0
+            ? 0d
+            : Math.Round((double)snapshot.BaselineCount / snapshot.TotalCount, 4, MidpointRounding.AwayFromZero);
+        var dominantLeadCount = Math.Max(0, snapshot.DominantCount - snapshot.BaselineCount);
+        var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((snapshot.DominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -183,11 +188,37 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             ShouldUseDominantRoute = snapshot.ShouldPrioritizeDominantOverBaseline,
             DominantShare = snapshot.DominantShare,
             DominantOverrideThreshold = snapshot.DominantOverrideThreshold,
+            DominantLeadCount = dominantLeadCount,
+            DominantLeadPercentagePoints = dominantLeadPercentagePoints,
+            SelectionReason = BuildSelectionReason(snapshot, selectedProfile, dominantLeadCount, dominantLeadPercentagePoints),
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
         };
+    }
+
+    private static string BuildSelectionReason(
+        MotorYMethodDecisionSnapshot snapshot,
+        MotorYLegacyAlgorithmRoute? selectedProfile,
+        int dominantLeadCount,
+        int dominantLeadPercentagePoints)
+    {
+        var selectedMethod = selectedProfile?.MethodValue;
+        var baselineMethod = snapshot.BaselineRoute?.MethodValue;
+        var dominantMethod = snapshot.DominantRoute?.MethodValue;
+
+        if (snapshot.ShouldPrioritizeDominantOverBaseline)
+        {
+            return $"selected dominant method {dominantMethod} over baseline {baselineMethod} because dominant share {snapshot.DominantShare:P2} reached threshold {snapshot.DominantOverrideThreshold:P0} (+{dominantLeadCount} items, +{dominantLeadPercentagePoints}pp)";
+        }
+
+        if (baselineMethod == dominantMethod)
+        {
+            return $"kept baseline method {selectedMethod} because baseline already matches dominant distribution ({snapshot.DominantShare:P2})";
+        }
+
+        return $"kept baseline method {baselineMethod} because dominant method {dominantMethod} share {snapshot.DominantShare:P2} did not reach threshold {snapshot.DominantOverrideThreshold:P0}";
     }
 
     private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)
