@@ -115,6 +115,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Remark = item.Remark ?? string.Empty
             }).ToArray(),
             MotorYMethodDecisions = view.MotorYMethodDecisions.Select(MapMotorYMethodDecision).ToArray(),
+            MotorYMethodAdaptationPlans = view.MotorYMethodDecisions.Select(MapMotorYMethodAdaptationPlan).ToArray(),
             ReportSummaries = view.ReportSummaries.Select(summary => new TestReportSummaryContract
             {
                 RecordCode = summary.RecordCode,
@@ -156,6 +157,36 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             Count = snapshot.Count,
             Share = snapshot.Share,
             Profile = MapBuildProfile(snapshot.Route)
+        };
+    }
+
+    private static MotorYMethodAdaptationPlanContract MapMotorYMethodAdaptationPlan(MotorYMethodDecisionSnapshot snapshot)
+    {
+        var selectedProfile = snapshot.ShouldPrioritizeDominantOverBaseline
+            ? snapshot.DominantRoute
+            : snapshot.BaselineRoute;
+        var selectedCount = snapshot.ShouldPrioritizeDominantOverBaseline
+            ? snapshot.DominantCount
+            : snapshot.BaselineCount;
+
+        return new MotorYMethodAdaptationPlanContract
+        {
+            CanonicalCode = snapshot.CanonicalCode,
+            TotalCount = snapshot.TotalCount,
+            BaselineProfile = MapBuildProfile(snapshot.BaselineRoute),
+            BaselineCount = snapshot.BaselineCount,
+            DominantProfile = MapBuildProfile(snapshot.DominantRoute),
+            DominantCount = snapshot.DominantCount,
+            SelectedProfile = MapBuildProfile(selectedProfile),
+            SelectedCount = selectedCount,
+            SelectionStrategy = snapshot.RecommendedStrategy,
+            ShouldUseDominantRoute = snapshot.ShouldPrioritizeDominantOverBaseline,
+            DominantShare = snapshot.DominantShare,
+            DominantOverrideThreshold = snapshot.DominantOverrideThreshold,
+            AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
+            SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
+            LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
+            Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
         };
     }
 

@@ -15,6 +15,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldReturnNullDetailForUnknownRecordCode();
         ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway();
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
+        ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
     }
 
@@ -367,6 +368,38 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertDistributionOrdering(decisions, MotorYTestMethodCodes.NoLoad, 59, 0);
     }
 
+    private static void ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway()
+    {
+        var baseTime = DateTimeOffset.Parse("2026-03-28T11:30:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-PLAN-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime,
+            Items =
+            {
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(1)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(2)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 0, baseTime.AddMinutes(3)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.LoadA, 4, baseTime.AddMinutes(4))
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y method adaptation plan query smoke test returned null detail.");
+        }
+
+        var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.NoLoad, 4, 0, 1, 59, 3, 59, 3, true, 0.75d, "dominant-threshold-over-baseline");
+        AssertMethodAdaptationPlan(plans, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, 4, 1, false, 1d, "baseline");
+    }
+
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
     {
         var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue)
@@ -507,6 +540,71 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         {
             throw new InvalidOperationException(
                 $"Motor_Y method decision query smoke test distribution ordering mismatch for '{canonicalCode}'. expected={string.Join(",", expectedMethodsInOrder)}, actual={string.Join(",", actual)}");
+        }
+    }
+
+    private static void AssertMethodAdaptationPlan(
+        IReadOnlyDictionary<string, MotorYMethodAdaptationPlanContract> plans,
+        string canonicalCode,
+        int expectedTotalCount,
+        int expectedBaselineMethod,
+        int expectedBaselineCount,
+        int expectedDominantMethod,
+        int expectedDominantCount,
+        int expectedSelectedMethod,
+        int expectedSelectedCount,
+        bool expectedShouldUseDominant,
+        double expectedDominantShare,
+        string expectedSelectionStrategy)
+    {
+        if (!plans.TryGetValue(canonicalCode, out var plan))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test missing plan '{canonicalCode}'.");
+        }
+
+        if (plan.TotalCount != expectedTotalCount
+            || plan.BaselineCount != expectedBaselineCount
+            || plan.DominantCount != expectedDominantCount
+            || plan.SelectedCount != expectedSelectedCount
+            || plan.ShouldUseDominantRoute != expectedShouldUseDominant
+            || Math.Abs(plan.DominantShare - expectedDominantShare) > 0.0001d
+            || !string.Equals(plan.SelectionStrategy, expectedSelectionStrategy, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test numeric mismatch for '{canonicalCode}'.");
+        }
+
+        if (plan.BaselineProfile is null
+            || plan.BaselineProfile.MethodValue != expectedBaselineMethod
+            || !plan.BaselineProfile.IsBaselineMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test baseline mismatch for '{canonicalCode}'.");
+        }
+
+        if (plan.DominantProfile is null
+            || plan.DominantProfile.MethodValue != expectedDominantMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test dominant mismatch for '{canonicalCode}'.");
+        }
+
+        if (plan.SelectedProfile is null
+            || plan.SelectedProfile.MethodValue != expectedSelectedMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected profile mismatch for '{canonicalCode}'.");
+        }
+
+        var selectedRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, expectedSelectedMethod)
+            ?? throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test missing selected route for '{canonicalCode}:{expectedSelectedMethod}'.");
+        if (!string.Equals(plan.AlgorithmEntry, selectedRoute.LegacyAlgorithmEntry, StringComparison.Ordinal)
+            || !string.Equals(plan.SettingsMethodName, selectedRoute.LegacySettingsMethodName, StringComparison.Ordinal)
+            || !string.Equals(plan.LegacyMethodName, selectedRoute.LegacyMethodName, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected metadata mismatch for '{canonicalCode}'.");
+        }
+
+        var distribution = plan.Distributions.Select(x => x.MethodValue).ToArray();
+        if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test distribution ordering mismatch for '{canonicalCode}'.");
         }
     }
 
