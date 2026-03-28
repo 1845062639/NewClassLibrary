@@ -32,6 +32,9 @@
 - 做数据库实体设计时，优先直接查看 `stp.db` 的真实表结构与真实数据，不要先依赖代码里的数据库对象定义。
 - `stp.db` 不只是结构样板，里面还有实际数据；应优先从中提炼实体、字段口径、关系、值域与历史兼容情况。
 - `Model` / `ViewModel` 可作为辅助手段参考，但数据库实体设计以 `stp.db` 为一手基线。
+- 已确认旧库核心业务表：`ProductTypes`、`TestRecords`、`TestRecordItems`、`TestRecordAttachments`、`TestRecordItemAttachments`、`FileAttachments`。
+- 已确认旧库是真实业务库而非空样板：当前抽样统计约为 `ProductTypes=302`、`TestRecords=576`、`TestRecordItems=2147`、`TestRecordItemAttachments=1384`。
+- 已确认旧库记录聚合模型：`TestRecords` 为主记录头，`TestRecordItems` 通过 `TestRecordId` 挂载业务试验项；业务项名称直接体现在 `TestRecordItems.Code`（如“直流电阻测定”“热试验”“空载试验”），`Method` 为整数枚举，`Data` 字段中保存旧 `TestData_*` JSON 结构；附件通过 `TestRecordAttachments` / `TestRecordItemAttachments` 与 `FileAttachments` 关联。
 
 ### 3.2 app / test 通讯方式
 - app 与 test 之间使用 **ModbusTcp** 交互
@@ -102,6 +105,7 @@
 - `MotorYTrialRecordBuilder` 已开始把 6 个业务试验项 payload 直接改造成接近旧 `TestData_Motor_Y_*` 的 JSON 结构：直流电阻对齐 `Ruv/Rvw/Rwu/R1/θ1c/ΔR/R`，空载对齐 `DataList + P0/I0/Pfw/Pfe`，堵转对齐 `DataList + Ikn/Pkn/Tkn`，热试验对齐 `Data1List/Data2List + θw/Δθ`，A/B 法对齐 `RawDataList/ResultDataList` 主字段，为后续迁移算法与报表字段打底。
 - 已在 next-gen 内新增轻量兼容层 `MotorYNoLoadLegacyShape` + `MotorYNoLoadLegacyPreviewFormatter`：先不强行引入旧 net48 `StandardTest.Library`，而是在当前 net8 主干中验证 NoLoad payload 是否已经具备“可按旧对象形状成功反序列化”的条件，为后续逐项增加 legacy-shape mapper/adapter 做试点。
 - 该模式已开始扩展到 `Lock_Rotor / Thermal / Load_A / Load_B`：当前 next-gen 已补 `MotorYLockRotorLegacyShape`、`MotorYThermalLegacyShape`、`MotorYLoadALegacyShape`、`MotorYLoadBLegacyShape` 及预览器，方向是先在 net8 主干内证明“这些业务项 payload 已具备被旧对象形状稳定消费的条件”，再决定是否有必要引入更深的算法适配层。
+- 本轮已把 Motor_Y 业务项闭环验证再向前推进一格：新增 smoke tests，直接用 `MotorYTrialRecordBuilder` 生成 6 个核心试验项，再校验 `TestRecordItemPayloadReader` 与 `TestRecordQueryGatewayAdapter` 对 `DataList / RawDataList / Data1List / Data2List` 推断出的 `SampleCount / RecordMode` 是否稳定，确保“builder -> payload reader -> app query”链路对 Motor_Y 业务 payload 可验证。
 
 ## 6. 参考范围
 

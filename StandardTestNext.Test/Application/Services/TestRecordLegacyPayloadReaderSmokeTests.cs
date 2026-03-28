@@ -12,6 +12,7 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
         ShouldFormatLegacyPayloadSummaryWithMetricsFlags();
         ShouldFormatListSummaryWithPayloadFlags();
         ShouldNormalizeMotorYLegacyItemCodesFromRealStpAliases();
+        ShouldParseMotorYTrialPayloadShapesFromBuilder();
     }
 
     private static void ShouldParseLegacyPayloadSummaryFromJson()
@@ -212,6 +213,93 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
             {
                 throw new InvalidOperationException($"Motor_Y core-trial detect smoke test failed for '{alias}'.");
             }
+        }
+    }
+
+    private static void ShouldParseMotorYTrialPayloadShapesFromBuilder()
+    {
+        var builder = new MotorYTrialRecordBuilder();
+        var rated = new MotorRatedParamsContract
+        {
+            ProductKind = "Motor_Y",
+            Model = "Y2-315M-4",
+            RatedPower = 132,
+            RatedCurrent = 240,
+            RatedVoltage = 380,
+            RatedSpeed = 1480,
+            RatedFrequency = 50,
+            Pole = 4,
+            PolePairs = 2,
+            Connection = "Δ"
+        };
+
+        var baseTime = DateTimeOffset.Parse("2026-03-28T10:00:00+08:00");
+        var samples = new[]
+        {
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime,
+                ProductKind = "Motor_Y",
+                VoltageAverage = 381.2,
+                CurrentAverage = 52.6,
+                Power = 24.8,
+                Frequency = 50,
+                Speed = 1492,
+                Torque = 118.2,
+                IsRecordPoint = true
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(10),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 379.8,
+                CurrentAverage = 66.4,
+                Power = 31.2,
+                Frequency = 50,
+                Speed = 1476,
+                Torque = 136.5,
+                IsRecordPoint = false
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(20),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 382.5,
+                CurrentAverage = 74.1,
+                Power = 36.7,
+                Frequency = 50,
+                Speed = 1468,
+                Torque = 149.3,
+                IsRecordPoint = true
+            }
+        };
+
+        var items = builder.BuildTrialItems(rated, samples).ToDictionary(x => x.ItemCode, StringComparer.Ordinal);
+
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.DcResistance, expectedSampleCount: 1, expectedRecordMode: null);
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.NoLoad, expectedSampleCount: 3, expectedRecordMode: TestRecordSampleModes.KeyPointOnly);
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.HeatRun, expectedSampleCount: 3, expectedRecordMode: TestRecordSampleModes.Continuous);
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.LoadA, expectedSampleCount: 2, expectedRecordMode: TestRecordSampleModes.Continuous);
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.LoadB, expectedSampleCount: 1, expectedRecordMode: TestRecordSampleModes.Continuous);
+        AssertMotorYPayloadSnapshot(items, MotorYTestMethodCodes.LockedRotor, expectedSampleCount: 2, expectedRecordMode: TestRecordSampleModes.KeyPointOnly);
+    }
+
+    private static void AssertMotorYPayloadSnapshot(
+        IReadOnlyDictionary<string, StandardTestNext.Test.Domain.Records.TestRecordItemAggregate> items,
+        string itemCode,
+        int expectedSampleCount,
+        string? expectedRecordMode)
+    {
+        if (!items.TryGetValue(itemCode, out var item))
+        {
+            throw new InvalidOperationException($"Motor_Y builder smoke test missing item '{itemCode}'.");
+        }
+
+        var snapshot = TestRecordItemPayloadReader.TryParse(item.DataJson);
+        if (snapshot.SampleCount != expectedSampleCount || !string.Equals(snapshot.RecordMode, expectedRecordMode, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                $"Motor_Y payload reader smoke test failed for '{itemCode}'. Expected sampleCount={expectedSampleCount}, recordMode={expectedRecordMode ?? "<null>"}; got sampleCount={snapshot.SampleCount}, recordMode={snapshot.RecordMode ?? "<null>"}.");
         }
     }
 

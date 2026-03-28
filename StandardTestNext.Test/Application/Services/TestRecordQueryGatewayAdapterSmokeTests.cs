@@ -13,6 +13,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway();
         ShouldPreserveReportSelectionMetadataThroughAppQueryGateway();
         ShouldReturnNullDetailForUnknownRecordCode();
+        ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway();
     }
 
     private static void ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway()
@@ -199,6 +200,112 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         if (detail is not null)
         {
             throw new InvalidOperationException("TestRecordQueryGatewayAdapter should return null for unknown record code.");
+        }
+    }
+
+    private static void ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway()
+    {
+        var builder = new MotorYTrialRecordBuilder();
+        var rated = new MotorRatedParamsContract
+        {
+            ProductKind = "Motor_Y",
+            Model = "Y2-315M-4",
+            RatedPower = 132,
+            RatedCurrent = 240,
+            RatedVoltage = 380,
+            RatedSpeed = 1480,
+            RatedFrequency = 50,
+            Pole = 4,
+            PolePairs = 2,
+            Connection = "Δ"
+        };
+
+        var baseTime = DateTimeOffset.Parse("2026-03-28T10:30:00+08:00");
+        var samples = new[]
+        {
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime,
+                ProductKind = "Motor_Y",
+                VoltageAverage = 381.2,
+                CurrentAverage = 52.6,
+                Power = 24.8,
+                Frequency = 50,
+                Speed = 1492,
+                Torque = 118.2,
+                IsRecordPoint = true
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(10),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 379.8,
+                CurrentAverage = 66.4,
+                Power = 31.2,
+                Frequency = 50,
+                Speed = 1476,
+                Torque = 136.5,
+                IsRecordPoint = false
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(20),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 382.5,
+                CurrentAverage = 74.1,
+                Power = 36.7,
+                Frequency = 50,
+                Speed = 1468,
+                Torque = 149.3,
+                IsRecordPoint = true
+            }
+        };
+
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime
+        };
+
+        foreach (var item in builder.BuildTrialItems(rated, samples))
+        {
+            record.Items.Add(item);
+        }
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y trial payload query smoke test returned null detail.");
+        }
+
+        var items = detail.ItemDetails.ToDictionary(x => x.ItemCode, StringComparer.Ordinal);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.DcResistance, 1, string.Empty);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.NoLoad, 3, TestRecordSampleModes.KeyPointOnly);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.HeatRun, 3, TestRecordSampleModes.Continuous);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.LoadA, 2, TestRecordSampleModes.Continuous);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.LoadB, 1, TestRecordSampleModes.Continuous);
+        AssertMotorYQueryItem(items, MotorYTestMethodCodes.LockedRotor, 2, TestRecordSampleModes.KeyPointOnly);
+    }
+
+    private static void AssertMotorYQueryItem(
+        IReadOnlyDictionary<string, TestRecordItemDetailContract> items,
+        string itemCode,
+        int expectedSampleCount,
+        string expectedRecordMode)
+    {
+        if (!items.TryGetValue(itemCode, out var item))
+        {
+            throw new InvalidOperationException($"Motor_Y query smoke test missing item '{itemCode}'.");
+        }
+
+        if (item.SampleCount != expectedSampleCount || !string.Equals(item.RecordMode, expectedRecordMode, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                $"Motor_Y query smoke test failed for '{itemCode}'. Expected sampleCount={expectedSampleCount}, recordMode={expectedRecordMode}; got sampleCount={item.SampleCount}, recordMode={item.RecordMode}.");
         }
     }
 
