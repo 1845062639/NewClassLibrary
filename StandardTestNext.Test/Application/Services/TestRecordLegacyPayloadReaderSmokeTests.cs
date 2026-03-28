@@ -13,6 +13,7 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
         ShouldFormatListSummaryWithPayloadFlags();
         ShouldNormalizeMotorYLegacyItemCodesFromRealStpAliases();
         ShouldResolveMotorYLegacyAliasesToStableDisplayMetadata();
+        ShouldFallbackToSingleSampleForThinLoadAPayload();
         ShouldParseMotorYTrialPayloadShapesFromBuilder();
     }
 
@@ -238,6 +239,33 @@ public static class TestRecordLegacyPayloadReaderSmokeTests
                 throw new InvalidOperationException(
                     $"Motor_Y descriptor resolver smoke test failed for '{alias}'. Expected name='{displayName}', sort={sortOrder}; got name='{resolvedName}', sort={resolvedSortOrder}.");
             }
+        }
+    }
+
+    private static void ShouldFallbackToSingleSampleForThinLoadAPayload()
+    {
+        const string thinLoadAPayload =
+            """
+            {
+              "Un": 380,
+              "Pn": 132,
+              "K1": 235,
+              "R1c": 0.1583,
+              "θ1c": 26.5,
+              "θa": 26.5,
+              "ΔT": 0.35,
+              "Order": 3,
+              "DecimalPlaces": 2,
+              "RawDataList": [],
+              "ResultDataList": []
+            }
+            """;
+
+        var snapshot = TestRecordItemPayloadReader.TryParse(thinLoadAPayload);
+        if (snapshot.SampleCount != 1 || snapshot.RecordMode != TestRecordSampleModes.Continuous)
+        {
+            throw new InvalidOperationException(
+                $"Thin LoadA payload fallback smoke test failed. Expected sampleCount=1, recordMode={TestRecordSampleModes.Continuous}; got sampleCount={snapshot.SampleCount}, recordMode={snapshot.RecordMode ?? "<null>"}.");
         }
     }
 

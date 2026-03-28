@@ -90,12 +90,12 @@ public static class TestRecordItemPayloadReader
 
         if (TryGetArrayLength(root, "RawDataList", out var rawDataCount))
         {
-            return rawDataCount;
+            return rawDataCount > 0 ? rawDataCount : GuessFlatLoadASampleCount(root);
         }
 
         if (TryGetArrayLength(root, "ResultDataList", out var resultDataCount))
         {
-            return resultDataCount;
+            return resultDataCount > 0 ? resultDataCount : GuessFlatLoadASampleCount(root);
         }
 
         if (TryGetArrayLength(root, "Data1List", out var data1Count))
@@ -154,6 +154,18 @@ public static class TestRecordItemPayloadReader
 
         count = 0;
         return false;
+    }
+
+    private static int GuessFlatLoadASampleCount(JsonElement root)
+    {
+        var rowLevelFields = new[] { "P1", "P2", "I1", "η", "Cosφ", "S", "Percentage" };
+        if (HasAnyNumericProperty(root, rowLevelFields))
+        {
+            return 1;
+        }
+
+        var envelopeFields = new[] { "Un", "Pn", "R1c", "θ1c", "θa", "ΔT", "K1" };
+        return HasAnyNumericProperty(root, envelopeFields) ? 1 : 0;
     }
 
     private static int CountNonEmptyProperties(JsonElement sample, params string[] propertyNames)
