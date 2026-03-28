@@ -307,7 +307,8 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
             var legacyCode = reader.GetString(1);
             int? method = reader.IsDBNull(2) ? null : reader.GetInt32(2);
             var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
-            var methodProfile = MotorYMethodProfileCatalog.TryGet(canonicalCode, method);
+            var methodKey = BuildMotorYMethodKey(legacyCode, method);
+            var legacyRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, method);
 
             items.Add(new StpDbTestRecordItemSnapshot
             {
@@ -315,12 +316,15 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
                 Code = legacyCode,
                 Method = method,
                 CanonicalCode = canonicalCode,
-                MethodKey = BuildMotorYMethodKey(legacyCode, method),
-                MethodProfileKey = methodProfile?.ProfileKey,
-                LegacyAlgorithmEntry = methodProfile?.LegacyAlgorithmEntry,
-                LegacyMethodName = methodProfile?.LegacyMethodName,
-                LegacySettingsMethodName = methodProfile?.LegacySettingsMethodName,
-                IsBaselineMethod = methodProfile?.IsBaselineEnumValue == true,
+                MethodKey = methodKey,
+                MethodProfileKey = legacyRoute?.ProfileKey,
+                LegacyAlgorithmRoute = legacyRoute,
+                LegacyEnumName = legacyRoute?.LegacyEnumName,
+                LegacyFormName = legacyRoute?.LegacyFormName,
+                LegacyAlgorithmEntry = legacyRoute?.LegacyAlgorithmEntry,
+                LegacyMethodName = legacyRoute?.LegacyMethodName,
+                LegacySettingsMethodName = legacyRoute?.LegacySettingsMethodName,
+                IsBaselineMethod = legacyRoute?.IsBaselineMethod == true,
                 DataJson = reader.GetString(3),
                 Remark = reader.IsDBNull(4) ? null : reader.GetString(4),
                 TestRecordId = reader.IsDBNull(5) ? null : reader.GetString(5),

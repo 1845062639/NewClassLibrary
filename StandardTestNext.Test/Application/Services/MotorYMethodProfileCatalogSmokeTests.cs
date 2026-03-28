@@ -16,6 +16,8 @@ public static class MotorYMethodProfileCatalogSmokeTests
         ShouldCoverRealMethodValuesFromStpDb();
         ShouldExposeMethodProfileMetadataOnSnapshots();
         ShouldExposeLegacyMethodRoutingNames();
+        ShouldExposeLegacyEnumAndFormRoutingNames();
+        ShouldResolveStructuredLegacyAlgorithmRoutes();
     }
 
     private static void ShouldCoverRealMethodValuesFromStpDb()
@@ -86,6 +88,16 @@ WHERE Code IN (
                 throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} profile key mismatch. expected={profile.ProfileKey}, actual={item.MethodProfileKey}");
             }
 
+            if (!string.Equals(item.LegacyEnumName, profile.LegacyEnumName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} legacy enum name mismatch. expected={profile.LegacyEnumName}, actual={item.LegacyEnumName}");
+            }
+
+            if (!string.Equals(item.LegacyFormName, profile.LegacyFormName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} legacy form name mismatch. expected={profile.LegacyFormName}, actual={item.LegacyFormName}");
+            }
+
             if (!string.Equals(item.LegacyAlgorithmEntry, profile.LegacyAlgorithmEntry, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException($"Motor_Y method profile smoke test failed: item {item.Id} legacy algorithm entry mismatch. expected={profile.LegacyAlgorithmEntry}, actual={item.LegacyAlgorithmEntry}");
@@ -131,6 +143,80 @@ WHERE Code IN (
             {
                 throw new InvalidOperationException($"Motor_Y method profile smoke test failed: baseline routing name mismatch for {row.CanonicalCode}:{row.Method}.");
             }
+        }
+    }
+
+    private static void ShouldExposeLegacyEnumAndFormRoutingNames()
+    {
+        var expected = new (string CanonicalCode, int Method, string EnumName, string FormName)[]
+        {
+            (MotorYTestMethodCodes.DcResistance, 1, MotorYLegacyEnumNames.DcResistance, MotorYLegacyFormNames.DcResistance),
+            (MotorYTestMethodCodes.DcResistance, 53, MotorYLegacyEnumNames.DcResistanceCompanion, MotorYLegacyFormNames.DcResistanceCompanion),
+            (MotorYTestMethodCodes.NoLoad, 0, MotorYLegacyEnumNames.NoLoad, MotorYLegacyFormNames.NoLoad),
+            (MotorYTestMethodCodes.NoLoad, 59, MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery),
+            (MotorYTestMethodCodes.HeatRun, 3, MotorYLegacyEnumNames.Thermal, MotorYLegacyFormNames.Thermal),
+            (MotorYTestMethodCodes.HeatRun, 47, MotorYLegacyEnumNames.ThermalCompanion, MotorYLegacyFormNames.ThermalCompanion),
+            (MotorYTestMethodCodes.HeatRun, 48, MotorYLegacyEnumNames.ThermalCydj, MotorYLegacyFormNames.ThermalCydj),
+            (MotorYTestMethodCodes.LoadA, 4, MotorYLegacyEnumNames.LoadA, MotorYLegacyFormNames.LoadA),
+            (MotorYTestMethodCodes.LoadB, 5, MotorYLegacyEnumNames.LoadB, MotorYLegacyFormNames.LoadB),
+            (MotorYTestMethodCodes.LockedRotor, 11, MotorYLegacyEnumNames.LockedRotor, MotorYLegacyFormNames.LockedRotor),
+            (MotorYTestMethodCodes.LockedRotor, 46, MotorYLegacyEnumNames.LockedRotorDelivery, MotorYLegacyFormNames.LockedRotorDelivery)
+        };
+
+        foreach (var row in expected)
+        {
+            var profile = MotorYMethodProfileCatalog.TryGet(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y method profile smoke test failed: missing enum/form profile for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(profile.LegacyEnumName, row.EnumName, StringComparison.Ordinal)
+                || !string.Equals(profile.LegacyFormName, row.FormName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y method profile smoke test failed: enum/form routing mismatch for {row.CanonicalCode}:{row.Method}.");
+            }
+        }
+    }
+
+    private static void ShouldResolveStructuredLegacyAlgorithmRoutes()
+    {
+        var expected = new (string CanonicalCode, int Method, string ProfileKey, bool IsBaselineMethod)[]
+        {
+            (MotorYTestMethodCodes.DcResistance, 1, "baseline", true),
+            (MotorYTestMethodCodes.DcResistance, 53, "companion", false),
+            (MotorYTestMethodCodes.NoLoad, 59, "delivery", false),
+            (MotorYTestMethodCodes.HeatRun, 47, "companion", false),
+            (MotorYTestMethodCodes.LoadA, 60, "delivery", false),
+            (MotorYTestMethodCodes.LoadB, 5, "baseline", true),
+            (MotorYTestMethodCodes.LockedRotor, 46, "delivery", false)
+        };
+
+        foreach (var row in expected)
+        {
+            var route = MotorYLegacyAlgorithmRouteResolver.Resolve(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y legacy route smoke test failed: missing route for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(route.MethodKey, $"{row.CanonicalCode}:{row.Method}", StringComparison.Ordinal)
+                || !string.Equals(route.ProfileKey, row.ProfileKey, StringComparison.Ordinal)
+                || route.IsBaselineMethod != row.IsBaselineMethod)
+            {
+                throw new InvalidOperationException($"Motor_Y legacy route smoke test failed: route payload mismatch for {row.CanonicalCode}:{row.Method}.");
+            }
+
+            var profile = MotorYMethodProfileCatalog.TryGet(row.CanonicalCode, row.Method)
+                ?? throw new InvalidOperationException($"Motor_Y legacy route smoke test failed: missing profile for {row.CanonicalCode}:{row.Method}.");
+
+            if (!string.Equals(route.LegacyAlgorithmEntry, profile.LegacyAlgorithmEntry, StringComparison.Ordinal)
+                || !string.Equals(route.LegacyMethodName, profile.LegacyMethodName, StringComparison.Ordinal)
+                || !string.Equals(route.LegacySettingsMethodName, profile.LegacySettingsMethodName, StringComparison.Ordinal)
+                || !string.Equals(route.LegacyEnumName, profile.LegacyEnumName, StringComparison.Ordinal)
+                || !string.Equals(route.LegacyFormName, profile.LegacyFormName, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y legacy route smoke test failed: route/profile projection mismatch for {row.CanonicalCode}:{row.Method}.");
+            }
+        }
+
+        if (MotorYLegacyAlgorithmRouteResolver.Resolve(MotorYTestMethodCodes.NoLoad, 999) is not null)
+        {
+            throw new InvalidOperationException("Motor_Y legacy route smoke test failed: unknown method should not resolve to a route.");
         }
     }
 }
