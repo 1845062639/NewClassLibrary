@@ -497,14 +497,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 $"Motor_Y method adaptation plan query smoke test share summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. baselineShare={noLoadPlan.BaselineShare}, dominantShare={noLoadPlan.DominantShare}, selectedShare={noLoadPlan.SelectedShare}, leadCount={noLoadPlan.SelectedLeadCountVsBaseline}, leadPp={noLoadPlan.SelectedLeadPercentagePointsVsBaseline}");
         }
 
-        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "legacy code selection unavailable in builder-only route planning", StringComparison.Ordinal)
-            || noLoadPlan.LegacyCodeDistributions.Count != 0
-            || !string.IsNullOrEmpty(noLoadPlan.RecommendedLegacyCode)
-            || !string.IsNullOrEmpty(noLoadPlan.DominantLegacyCode)
-            || noLoadPlan.RecommendedLegacyCodeCount != 0
-            || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare) > 0.0001d)
+        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code '空载试验' for MotorY.NoLoad (4/4, 100pp)", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions.Count != 1
+            || !string.Equals(noLoadPlan.RecommendedLegacyCode, "空载试验", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.DominantLegacyCode, "空载试验", StringComparison.Ordinal)
+            || noLoadPlan.RecommendedLegacyCodeCount != 4
+            || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "空载试验", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions[0].Count != 4
+            || Math.Abs(noLoadPlan.LegacyCodeDistributions[0].Share - 1d) > 0.0001d)
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test legacy-code summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. summary='{noLoadPlan.LegacyCodeSelectionSummary}', recommended='{noLoadPlan.RecommendedLegacyCode}', count={noLoadPlan.RecommendedLegacyCodeCount}, share={noLoadPlan.RecommendedLegacyCodeShare}");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test legacy-code summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. summary='{noLoadPlan.LegacyCodeSelectionSummary}', recommended='{noLoadPlan.RecommendedLegacyCode}', count={noLoadPlan.RecommendedLegacyCodeCount}, share={noLoadPlan.RecommendedLegacyCodeShare}, distributions={noLoadPlan.LegacyCodeDistributions.Count}");
         }
     }
 

@@ -116,7 +116,10 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             }).ToArray(),
             MotorYMethodDecisions = view.MotorYMethodDecisions.Select(MapMotorYMethodDecision).ToArray(),
             MotorYMethodAdaptationPlans = view.MotorYMethodDecisions
-                .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(snapshot, MapBuildProfile))
+                .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
+                    snapshot,
+                    MapBuildProfile,
+                    BuildLegacyCodeDistributions(view.ItemDetails, snapshot.CanonicalCode)))
                 .ToArray(),
             ReportSummaries = view.ReportSummaries.Select(summary => new TestReportSummaryContract
             {
@@ -168,6 +171,37 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             Share = snapshot.Share,
             Profile = MapBuildProfile(snapshot.Route)
         };
+    }
+
+    private static IReadOnlyList<MotorYLegacyCodeDistributionSnapshot> BuildLegacyCodeDistributions(
+        IReadOnlyList<TestRecordItemDetail> items,
+        string canonicalCode)
+    {
+        var relevant = items
+            .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
+            .Select(item => string.IsNullOrWhiteSpace(item.DisplayName)
+                ? item.ItemCode
+                : item.DisplayName)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .ToArray();
+
+        if (relevant.Length == 0)
+        {
+            return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
+        }
+
+        return relevant
+            .GroupBy(code => code, StringComparer.Ordinal)
+            .Select(group => new MotorYLegacyCodeDistributionSnapshot
+            {
+                CanonicalCode = canonicalCode,
+                LegacyCode = group.Key,
+                Count = group.Count(),
+                Share = Math.Round((double)group.Count() / relevant.Length, 4, MidpointRounding.AwayFromZero)
+            })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)

@@ -6,11 +6,13 @@ internal static class MotorYMethodAdaptationPlanContractMapper
 {
     public static MotorYMethodAdaptationPlanContract Map(
         MotorYMethodDecisionSnapshot snapshot,
-        Func<MotorYLegacyAlgorithmRoute?, MotorYBuildProfileContract?> profileMapper)
+        Func<MotorYLegacyAlgorithmRoute?, MotorYBuildProfileContract?> profileMapper,
+        IReadOnlyList<MotorYLegacyCodeDistributionSnapshot>? legacyCodeDistributions = null)
     {
         var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(snapshot);
         var selectedProfile = selection.SelectedRoute;
         var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
+        var legacyCodeSelection = BuildLegacyCodeSelection(selection.CanonicalCode, legacyCodeDistributions);
         var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
         var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
             selection.CanonicalCode,
@@ -102,12 +104,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,
-            RecommendedLegacyCode = string.Empty,
-            DominantLegacyCode = string.Empty,
-            RecommendedLegacyCodeCount = 0,
-            RecommendedLegacyCodeShare = 0d,
-            LegacyCodeSelectionSummary = "legacy code selection unavailable in builder-only route planning",
-            LegacyCodeDistributions = Array.Empty<MotorYLegacyCodeDistributionContract>(),
+            RecommendedLegacyCode = legacyCodeSelection.RecommendedLegacyCode,
+            DominantLegacyCode = legacyCodeSelection.DominantLegacyCode,
+            RecommendedLegacyCodeCount = legacyCodeSelection.RecommendedLegacyCodeCount,
+            RecommendedLegacyCodeShare = legacyCodeSelection.RecommendedLegacyCodeShare,
+            LegacyCodeSelectionSummary = legacyCodeSelection.Summary,
+            LegacyCodeDistributions = legacyCodeSelection.Distributions
+                .Select(MapLegacyCodeDistribution)
+                .ToArray(),
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
             ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
@@ -251,6 +255,49 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             Count = snapshot.Count,
             Share = snapshot.Share,
             Profile = MapBuildProfile(snapshot.Route)
+        };
+    }
+
+    private static MotorYLegacyCodeDistributionContract MapLegacyCodeDistribution(MotorYLegacyCodeDistributionSnapshot snapshot)
+    {
+        return new MotorYLegacyCodeDistributionContract
+        {
+            CanonicalCode = snapshot.CanonicalCode,
+            LegacyCode = snapshot.LegacyCode,
+            Count = snapshot.Count,
+            Share = snapshot.Share
+        };
+    }
+
+    private static MotorYLegacyCodeSelectionSnapshot BuildLegacyCodeSelection(
+        string canonicalCode,
+        IReadOnlyList<MotorYLegacyCodeDistributionSnapshot>? legacyCodeDistributions)
+    {
+        var distributions = (legacyCodeDistributions ?? Array.Empty<MotorYLegacyCodeDistributionSnapshot>())
+            .Where(x => string.Equals(x.CanonicalCode, canonicalCode, StringComparison.Ordinal))
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
+            .ToArray();
+
+        if (distributions.Length == 0)
+        {
+            return new MotorYLegacyCodeSelectionSnapshot
+            {
+                CanonicalCode = canonicalCode,
+                Summary = "legacy code selection unavailable in builder-only route planning"
+            };
+        }
+
+        var recommended = distributions[0];
+        return new MotorYLegacyCodeSelectionSnapshot
+        {
+            CanonicalCode = canonicalCode,
+            RecommendedLegacyCode = recommended.LegacyCode,
+            DominantLegacyCode = recommended.LegacyCode,
+            RecommendedLegacyCodeCount = recommended.Count,
+            RecommendedLegacyCodeShare = recommended.Share,
+            Distributions = distributions,
+            Summary = $"recommended legacy code '{recommended.LegacyCode}' for {canonicalCode} ({recommended.Count}/{distributions.Sum(x => x.Count)}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp)"
         };
     }
 
