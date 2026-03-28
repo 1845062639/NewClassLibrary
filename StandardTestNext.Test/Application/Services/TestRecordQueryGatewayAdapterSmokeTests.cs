@@ -552,8 +552,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || item.SampleCount != 2
             || !string.Equals(item.LegacyAlgorithmRoute.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
             || item.LegacyAlgorithmRoute.MethodValue != 59
-            || !string.Equals(item.LegacyAlgorithmRoute.ProfileKey, "NoLoad.Delivery59", StringComparison.Ordinal)
-            || !string.Equals(item.LegacyAlgorithmRoute.LegacyFormName, "FrmMotor_Y_NL", StringComparison.Ordinal)
+            || !string.Equals(item.LegacyAlgorithmRoute.ProfileKey, "delivery", StringComparison.Ordinal)
+            || !string.Equals(item.LegacyAlgorithmRoute.LegacyFormName, MotorYLegacyFormNames.NoLoadDelivery, StringComparison.Ordinal)
             || item.LegacyAlgorithmRoute.IsBaselineMethod)
         {
             throw new InvalidOperationException("Motor_Y legacy route item smoke test route projection mismatch.");

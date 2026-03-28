@@ -108,6 +108,19 @@ public sealed class StpDbSnapshotQueryService
         return LoadMotorYMethodDistribution(connection);
     }
 
+    public IReadOnlyList<StpDbMotorYLegacyCodeDistributionSnapshot> ListMotorYLegacyCodeDistribution()
+    {
+        if (!File.Exists(_dbPath))
+        {
+            throw new InvalidOperationException($"stp.db not found: {_dbPath}");
+        }
+
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+
+        return LoadMotorYLegacyCodeDistribution(connection);
+    }
+
     public IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> ListMotorRatedParamsValueDistribution()
     {
         if (!File.Exists(_dbPath))
@@ -381,6 +394,47 @@ ORDER BY COALESCE(Code, ''), Method;";
             .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ThenByDescending(snapshot => snapshot.Count)
             .ThenBy(snapshot => snapshot.Method)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<StpDbMotorYLegacyCodeDistributionSnapshot> LoadMotorYLegacyCodeDistribution(SqliteConnection connection)
+    {
+        using var command = connection.CreateCommand();
+        command.CommandText = $@"
+SELECT COALESCE(Code, ''), Method, COUNT(*)
+FROM TestRecordItems
+WHERE Code IN ({BuildInlineQuotedList(MotorYLegacyItemCodes)})
+GROUP BY COALESCE(Code, ''), Method
+ORDER BY COALESCE(Code, ''), Method;";
+
+        var snapshots = new List<StpDbMotorYLegacyCodeDistributionSnapshot>();
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.GetString(0);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
+            {
+                continue;
+            }
+
+            var method = reader.IsDBNull(1) ? (int?)null : reader.GetInt32(1);
+            snapshots.Add(new StpDbMotorYLegacyCodeDistributionSnapshot
+            {
+                CanonicalCode = canonicalCode,
+                LegacyCode = legacyCode,
+                Method = method,
+                Count = reader.GetInt32(2),
+                MethodKey = method.HasValue ? $"{canonicalCode}:{method.Value}" : $"{canonicalCode}:null",
+                Route = method.HasValue ? MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, method.Value) : null
+            });
+        }
+
+        return snapshots
+            .OrderBy(row => row.CanonicalCode, StringComparer.Ordinal)
+            .ThenByDescending(row => row.Count)
+            .ThenBy(row => row.LegacyCode, StringComparer.Ordinal)
+            .ThenBy(row => row.Method ?? int.MinValue)
             .ToArray();
     }
 
