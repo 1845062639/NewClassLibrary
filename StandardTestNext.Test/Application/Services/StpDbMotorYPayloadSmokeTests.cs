@@ -17,6 +17,17 @@ public static class StpDbMotorYPayloadSmokeTests
             [MotorYTestMethodCodes.LockedRotor] = new[] { 11, 46, 47 }
         };
 
+    private static readonly IReadOnlyDictionary<string, string[]> ExpectedLegacyCodesByCanonicalCode =
+        new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            [MotorYTestMethodCodes.DcResistance] = new[] { "直流电阻测定" },
+            [MotorYTestMethodCodes.NoLoad] = new[] { "空载试验", "空载特性试验" },
+            [MotorYTestMethodCodes.HeatRun] = new[] { "热试验" },
+            [MotorYTestMethodCodes.LoadA] = new[] { "A法负载试验" },
+            [MotorYTestMethodCodes.LoadB] = new[] { "B法负载试验" },
+            [MotorYTestMethodCodes.LockedRotor] = new[] { "堵转试验", "堵转特性试验" }
+        };
+
     public static void Run()
     {
         if (!File.Exists(DbPath))
@@ -28,6 +39,7 @@ public static class StpDbMotorYPayloadSmokeTests
         connection.Open();
 
         AssertMethodCoverage(connection);
+        AssertLegacyCodeCoverage(connection);
 
         var command = connection.CreateCommand();
         command.CommandText = @"
@@ -139,6 +151,59 @@ WHERE Code IN (
             {
                 throw new InvalidOperationException(
                     $"stp.db method coverage mismatch for {canonicalCode}. Missing methods: {string.Join(", ", missingMethods)}. Actual methods: {string.Join(", ", actualMethods.OrderBy(x => x))}");
+            }
+        }
+    }
+
+    private static void AssertLegacyCodeCoverage(SqliteConnection connection)
+    {
+        var actualLegacyCodesByCanonicalCode = new Dictionary<string, HashSet<string>>(StringComparer.Ordinal);
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT DISTINCT Code
+FROM TestRecordItems
+WHERE Code IN (
+    '直流电阻测定',
+    '空载试验',
+    '空载特性试验',
+    '热试验',
+    'A法负载试验',
+    'B法负载试验',
+    '堵转试验',
+    '堵转特性试验');";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var legacyCode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
+            var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
+            {
+                continue;
+            }
+
+            if (!actualLegacyCodesByCanonicalCode.TryGetValue(canonicalCode, out var legacyCodes))
+            {
+                legacyCodes = new HashSet<string>(StringComparer.Ordinal);
+                actualLegacyCodesByCanonicalCode[canonicalCode] = legacyCodes;
+            }
+
+            legacyCodes.Add(legacyCode);
+        }
+
+        foreach (var (canonicalCode, expectedLegacyCodes) in ExpectedLegacyCodesByCanonicalCode)
+        {
+            if (!actualLegacyCodesByCanonicalCode.TryGetValue(canonicalCode, out var actualLegacyCodes))
+            {
+                throw new InvalidOperationException($"stp.db legacy code coverage missing canonical item '{canonicalCode}'.");
+            }
+
+            var missingLegacyCodes = expectedLegacyCodes.Where(expected => !actualLegacyCodes.Contains(expected)).ToArray();
+            if (missingLegacyCodes.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    $"stp.db legacy code coverage mismatch for {canonicalCode}. Missing codes: {string.Join(", ", missingLegacyCodes)}. Actual codes: {string.Join(", ", actualLegacyCodes.OrderBy(x => x))}");
             }
         }
     }
