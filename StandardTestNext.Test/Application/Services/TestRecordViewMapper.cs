@@ -68,8 +68,52 @@ public static class TestRecordViewMapper
             LightweightReportFormat = detail.LightweightReport?.Format,
             LightweightReportArtifactFileName = detail.LightweightReport?.ArtifactFileName,
             ItemDetails = detail.ItemDetails,
+            MotorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails),
             ReportSummaries = detail.ReportSummaries
         };
+    }
+
+    private static IReadOnlyList<MotorYMethodDecisionSnapshot> BuildMotorYMethodDecisions(IReadOnlyList<TestRecordItemDetail> itemDetails)
+    {
+        return itemDetails
+            .Where(item => item.BuildProfile is not null && !string.IsNullOrWhiteSpace(item.BuildProfile.CanonicalCode))
+            .Select(item => item.BuildProfile!)
+            .GroupBy(profile => profile.CanonicalCode, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var totalCount = group.Count();
+                var dominant = group
+                    .GroupBy(profile => profile.MethodValue)
+                    .Select(methodGroup => new
+                    {
+                        MethodValue = methodGroup.Key,
+                        Count = methodGroup.Count(),
+                        Profile = methodGroup.First()
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ThenBy(x => x.MethodValue)
+                    .First();
+                var baseline = group.FirstOrDefault(profile => profile.IsBaselineMethod)
+                    ?? dominant.Profile;
+                var baselineCount = group.Count(profile => profile.MethodValue == baseline.MethodValue);
+                var dominantShare = totalCount <= 0
+                    ? 0d
+                    : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+
+                return new MotorYMethodDecisionSnapshot
+                {
+                    CanonicalCode = group.Key,
+                    TotalCount = totalCount,
+                    BaselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(baseline.CanonicalCode, baseline.MethodValue),
+                    BaselineCount = baselineCount,
+                    DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue),
+                    DominantCount = dominant.Count,
+                    ShouldPrioritizeDominantOverBaseline = dominant.MethodValue != baseline.MethodValue,
+                    DominantShare = dominantShare
+                };
+            })
+            .OrderBy(x => x.CanonicalCode, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static string BuildProductDisplayName(string? model, string? code, string productKind)

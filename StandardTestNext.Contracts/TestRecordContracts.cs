@@ -59,6 +59,7 @@ public sealed class TestRecordDetailContract
     public string? LightweightReportFormat { get; init; }
     public string? LightweightReportArtifactFileName { get; init; }
     public IReadOnlyList<TestRecordItemDetailContract> ItemDetails { get; init; } = Array.Empty<TestRecordItemDetailContract>();
+    public IReadOnlyList<MotorYMethodDecisionContract> MotorYMethodDecisions { get; init; } = Array.Empty<MotorYMethodDecisionContract>();
     public IReadOnlyList<TestReportSummaryContract> ReportSummaries { get; init; } = Array.Empty<TestReportSummaryContract>();
 }
 

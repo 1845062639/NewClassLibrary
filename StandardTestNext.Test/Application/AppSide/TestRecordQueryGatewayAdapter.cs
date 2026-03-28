@@ -113,6 +113,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 HasRemark = item.HasRemark,
                 Remark = item.Remark ?? string.Empty
             }).ToArray(),
+            MotorYMethodDecisions = view.MotorYMethodDecisions.Select(MapMotorYMethodDecision).ToArray(),
             ReportSummaries = view.ReportSummaries.Select(summary => new TestReportSummaryContract
             {
                 RecordCode = summary.RecordCode,
@@ -125,5 +126,41 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 IsPrimaryEntry = summary.IsPrimaryEntry
             }).ToArray()
         };
+    }
+
+    private static MotorYMethodDecisionContract MapMotorYMethodDecision(MotorYMethodDecisionSnapshot snapshot)
+    {
+        return new MotorYMethodDecisionContract
+        {
+            CanonicalCode = snapshot.CanonicalCode,
+            TotalCount = snapshot.TotalCount,
+            BaselineProfile = MapBuildProfile(snapshot.BaselineRoute),
+            BaselineCount = snapshot.BaselineCount,
+            DominantProfile = MapBuildProfile(snapshot.DominantRoute),
+            DominantCount = snapshot.DominantCount,
+            ShouldPrioritizeDominantOverBaseline = snapshot.ShouldPrioritizeDominantOverBaseline,
+            DominantShare = snapshot.DominantShare
+        };
+    }
+
+    private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)
+    {
+        return route is null
+            ? null
+            : new MotorYBuildProfileContract
+            {
+                CanonicalCode = route.CanonicalCode,
+                MethodValue = route.MethodValue,
+                MethodKey = route.MethodKey,
+                ProfileKey = route.ProfileKey,
+                VariantKind = route.VariantKind,
+                AlgorithmFamily = route.AlgorithmFamily,
+                LegacyEnumName = route.LegacyEnumName,
+                LegacyFormName = route.LegacyFormName,
+                LegacyAlgorithmEntry = route.LegacyAlgorithmEntry,
+                LegacyMethodName = route.LegacyMethodName,
+                LegacySettingsMethodName = route.LegacySettingsMethodName,
+                IsBaselineMethod = route.IsBaselineMethod
+            };
     }
 }

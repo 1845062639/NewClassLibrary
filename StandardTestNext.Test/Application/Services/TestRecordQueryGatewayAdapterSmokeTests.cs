@@ -14,6 +14,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldPreserveReportSelectionMetadataThroughAppQueryGateway();
         ShouldReturnNullDetailForUnknownRecordCode();
         ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway();
+        ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
     }
 
     private static void ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway()
@@ -325,6 +326,120 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y query smoke test build profile mismatch for '{itemCode}'.");
         }
     }
+
+    private static void ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway()
+    {
+        var baseTime = DateTimeOffset.Parse("2026-03-28T11:00:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-DECISION-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime,
+            Items =
+            {
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.DcResistance, 1, baseTime),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(1)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime.AddMinutes(2)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.NoLoad, 0, baseTime.AddMinutes(3)),
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.LoadA, 4, baseTime.AddMinutes(4))
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y method decision query smoke test returned null detail.");
+        }
+
+        var decisions = detail.MotorYMethodDecisions.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1, 1, 1, false, 1d);
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, true, 0.6667d);
+        AssertMethodDecision(decisions, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, false, 1d);
+    }
+
+    private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
+    {
+        var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue)
+            ?? throw new InvalidOperationException($"Missing Motor_Y route for {canonicalCode}:{methodValue}.");
+
+        return new TestRecordItemAggregate
+        {
+            TestRecordItemId = Guid.NewGuid(),
+            ItemCode = canonicalCode,
+            MethodCode = route.MethodKey,
+            IsValid = true,
+            DataJson = $$"""
+            {
+              "SampleCount": 1,
+              "RecordMode": "key-point",
+              "BuildProfile": {
+                "CanonicalCode": "{{route.CanonicalCode}}",
+                "MethodValue": {{route.MethodValue}},
+                "MethodKey": "{{route.MethodKey}}",
+                "ProfileKey": "{{route.ProfileKey}}",
+                "VariantKind": "{{route.VariantKind}}",
+                "AlgorithmFamily": "{{route.AlgorithmFamily}}",
+                "LegacyEnumName": "{{route.LegacyEnumName}}",
+                "LegacyFormName": "{{route.LegacyFormName}}",
+                "LegacyAlgorithmEntry": "{{route.LegacyAlgorithmEntry}}",
+                "LegacyMethodName": "{{route.LegacyMethodName}}",
+                "LegacySettingsMethodName": "{{route.LegacySettingsMethodName}}",
+                "IsBaselineMethod": {{route.IsBaselineMethod.ToString().ToLowerInvariant()}}
+              },
+              "Samples": [
+                {
+                  "SampleTime": "{{sampleTime:O}}",
+                  "CurrentAverage": 12.3,
+                  "VoltageAverage": 380.0
+                }
+              ]
+            }
+            """
+        };
+    }
+
+    private static void AssertMethodDecision(
+        IReadOnlyDictionary<string, MotorYMethodDecisionContract> decisions,
+        string canonicalCode,
+        int expectedTotalCount,
+        int expectedBaselineMethod,
+        int expectedBaselineCount,
+        int expectedDominantMethod,
+        int expectedDominantCount,
+        bool expectedPrioritize,
+        double expectedDominantShare)
+    {
+        if (!decisions.TryGetValue(canonicalCode, out var decision))
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test missing decision '{canonicalCode}'.");
+        }
+
+        if (decision.TotalCount != expectedTotalCount
+            || decision.BaselineCount != expectedBaselineCount
+            || decision.DominantCount != expectedDominantCount
+            || decision.ShouldPrioritizeDominantOverBaseline != expectedPrioritize
+            || Math.Abs(decision.DominantShare - expectedDominantShare) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test numeric mismatch for '{canonicalCode}'.");
+        }
+
+        if (decision.BaselineProfile is null
+            || decision.BaselineProfile.MethodValue != expectedBaselineMethod
+            || !decision.BaselineProfile.IsBaselineMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test baseline mismatch for '{canonicalCode}'.");
+        }
+
+        if (decision.DominantProfile is null
+            || decision.DominantProfile.MethodValue != expectedDominantMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test dominant mismatch for '{canonicalCode}'.");
+        }
+    }
+
 
     private static TestRecordQueryGatewayAdapter CreateGateway(params TestRecordAggregate[] records)
     {
