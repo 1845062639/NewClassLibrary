@@ -113,6 +113,7 @@
 - 本轮继续把旧 Motor_Y 的“方法号 -> 旧枚举名/旧窗体名”路由信息补齐：`MotorYMethodProfileCatalog` 新增 `LegacyEnumName / LegacyFormName`，并把 `stp.db` 中真实出现的 53/59/47/48/46 等变体方法号映射到 `FrmMotor_Y_*` 与对应旧枚举别名；`StpDbSnapshotQueryService` 已把这些字段挂到 `StpDbTestRecordItemSnapshot`，并由 smoke test 锁定，方便后续直接做 `stp.db Method -> 旧页面/旧算法适配入口 -> next-gen 适配层` 闭环对齐。
 - 本轮又把上述字符串路由再前推一格：新增 `MotorYLegacyAlgorithmRouteResolver`，把 `CanonicalCode + Method` 解析为结构化 `LegacyAlgorithmRoute`（含 MethodKey/ProfileKey/旧枚举名/旧窗体名/旧算法入口/旧配置方法名/基线标记），并在 `StpDbSnapshotQueryService` 快照项上直接暴露 `LegacyAlgorithmRoute`；同时补 smoke test 锁定 route/profile 投影一致性，方便后续 Motor_Y 适配层直接消费，而不是重复拼字符串。
 - 本轮继续把 Motor_Y 的旧方法分支语义再结构化一层：`MotorYMethodProfile` / `LegacyAlgorithmRoute` / `StpDbTestRecordItemSnapshot` 已新增 `VariantKind + AlgorithmFamily`，把 stp.db 里的 baseline / delivery / companion / legacy-alias 等真实变体标签与 DirectCurrentResistance / NoLoad / Thermal / LoadA / LoadB / LockedRotor 算法家族直接沉到 next-gen 查询模型；并补 smoke test 锁定 profile -> route -> snapshot 三层投影一致，便于后续 builder / adapter / 报表直接按真实旧方法分支做适配。
+- 本轮已把这套结构化旧方法语义从 `stp.db` 快照层继续打通到 demo/builder/query 闭环：`MotorYTrialRecordBuilder` 产出的业务试验项经 `BuildProfile` 携带 baseline `MethodKey/ProfileKey/LegacyEnumName/LegacyFormName/LegacyAlgorithmEntry/LegacySettingsMethodName`，`TestRecordQueryGatewayAdapter` 也已把这些字段投影到 App 查询 contract，并由 smoke test 锁定 `builder -> query detail` 一致性，后续 App/报表可直接消费旧算法路由而不必只靠 snapshot 或字符串猜测。
 
 ## 6. 参考范围
 

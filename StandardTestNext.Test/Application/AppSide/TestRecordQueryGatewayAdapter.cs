@@ -91,6 +91,23 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                     HasIncomingPowerMetrics = item.LegacyPayload.HasIncomingPowerMetrics,
                     HasWindingTemperatureMetrics = item.LegacyPayload.HasWindingTemperatureMetrics
                 },
+                BuildProfile = item.BuildProfile is null
+                    ? null
+                    : new MotorYBuildProfileContract
+                    {
+                        CanonicalCode = item.BuildProfile.CanonicalCode,
+                        MethodValue = item.BuildProfile.MethodValue,
+                        MethodKey = item.BuildProfile.MethodKey,
+                        ProfileKey = item.BuildProfile.ProfileKey,
+                        VariantKind = item.BuildProfile.VariantKind,
+                        AlgorithmFamily = item.BuildProfile.AlgorithmFamily,
+                        LegacyEnumName = item.BuildProfile.LegacyEnumName,
+                        LegacyFormName = item.BuildProfile.LegacyFormName,
+                        LegacyAlgorithmEntry = item.BuildProfile.LegacyAlgorithmEntry,
+                        LegacyMethodName = item.BuildProfile.LegacyMethodName,
+                        LegacySettingsMethodName = item.BuildProfile.LegacySettingsMethodName,
+                        IsBaselineMethod = item.BuildProfile.IsBaselineMethod
+                    },
                 AttachmentCount = item.AttachmentCount,
                 IsValid = item.IsValid,
                 HasRemark = item.HasRemark,

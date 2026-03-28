@@ -1,5 +1,21 @@
 namespace StandardTestNext.Contracts;
 
+public sealed class MotorYBuildProfileContract
+{
+    public string CanonicalCode { get; init; } = string.Empty;
+    public int MethodValue { get; init; }
+    public string MethodKey { get; init; } = string.Empty;
+    public string ProfileKey { get; init; } = string.Empty;
+    public string VariantKind { get; init; } = string.Empty;
+    public string AlgorithmFamily { get; init; } = string.Empty;
+    public string LegacyEnumName { get; init; } = string.Empty;
+    public string LegacyFormName { get; init; } = string.Empty;
+    public string LegacyAlgorithmEntry { get; init; } = string.Empty;
+    public string LegacyMethodName { get; init; } = string.Empty;
+    public string LegacySettingsMethodName { get; init; } = string.Empty;
+    public bool IsBaselineMethod { get; init; }
+}
+
 public sealed class TestRecordListItemContract
 {
     public string RecordCode { get; init; } = string.Empty;
@@ -57,6 +73,7 @@ public sealed class TestRecordItemDetailContract
     public int LegacySampleCount { get; init; }
     public bool HasLegacyPayload { get; init; }
     public TestRecordLegacyPayloadContract LegacyPayload { get; init; } = new();
+    public MotorYBuildProfileContract? BuildProfile { get; init; }
     public int AttachmentCount { get; init; }
     public bool IsValid { get; init; }
     public bool HasRemark { get; init; }

@@ -6,6 +6,7 @@ public sealed class TestRecordItemDetail
     public string ItemCode { get; init; } = string.Empty;
     public string DisplayName { get; init; } = string.Empty;
     public string MethodCode { get; init; } = string.Empty;
+    public MotorYTrialItemBuildProfile? BuildProfile { get; init; }
     public bool IsValid { get; init; }
     public string? Remark { get; init; }
     public bool HasRemark { get; init; }

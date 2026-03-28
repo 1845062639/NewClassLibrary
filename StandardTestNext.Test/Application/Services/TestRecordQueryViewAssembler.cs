@@ -93,6 +93,7 @@ public sealed class TestRecordQueryViewAssembler
             ItemCode = item.ItemCode,
             DisplayName = TestRecordItemDescriptorResolver.ResolveDisplayName(item.ItemCode, payload.RecordMode),
             MethodCode = item.MethodCode,
+            BuildProfile = item.BuildProfile,
             IsValid = item.IsValid,
             Remark = item.Remark,
             HasRemark = !string.IsNullOrWhiteSpace(item.Remark),

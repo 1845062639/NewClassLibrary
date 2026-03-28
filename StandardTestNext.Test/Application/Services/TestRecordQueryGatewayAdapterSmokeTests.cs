@@ -307,6 +307,23 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException(
                 $"Motor_Y query smoke test failed for '{itemCode}'. Expected sampleCount={expectedSampleCount}, recordMode={expectedRecordMode}; got sampleCount={item.SampleCount}, recordMode={item.RecordMode}.");
         }
+
+        var expectedProfile = MotorYTrialItemProfileCatalog.GetRequiredBaseline(itemCode);
+        if (item.BuildProfile is null
+            || item.BuildProfile.MethodValue != expectedProfile.MethodValue
+            || !string.Equals(item.BuildProfile.MethodKey, expectedProfile.MethodKey, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.ProfileKey, expectedProfile.ProfileKey, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.VariantKind, expectedProfile.VariantKind, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.AlgorithmFamily, expectedProfile.AlgorithmFamily, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.LegacyEnumName, expectedProfile.LegacyEnumName, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.LegacyFormName, expectedProfile.LegacyFormName, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.LegacyAlgorithmEntry, expectedProfile.LegacyAlgorithmEntry, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.LegacyMethodName, expectedProfile.LegacyMethodName, StringComparison.Ordinal)
+            || !string.Equals(item.BuildProfile.LegacySettingsMethodName, expectedProfile.LegacySettingsMethodName, StringComparison.Ordinal)
+            || !item.BuildProfile.IsBaselineMethod)
+        {
+            throw new InvalidOperationException($"Motor_Y query smoke test build profile mismatch for '{itemCode}'.");
+        }
     }
 
     private static TestRecordQueryGatewayAdapter CreateGateway(params TestRecordAggregate[] records)
