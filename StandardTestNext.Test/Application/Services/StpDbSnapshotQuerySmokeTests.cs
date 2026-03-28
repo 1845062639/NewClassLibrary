@@ -42,6 +42,16 @@ public static class StpDbSnapshotQuerySmokeTests
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated params key fields invalid after normalization.");
             }
 
+            if (string.IsNullOrWhiteSpace(snapshot.ProductType.RatedParams.ConnectionRaw))
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} missing raw connection enum.");
+            }
+
+            if (string.IsNullOrWhiteSpace(snapshot.ProductType.RatedParams.DutyRaw))
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} missing raw duty enum.");
+            }
+
             if (snapshot.Items.Count == 0)
             {
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} missing Motor_Y items.");

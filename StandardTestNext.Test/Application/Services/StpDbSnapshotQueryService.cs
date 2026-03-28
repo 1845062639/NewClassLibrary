@@ -422,6 +422,9 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
                 polePairs = Math.Max(1, pole / 2);
             }
 
+            var rawDuty = ReadStringish(root, "Duty");
+            var rawConnection = ReadStringish(root, "Connection");
+
             return new MotorRatedParamsContract
             {
                 ProductKind = "Motor_Y",
@@ -434,12 +437,14 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
                 RatedFrequency = ReadDouble(root, "RatedFrequency"),
                 Pole = pole,
                 PolePairs = polePairs,
-                Duty = NormalizeDuty(ReadStringish(root, "Duty")),
+                Duty = NormalizeDuty(rawDuty),
+                DutyRaw = rawDuty,
                 InsulationGrade = ReadStringish(root, "InsulationGrade"),
                 PowerFactor = ReadDouble(root, "PowerFactor"),
                 Weight = ReadDouble(root, "Weight"),
                 IngressProtection = ReadStringish(root, "IngressProtection"),
-                Connection = NormalizeConnection(ReadStringish(root, "Connection"))
+                Connection = NormalizeConnection(rawConnection),
+                ConnectionRaw = rawConnection
             };
         }
         catch (JsonException)

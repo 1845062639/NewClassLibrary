@@ -13,9 +13,11 @@ public sealed class MotorRatedParamsContract
     public int Pole { get; set; }
     public int PolePairs { get; set; }
     public string Duty { get; set; } = string.Empty;
+    public string DutyRaw { get; set; } = string.Empty;
     public string InsulationGrade { get; set; } = string.Empty;
     public double PowerFactor { get; set; }
     public double Weight { get; set; }
     public string IngressProtection { get; set; } = string.Empty;
     public string Connection { get; set; } = string.Empty;
+    public string ConnectionRaw { get; set; } = string.Empty;
 }
