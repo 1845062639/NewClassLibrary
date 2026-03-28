@@ -427,6 +427,17 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test formula/rule coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual formulaCovered=[{string.Join(", ", noLoadPlan.CoveredFormulaSignals)}], rulesCovered=[{string.Join(", ", noLoadPlan.CoveredLegacyAlgorithmRules)}]");
         }
 
+        if (noLoadPlan.CoveredRequiredResultFieldCount != 0
+            || noLoadPlan.MissingRequiredResultFieldCount != 7
+            || noLoadPlan.CoveredRequiredResultFields.Count != 0
+            || !noLoadPlan.MissingRequiredResultFields.SequenceEqual(new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" }, StringComparer.Ordinal)
+            || noLoadPlan.RequiredResultFieldCoverageRatio != 0d
+            || noLoadPlan.RequiredResultFieldCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.RequiredResultFieldCoverageSummary, "result required fields covered 0/7 (0pp); missing: I0, ΔI0, P0, Pcu, Pfw, Pfe, CoefficientOfPfe", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test result-field coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. covered=[{string.Join(", ", noLoadPlan.CoveredRequiredResultFields)}], missing=[{string.Join(", ", noLoadPlan.MissingRequiredResultFields)}], summary='{noLoadPlan.RequiredResultFieldCoverageSummary}'");
+        }
+
         if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");

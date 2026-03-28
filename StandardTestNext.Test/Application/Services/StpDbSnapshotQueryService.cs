@@ -499,6 +499,10 @@ ORDER BY COALESCE(Code, ''), Method;";
                     selection.CanonicalCode,
                     dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     sampleRatedParamsContract);
+                var resultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
+                    selection.CanonicalCode,
+                    dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
+                    sampleDataJson);
                 var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
                     dependencyProfile?.FormulaSignals,
                     dependencyProfile?.FormulaSignals,
@@ -548,6 +552,13 @@ ORDER BY COALESCE(Code, ''), Method;";
                     RequiredPayloadFields = requiredPayloadFields,
                     RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
+                    CoveredRequiredResultFieldCount = resultCoverage.CoveredRequiredResultFieldCount,
+                    MissingRequiredResultFieldCount = resultCoverage.MissingRequiredResultFieldCount,
+                    MissingRequiredResultFields = resultCoverage.MissingRequiredResultFields,
+                    CoveredRequiredResultFields = resultCoverage.CoveredRequiredResultFields,
+                    RequiredResultFieldCoverageRatio = resultCoverage.RequiredResultFieldCoverageRatio,
+                    RequiredResultFieldCoveragePercentagePoints = resultCoverage.RequiredResultFieldCoveragePercentagePoints,
+                    RequiredResultFieldCoverageSummary = resultCoverage.RequiredResultFieldCoverageSummary,
                     CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,
                     MissingRequiredPayloadFieldCount = coverage.MissingRequiredPayloadFieldCount,
                     MissingRequiredPayloadFields = coverage.MissingRequiredPayloadFields,

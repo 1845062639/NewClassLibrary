@@ -121,6 +121,13 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || !contract.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
+            || contract.CoveredRequiredResultFieldCount != 0
+            || contract.MissingRequiredResultFieldCount != 7
+            || contract.CoveredRequiredResultFields.Count != 0
+            || !contract.MissingRequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
+            || contract.RequiredResultFieldCoverageRatio != 0d
+            || contract.RequiredResultFieldCoveragePercentagePoints != 0
+            || !string.Equals(contract.RequiredResultFieldCoverageSummary, "result required fields covered 0/7 (0pp); missing: A, B, R, Pcu1, Pcu2, θs, ResultDataList", StringComparison.Ordinal)
             || contract.SamplePayloadAvailable
             || contract.RequiredPayloadFieldCoverageRatio != 0d
             || contract.RequiredPayloadFieldCoveragePercentagePoints != 0
@@ -171,6 +178,13 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
             || !loadBPlan.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
             || !loadBPlan.SamplePayloadAvailable
+            || loadBPlan.CoveredRequiredResultFieldCount != 7
+            || loadBPlan.MissingRequiredResultFieldCount != 0
+            || !loadBPlan.CoveredRequiredResultFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "A", "B", "Pcu1", "Pcu2", "R", "ResultDataList", "θs" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || loadBPlan.MissingRequiredResultFields.Count != 0
+            || Math.Abs(loadBPlan.RequiredResultFieldCoverageRatio - 1d) > 0.0001d
+            || loadBPlan.RequiredResultFieldCoveragePercentagePoints != 100
+            || !string.Equals(loadBPlan.RequiredResultFieldCoverageSummary, "result required fields covered 7/7 (100pp); missing: none", StringComparison.Ordinal)
             || loadBPlan.CoveredRequiredPayloadFields.Count == 0
             || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
             || loadBPlan.RequiredPayloadFieldCoveragePercentagePoints <= 0

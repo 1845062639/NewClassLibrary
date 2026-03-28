@@ -34,6 +34,13 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
+    public int CoveredRequiredResultFieldCount { get; init; }
+    public int MissingRequiredResultFieldCount { get; init; }
+    public IReadOnlyList<string> MissingRequiredResultFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CoveredRequiredResultFields { get; init; } = Array.Empty<string>();
+    public double RequiredResultFieldCoverageRatio { get; init; }
+    public int RequiredResultFieldCoveragePercentagePoints { get; init; }
+    public string RequiredResultFieldCoverageSummary { get; init; } = string.Empty;
     public int CoveredRequiredPayloadFieldCount { get; init; }
     public int MissingRequiredPayloadFieldCount { get; init; }
     public IReadOnlyList<string> MissingRequiredPayloadFields { get; init; } = Array.Empty<string>();
