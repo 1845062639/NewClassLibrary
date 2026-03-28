@@ -4,6 +4,9 @@ internal sealed class MotorYObservedAlgorithmEvidenceSnapshot
 {
     public bool BackedByObservedPayload { get; init; }
     public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public double CoverageRatio { get; init; }
+    public int CoveragePercentagePoints { get; init; }
     public string Summary { get; init; } = string.Empty;
 }
 
@@ -54,12 +57,22 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             .Where(field => observed.Contains(field, StringComparer.Ordinal))
             .OrderBy(field => field, StringComparer.Ordinal)
             .ToArray();
+        var missing = requiredFields
+            .Where(field => !matched.Contains(field, StringComparer.Ordinal))
+            .ToArray();
+        var ratio = requiredFields.Length == 0
+            ? 1d
+            : Math.Round((double)matched.Length / requiredFields.Length, 4, MidpointRounding.AwayFromZero);
+        var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
 
         return new MotorYObservedAlgorithmEvidenceSnapshot
         {
             BackedByObservedPayload = requiredFields.Length == 0 || matched.Length > 0,
             ObservedPayloadFields = matched,
-            Summary = $"{summaryLabel} fields observed {matched.Length}/{requiredFields.Length}; observed: {(matched.Length == 0 ? "none" : string.Join(", ", matched))}"
+            MissingPayloadFields = missing,
+            CoverageRatio = ratio,
+            CoveragePercentagePoints = percentagePoints,
+            Summary = $"{summaryLabel} fields observed {matched.Length}/{requiredFields.Length} ({percentagePoints}pp); missing: {(missing.Length == 0 ? "none" : string.Join(", ", missing))}; observed: {(matched.Length == 0 ? "none" : string.Join(", ", matched))}"
         };
     }
 }
