@@ -52,6 +52,21 @@ public static class StpDbSnapshotQuerySmokeTests
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} missing raw duty enum.");
             }
 
+            if (snapshot.ProductType.RatedParams.RatedPowerRaw <= 0 || snapshot.ProductType.RatedParams.RatedPower <= 0)
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated power raw/normalized invalid.");
+            }
+
+            if (snapshot.ProductType.RatedParams.RatedPowerRaw < snapshot.ProductType.RatedParams.RatedPower)
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated power normalization inverted raw value.");
+            }
+
+            if (snapshot.ProductType.RatedParams.RatedFrequency <= 0)
+            {
+                throw new InvalidOperationException($"stp.db snapshot query smoke test failed: product type {snapshot.ProductType.Code} rated frequency invalid.");
+            }
+
             if (snapshot.Items.Count == 0)
             {
                 throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code} missing Motor_Y items.");

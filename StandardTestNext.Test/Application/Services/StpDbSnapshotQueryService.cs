@@ -430,6 +430,7 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
                 ProductKind = "Motor_Y",
                 Model = productTypeCode,
                 StandardCode = string.Empty,
+                RatedPowerRaw = ReadDouble(root, "RatedPower"),
                 RatedPower = NormalizeRatedPower(ReadDouble(root, "RatedPower")),
                 RatedCurrent = ReadDouble(root, "RatedCurrent"),
                 RatedVoltage = ReadDouble(root, "RatedVoltage"),

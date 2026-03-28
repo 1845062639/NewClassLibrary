@@ -6,6 +6,7 @@ public sealed class MotorRatedParamsContract
     public string Model { get; set; } = string.Empty;
     public string StandardCode { get; set; } = string.Empty;
     public double RatedPower { get; set; }
+    public double RatedPowerRaw { get; set; }
     public double RatedCurrent { get; set; }
     public double RatedVoltage { get; set; }
     public double RatedSpeed { get; set; }
