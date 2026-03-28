@@ -62,6 +62,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             UpstreamDependencySummary = upstream.UpstreamDependencySummary,
             RequiredPayloadFields = requiredPayloadFields,
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
+            RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             CoveredRequiredPayloadFieldCount = coverage.CoveredRequiredPayloadFieldCount,
             MissingRequiredPayloadFieldCount = coverage.MissingRequiredPayloadFieldCount,
             MissingRequiredPayloadFields = coverage.MissingRequiredPayloadFields,

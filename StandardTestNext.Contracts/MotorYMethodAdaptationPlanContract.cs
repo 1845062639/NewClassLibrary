@@ -33,6 +33,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string UpstreamDependencySummary { get; init; } = string.Empty;
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public int CoveredRequiredPayloadFieldCount { get; init; }
     public int MissingRequiredPayloadFieldCount { get; init; }
     public IReadOnlyList<string> MissingRequiredPayloadFields { get; init; } = Array.Empty<string>();

@@ -8,12 +8,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
     {
         var expected = new[]
         {
-            (MotorYTestMethodCodes.DcResistance, false, Array.Empty<string>(), new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" }, Array.Empty<string>()),
-            (MotorYTestMethodCodes.NoLoad, false, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" }, Array.Empty<string>()),
-            (MotorYTestMethodCodes.HeatRun, true, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" }, new[] { "GB" }),
-            (MotorYTestMethodCodes.LoadA, false, new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" }, Array.Empty<string>()),
-            (MotorYTestMethodCodes.LoadB, true, new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" }, new[] { "GB" }),
-            (MotorYTestMethodCodes.LockedRotor, false, new[] { MotorYTestMethodCodes.NoLoad }, new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" }, Array.Empty<string>())
+            (MotorYTestMethodCodes.DcResistance, false, Array.Empty<string>(), new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" }, Array.Empty<string>(), new[] { "R1", "θ1c" }),
+            (MotorYTestMethodCodes.NoLoad, false, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" }, Array.Empty<string>(), new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" }),
+            (MotorYTestMethodCodes.HeatRun, true, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" }, new[] { "GB" }, new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" }),
+            (MotorYTestMethodCodes.LoadA, false, new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" }, Array.Empty<string>(), new[] { "Pcu1", "Pcu2", "ResultDataList", "η" }),
+            (MotorYTestMethodCodes.LoadB, true, new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" }, new[] { "GB" }, new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }),
+            (MotorYTestMethodCodes.LockedRotor, false, new[] { MotorYTestMethodCodes.NoLoad }, new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" }, Array.Empty<string>(), new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" })
         };
 
         foreach (var row in expected)
@@ -39,6 +39,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             if (!profile.RequiredRatedParamFields.SequenceEqual(row.Item5, StringComparer.Ordinal))
             {
                 throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: rated param fields mismatch for {row.Item1}.");
+            }
+
+            if (!profile.RequiredResultFields.SequenceEqual(row.Item6, StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: result fields mismatch for {row.Item1}.");
             }
 
             if (string.IsNullOrWhiteSpace(profile.Notes)
@@ -115,6 +120,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !string.Equals(contract.UpstreamDependencySummary, "upstream dependencies missing 2/2: NoLoad, HeatRun; observed 0/2 required upstream codes", StringComparison.Ordinal)
             || !contract.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !contract.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
+            || !contract.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
             || contract.SamplePayloadAvailable
             || contract.RequiredPayloadFieldCoverageRatio != 0d
             || contract.RequiredPayloadFieldCoveragePercentagePoints != 0
@@ -151,6 +157,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (NoLoad + HeatRun); observed 2/2 required upstream codes", StringComparison.Ordinal)
             || !loadBPlan.RequiredPayloadFields.Contains("θw", StringComparer.Ordinal)
             || !loadBPlan.RequiredRatedParamFields.SequenceEqual(new[] { "GB" }, StringComparer.Ordinal)
+            || !loadBPlan.RequiredResultFields.SequenceEqual(new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" }, StringComparer.Ordinal)
             || !loadBPlan.SamplePayloadAvailable
             || loadBPlan.CoveredRequiredPayloadFields.Count == 0
             || loadBPlan.RequiredPayloadFieldCoverageRatio <= 0d
