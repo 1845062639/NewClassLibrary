@@ -14,6 +14,9 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public bool ShouldUseDominantRoute { get; init; }
     public double DominantShare { get; init; }
     public double DominantOverrideThreshold { get; init; }
+    public int DominantLeadCount { get; init; }
+    public int DominantLeadPercentagePoints { get; init; }
+    public string SelectionReason { get; init; } = string.Empty;
     public string AlgorithmEntry { get; init; } = string.Empty;
     public string SettingsMethodName { get; init; } = string.Empty;
     public string LegacyMethodName { get; init; } = string.Empty;

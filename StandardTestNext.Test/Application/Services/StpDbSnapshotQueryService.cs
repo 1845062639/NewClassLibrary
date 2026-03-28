@@ -469,6 +469,11 @@ ORDER BY COALESCE(Code, ''), Method;";
                 var selectedCount = decision.ShouldPrioritizeDominantOverBaseline
                     ? decision.DominantCount
                     : decision.BaselineCount;
+                var baselineShare = decision.TotalCount <= 0
+                    ? 0d
+                    : Math.Round((double)decision.BaselineCount / decision.TotalCount, 4, MidpointRounding.AwayFromZero);
+                var dominantLeadCount = Math.Max(0, decision.DominantCount - decision.BaselineCount);
+                var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((decision.DominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -484,6 +489,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                     ShouldUseDominantRoute = decision.ShouldPrioritizeDominantOverBaseline,
                     DominantShare = decision.DominantShare,
                     DominantOverrideThreshold = decision.DominantOverrideThreshold,
+                    DominantLeadCount = dominantLeadCount,
+                    DominantLeadPercentagePoints = dominantLeadPercentagePoints,
+                    SelectionReason = BuildMotorYMethodSelectionReason(decision, selectedRoute, dominantLeadCount, dominantLeadPercentagePoints),
                     AlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty,
                     SettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty,
                     LegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty,
@@ -585,6 +593,29 @@ ORDER BY COALESCE(Code, ''), Method;";
         return result
             .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static string BuildMotorYMethodSelectionReason(
+        MotorYMethodDecisionSnapshot decision,
+        MotorYLegacyAlgorithmRoute? selectedRoute,
+        int dominantLeadCount,
+        int dominantLeadPercentagePoints)
+    {
+        var selectedMethod = selectedRoute?.MethodValue;
+        var baselineMethod = decision.BaselineRoute?.MethodValue;
+        var dominantMethod = decision.DominantRoute?.MethodValue;
+
+        if (decision.ShouldPrioritizeDominantOverBaseline)
+        {
+            return $"selected dominant method {dominantMethod} over baseline {baselineMethod} because dominant share {decision.DominantShare:P2} reached threshold {decision.DominantOverrideThreshold:P0} (+{dominantLeadCount} items, +{dominantLeadPercentagePoints}pp)";
+        }
+
+        if (baselineMethod == dominantMethod)
+        {
+            return $"kept baseline method {selectedMethod} because baseline already matches dominant distribution ({decision.DominantShare:P2})";
+        }
+
+        return $"kept baseline method {baselineMethod} because dominant method {dominantMethod} share {decision.DominantShare:P2} did not reach threshold {decision.DominantOverrideThreshold:P0}";
     }
 
     private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadRatedParamsFieldDistribution(

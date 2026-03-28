@@ -83,6 +83,17 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: selected route metadata mismatch for {row.CanonicalCode}.");
             }
 
+            if (snapshot.DominantLeadCount != row.DominantLeadCount
+                || snapshot.DominantLeadPercentagePoints != row.DominantLeadPercentagePoints)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: lead summary mismatch for {row.CanonicalCode}. expectedCount={row.DominantLeadCount}, actualCount={snapshot.DominantLeadCount}, expectedPp={row.DominantLeadPercentagePoints}, actualPp={snapshot.DominantLeadPercentagePoints}");
+            }
+
+            if (!string.Equals(snapshot.SelectionReason, row.SelectionReason, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: selection reason mismatch for {row.CanonicalCode}. expected='{row.SelectionReason}', actual='{snapshot.SelectionReason}'");
+            }
+
             if (snapshot.Distributions.Count != row.Distributions.Count)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: distribution count mismatch for {row.CanonicalCode}.");
@@ -138,7 +149,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         }
     }
 
-    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount, int SelectedMethod, int SelectedCount, string SelectionStrategy, bool ShouldUseDominantRoute, double DominantShare, IReadOnlyList<(int MethodValue, int Count, double Share)> Distributions) BuildExpected(
+    private static (string CanonicalCode, int TotalCount, int BaselineMethod, int BaselineCount, int DominantMethod, int DominantCount, int SelectedMethod, int SelectedCount, string SelectionStrategy, bool ShouldUseDominantRoute, double DominantShare, int DominantLeadCount, int DominantLeadPercentagePoints, string SelectionReason, IReadOnlyList<(int MethodValue, int Count, double Share)> Distributions) BuildExpected(
         SqliteConnection connection,
         string canonicalCode,
         int baselineMethod)
@@ -165,6 +176,16 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         var selectionStrategy = shouldUseDominantRoute
             ? "dominant-threshold-over-baseline"
             : "baseline";
+        var baselineShare = totalCount <= 0
+            ? 0d
+            : Math.Round((double)baselineCount / totalCount, 4, MidpointRounding.AwayFromZero);
+        var dominantLeadCount = Math.Max(0, dominant.Value - baselineCount);
+        var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((dominantShare - baselineShare) * 100d, MidpointRounding.AwayFromZero));
+        var selectionReason = shouldUseDominantRoute
+            ? $"selected dominant method {dominant.Key} over baseline {baselineMethod} because dominant share {dominantShare:P2} reached threshold {DominantOverrideThreshold:P0} (+{dominantLeadCount} items, +{dominantLeadPercentagePoints}pp)"
+            : baselineMethod == dominant.Key
+                ? $"kept baseline method {selectedMethod} because baseline already matches dominant distribution ({dominantShare:P2})"
+                : $"kept baseline method {baselineMethod} because dominant method {dominant.Key} share {dominantShare:P2} did not reach threshold {DominantOverrideThreshold:P0}";
         var distributions = rows
             .OrderByDescending(x => x.Value)
             .ThenBy(x => x.Key)
@@ -176,7 +197,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                     : Math.Round((double)x.Value / totalCount, 4, MidpointRounding.AwayFromZero)))
             .ToArray();
 
-        return (canonicalCode, totalCount, baselineMethod, baselineCount, dominant.Key, dominant.Value, selectedMethod, selectedCount, selectionStrategy, shouldUseDominantRoute, dominantShare, distributions);
+        return (canonicalCode, totalCount, baselineMethod, baselineCount, dominant.Key, dominant.Value, selectedMethod, selectedCount, selectionStrategy, shouldUseDominantRoute, dominantShare, dominantLeadCount, dominantLeadPercentagePoints, selectionReason, distributions);
     }
 
     private static Dictionary<int, int> LoadCounts(SqliteConnection connection, string canonicalCode)
