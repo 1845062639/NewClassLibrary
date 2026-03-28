@@ -15,6 +15,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldReturnNullDetailForUnknownRecordCode();
         ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway();
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
+        ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
     }
 
     private static void ShouldExposeLegacyPayloadSummaryThroughAppQueryGateway()
@@ -477,6 +478,69 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
     }
 
+
+    private static void ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile()
+    {
+        var baseTime = DateTimeOffset.Parse("2026-03-28T12:30:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-ROUTE-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime,
+            Items =
+            {
+                new()
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = "空载试验",
+                    MethodCode = "NoLoad:59",
+                    IsValid = true,
+                    DataJson = $$"""
+                    {
+                      "SampleCount": 2,
+                      "Method": 59,
+                      "RecordMode": "key-point",
+                      "DataList": [
+                        { "SampleTime": "{{baseTime:O}}", "P0": 1.23 },
+                        { "SampleTime": "{{baseTime.AddMinutes(1):O}}", "P0": 1.25 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y legacy route item smoke test returned null detail.");
+        }
+
+        var item = detail.ItemDetails.Single();
+        if (item.BuildProfile is not null)
+        {
+            throw new InvalidOperationException("Motor_Y legacy route item smoke test expected null build profile.");
+        }
+
+        if (item.LegacyAlgorithmRoute is null)
+        {
+            throw new InvalidOperationException("Motor_Y legacy route item smoke test missing legacy algorithm route.");
+        }
+
+        if (!string.Equals(item.ItemCode, "空载试验", StringComparison.Ordinal)
+            || item.SampleCount != 2
+            || !string.Equals(item.LegacyAlgorithmRoute.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
+            || item.LegacyAlgorithmRoute.MethodValue != 59
+            || !string.Equals(item.LegacyAlgorithmRoute.ProfileKey, "NoLoad.Delivery59", StringComparison.Ordinal)
+            || !string.Equals(item.LegacyAlgorithmRoute.LegacyFormName, "FrmMotor_Y_NL", StringComparison.Ordinal)
+            || item.LegacyAlgorithmRoute.IsBaselineMethod)
+        {
+            throw new InvalidOperationException("Motor_Y legacy route item smoke test route projection mismatch.");
+        }
+    }
 
     private static TestRecordQueryGatewayAdapter CreateGateway(params TestRecordAggregate[] records)
     {

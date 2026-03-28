@@ -94,6 +94,7 @@ public sealed class TestRecordQueryViewAssembler
             DisplayName = TestRecordItemDescriptorResolver.ResolveDisplayName(item.ItemCode, payload.RecordMode),
             MethodCode = item.MethodCode,
             BuildProfile = item.BuildProfile,
+            LegacyAlgorithmRoute = ResolveLegacyAlgorithmRoute(item, payload),
             IsValid = item.IsValid,
             Remark = item.Remark,
             HasRemark = !string.IsNullOrWhiteSpace(item.Remark),
@@ -101,9 +102,35 @@ public sealed class TestRecordQueryViewAssembler
             SampleCount = payload.SampleCount,
             LegacySampleCount = payload.LegacySampleCount,
             HasLegacyPayload = payload.HasLegacyPayload,
+            HasBuildProfile = payload.HasBuildProfile,
             LegacyPayload = payload.LegacyPayload,
             RecordMode = payload.RecordMode,
             SortOrder = TestRecordItemDescriptorResolver.ResolveSortOrder(item.ItemCode, payload.RecordMode)
         };
+    }
+
+    private static MotorYLegacyAlgorithmRoute? ResolveLegacyAlgorithmRoute(TestRecordItemAggregate item, TestRecordItemPayloadSnapshot payload)
+    {
+        if (item.BuildProfile is not null && !string.IsNullOrWhiteSpace(item.BuildProfile.CanonicalCode))
+        {
+            return MotorYLegacyAlgorithmRouteResolver.Resolve(item.BuildProfile.CanonicalCode, item.BuildProfile.MethodValue);
+        }
+
+        if (string.IsNullOrWhiteSpace(item.ItemCode))
+        {
+            return null;
+        }
+
+        var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(item.ItemCode);
+        if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.ItemCode)
+            && !MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
+        {
+            return null;
+        }
+
+        var methodValue = TestRecordItemPayloadReader.TryResolveMethodValue(payload, item.MethodCode);
+        return methodValue.HasValue
+            ? MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue.Value)
+            : null;
     }
 }

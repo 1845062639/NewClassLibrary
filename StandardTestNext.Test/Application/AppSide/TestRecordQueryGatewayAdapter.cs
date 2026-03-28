@@ -108,6 +108,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                         LegacySettingsMethodName = item.BuildProfile.LegacySettingsMethodName,
                         IsBaselineMethod = item.BuildProfile.IsBaselineMethod
                     },
+                LegacyAlgorithmRoute = MapBuildProfile(item.LegacyAlgorithmRoute),
                 AttachmentCount = item.AttachmentCount,
                 IsValid = item.IsValid,
                 HasRemark = item.HasRemark,

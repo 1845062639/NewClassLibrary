@@ -75,6 +75,7 @@ public sealed class TestRecordItemDetailContract
     public bool HasLegacyPayload { get; init; }
     public TestRecordLegacyPayloadContract LegacyPayload { get; init; } = new();
     public MotorYBuildProfileContract? BuildProfile { get; init; }
+    public MotorYBuildProfileContract? LegacyAlgorithmRoute { get; init; }
     public int AttachmentCount { get; init; }
     public bool IsValid { get; init; }
     public bool HasRemark { get; init; }

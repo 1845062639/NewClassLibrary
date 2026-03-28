@@ -24,16 +24,28 @@ public static class TestRecordItemPayloadReader
             var recordMode = root.TryGetProperty("RecordMode", out var recordModeElement) && recordModeElement.ValueKind == JsonValueKind.String
                 ? recordModeElement.GetString()
                 : GuessRecordMode(root);
+            int? methodValue = root.TryGetProperty("Method", out var methodElement) && methodElement.ValueKind == JsonValueKind.Number
+                ? methodElement.GetInt32()
+                : root.TryGetProperty("MethodValue", out var methodValueElement) && methodValueElement.ValueKind == JsonValueKind.Number
+                    ? methodValueElement.GetInt32()
+                    : root.TryGetProperty("BuildProfile", out var buildProfileElement) && buildProfileElement.ValueKind == JsonValueKind.Object
+                        && buildProfileElement.TryGetProperty("MethodValue", out var buildProfileMethodValueElement) && buildProfileMethodValueElement.ValueKind == JsonValueKind.Number
+                        ? buildProfileMethodValueElement.GetInt32()
+                        : null;
             var hasLegacyPayload = root.TryGetProperty("LegacySamples", out var legacySamplesElement)
                 ? legacySamplesElement.ValueKind == JsonValueKind.Array && legacySamplesElement.GetArrayLength() > 0
                 : legacySampleCount > 0;
+            var hasBuildProfile = root.TryGetProperty("BuildProfile", out buildProfileElement)
+                && buildProfileElement.ValueKind == JsonValueKind.Object;
 
             return new TestRecordItemPayloadSnapshot
             {
                 SampleCount = sampleCount,
                 LegacySampleCount = legacySampleCount,
                 HasLegacyPayload = hasLegacyPayload,
+                HasBuildProfile = hasBuildProfile,
                 RecordMode = recordMode,
+                MethodValue = methodValue,
                 LegacyPayload = BuildLegacyPayload(root, legacySampleCount, hasLegacyPayload)
             };
         }
@@ -41,6 +53,33 @@ public static class TestRecordItemPayloadReader
         {
             return new TestRecordItemPayloadSnapshot();
         }
+    }
+
+    public static int? TryResolveMethodValue(TestRecordItemPayloadSnapshot payload, string? methodCode)
+    {
+        if (payload.MethodValue.HasValue)
+        {
+            return payload.MethodValue.Value;
+        }
+
+        if (string.IsNullOrWhiteSpace(methodCode))
+        {
+            return null;
+        }
+
+        var separatorIndex = methodCode.LastIndexOf(':');
+        if (separatorIndex >= 0)
+        {
+            var suffix = methodCode[(separatorIndex + 1)..];
+            if (int.TryParse(suffix, out var parsedSuffix))
+            {
+                return parsedSuffix;
+            }
+        }
+
+        return int.TryParse(methodCode, out var parsed)
+            ? parsed
+            : null;
     }
 
     private static TestRecordLegacyPayloadSummary BuildLegacyPayload(JsonElement root, int legacySampleCount, bool hasLegacyPayload)
@@ -201,6 +240,8 @@ public sealed class TestRecordItemPayloadSnapshot
     public int SampleCount { get; init; }
     public int LegacySampleCount { get; init; }
     public bool HasLegacyPayload { get; init; }
+    public bool HasBuildProfile { get; init; }
     public TestRecordLegacyPayloadSummary LegacyPayload { get; init; } = new();
     public string? RecordMode { get; init; }
+    public int? MethodValue { get; init; }
 }
