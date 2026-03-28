@@ -108,6 +108,7 @@
 - 本轮已把 Motor_Y 业务项闭环验证再向前推进一格：新增 smoke tests，直接用 `MotorYTrialRecordBuilder` 生成 6 个核心试验项，再校验 `TestRecordItemPayloadReader` 与 `TestRecordQueryGatewayAdapter` 对 `DataList / RawDataList / Data1List / Data2List` 推断出的 `SampleCount / RecordMode` 是否稳定，确保“builder -> payload reader -> app query”链路对 Motor_Y 业务 payload 可验证。
 - 已继续把 `stp.db` 真实结构驱动往前推进：`StpDbSnapshotQueryService` 现在除返回 `ProductTypes.RatedParams` 原始 JSON 外，也会直接归一化解析为 next-gen `MotorRatedParamsContract`（含功率单位、接法枚举、极对数补全等），并通过 smoke test 强约束最近 Motor_Y 记录的额定参数必须可被 next-gen 查询层直接消费，为后续 `stp.db -> next-gen 实体/查询模型 -> builder/算法适配` 打基础。
 - 本轮进一步把旧库额定参数“归一化口径 + 原始枚举口径”同时保留下来：`MotorRatedParamsContract` 新增 `DutyRaw / ConnectionRaw`，`StpDbSnapshotQueryService` 会把 `RatedParams` 里的旧枚举值原样暴露，同时保留 next-gen 友好的 `Duty / Connection` 归一化字段，并由 smoke test 锁定，方便后续 Motor_Y 算法适配层直接按旧库枚举做映射校验。
+- 本轮继续把 `stp.db` 的真实方法枚举口径纳入 next-gen 查询模型：`StpDbTestRecordItemSnapshot` 新增 `CanonicalCode / MethodKey`，显式保留 `TestRecordItems.Method` 与归一化业务项编码的组合（如 `NoLoad:0`、`LoadA:60`、`LockedRotor:47`），并新增 `StpDbMotorYMethodMappingSmokeTests` + snapshot smoke 断言，锁定当前旧库中 Motor_Y 核心试验项的真实 Method 值域，为后续对齐旧 `Algorithm_Motor_Y.cs` 的方法分支映射做准备。
 
 ## 6. 参考范围
 

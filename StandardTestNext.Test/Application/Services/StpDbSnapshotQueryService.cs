@@ -309,6 +309,8 @@ WHERE TestRecordId IN ({string.Join(", ", parameterNames)})
                 Id = id,
                 Code = reader.GetString(1),
                 Method = reader.IsDBNull(2) ? null : reader.GetInt32(2),
+                CanonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(reader.GetString(1)),
+                MethodKey = BuildMotorYMethodKey(reader.GetString(1), reader.IsDBNull(2) ? null : reader.GetInt32(2)),
                 DataJson = reader.GetString(3),
                 Remark = reader.IsDBNull(4) ? null : reader.GetString(4),
                 TestRecordId = reader.IsDBNull(5) ? null : reader.GetString(5),
@@ -538,6 +540,14 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
             "1" => "Δ",
             _ => rawConnection
         };
+    }
+
+    private static string BuildMotorYMethodKey(string legacyCode, int? method)
+    {
+        var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
+        return string.IsNullOrWhiteSpace(canonicalCode)
+            ? (method.HasValue ? $"Unknown:{method.Value}" : "Unknown")
+            : method.HasValue ? $"{canonicalCode}:{method.Value}" : $"{canonicalCode}:<null>";
     }
 
     private static string BuildInlineQuotedList(IEnumerable<string> values)

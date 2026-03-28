@@ -98,6 +98,20 @@ public static class StpDbSnapshotQuerySmokeTests
                     throw new InvalidOperationException($"stp.db snapshot query smoke test failed: record {snapshot.Record.Code ?? snapshot.Record.Id} has item with missing id/recordId.");
                 }
 
+                var expectedCanonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(item.Code);
+                if (!string.Equals(item.CanonicalCode, expectedCanonicalCode, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: item {item.Id} canonical code mismatch. expected={expectedCanonicalCode}, actual={item.CanonicalCode}");
+                }
+
+                var expectedMethodKey = item.Method.HasValue
+                    ? $"{expectedCanonicalCode}:{item.Method.Value}"
+                    : $"{expectedCanonicalCode}:<null>";
+                if (!string.Equals(item.MethodKey, expectedMethodKey, StringComparison.Ordinal))
+                {
+                    throw new InvalidOperationException($"stp.db snapshot query smoke test failed: item {item.Id} method key mismatch. expected={expectedMethodKey}, actual={item.MethodKey}");
+                }
+
                 var payload = TestRecordItemPayloadReader.TryParse(item.DataJson);
                 if (MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.Code) && payload.SampleCount > 0)
                 {

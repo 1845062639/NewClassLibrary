@@ -44,6 +44,8 @@ public sealed class StpDbTestRecordItemSnapshot
     public string Id { get; init; } = string.Empty;
     public string Code { get; init; } = string.Empty;
     public int? Method { get; init; }
+    public string? CanonicalCode { get; init; }
+    public string MethodKey { get; init; } = string.Empty;
     public string DataJson { get; init; } = "{}";
     public string? Remark { get; init; }
     public string? TestRecordId { get; init; }
