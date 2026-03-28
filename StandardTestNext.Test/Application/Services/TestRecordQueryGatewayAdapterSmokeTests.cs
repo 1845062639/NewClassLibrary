@@ -358,6 +358,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         AssertMethodDecision(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1, 1, 1, false, 1d);
         AssertMethodDecision(decisions, MotorYTestMethodCodes.NoLoad, 3, 0, 1, 59, 2, true, 0.6667d);
         AssertMethodDecision(decisions, MotorYTestMethodCodes.LoadA, 1, 4, 1, 4, 1, false, 1d);
+
+        AssertDistribution(decisions, MotorYTestMethodCodes.DcResistance, 1, 1, 1d, true);
+        AssertDistribution(decisions, MotorYTestMethodCodes.NoLoad, 59, 2, 0.6667d, false);
+        AssertDistribution(decisions, MotorYTestMethodCodes.NoLoad, 0, 1, 0.3333d, true);
+        AssertDistribution(decisions, MotorYTestMethodCodes.LoadA, 4, 1, 1d, true);
     }
 
     private static TestRecordItemAggregate CreateMotorYDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
@@ -437,6 +442,38 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || decision.DominantProfile.MethodValue != expectedDominantMethod)
         {
             throw new InvalidOperationException($"Motor_Y method decision query smoke test dominant mismatch for '{canonicalCode}'.");
+        }
+    }
+    private static void AssertDistribution(
+        IReadOnlyDictionary<string, MotorYMethodDecisionContract> decisions,
+        string canonicalCode,
+        int expectedMethod,
+        int expectedCount,
+        double expectedShare,
+        bool expectedBaseline)
+    {
+        if (!decisions.TryGetValue(canonicalCode, out var decision))
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test missing decision '{canonicalCode}' for distribution assertion.");
+        }
+
+        var distribution = decision.Distributions.FirstOrDefault(x => x.MethodValue == expectedMethod);
+        if (distribution is null)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test missing distribution '{canonicalCode}:{expectedMethod}'.");
+        }
+
+        if (distribution.Count != expectedCount
+            || Math.Abs(distribution.Share - expectedShare) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test distribution numeric mismatch for '{canonicalCode}:{expectedMethod}'.");
+        }
+
+        if (distribution.Profile is null
+            || distribution.Profile.MethodValue != expectedMethod
+            || distribution.Profile.IsBaselineMethod != expectedBaseline)
+        {
+            throw new InvalidOperationException($"Motor_Y method decision query smoke test distribution profile mismatch for '{canonicalCode}:{expectedMethod}'.");
         }
     }
 

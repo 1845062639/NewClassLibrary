@@ -1,5 +1,13 @@
 namespace StandardTestNext.Contracts;
 
+public sealed class MotorYMethodDistributionContract
+{
+    public int MethodValue { get; init; }
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public MotorYBuildProfileContract? Profile { get; init; }
+}
+
 public sealed class MotorYMethodDecisionContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -10,4 +18,5 @@ public sealed class MotorYMethodDecisionContract
     public int DominantCount { get; init; }
     public bool ShouldPrioritizeDominantOverBaseline { get; init; }
     public double DominantShare { get; init; }
+    public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
 }

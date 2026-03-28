@@ -139,7 +139,19 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             DominantProfile = MapBuildProfile(snapshot.DominantRoute),
             DominantCount = snapshot.DominantCount,
             ShouldPrioritizeDominantOverBaseline = snapshot.ShouldPrioritizeDominantOverBaseline,
-            DominantShare = snapshot.DominantShare
+            DominantShare = snapshot.DominantShare,
+            Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
+        };
+    }
+
+    private static MotorYMethodDistributionContract MapMotorYMethodDistribution(MotorYMethodDistributionSnapshot snapshot)
+    {
+        return new MotorYMethodDistributionContract
+        {
+            MethodValue = snapshot.MethodValue,
+            Count = snapshot.Count,
+            Share = snapshot.Share,
+            Profile = MapBuildProfile(snapshot.Route)
         };
     }
 

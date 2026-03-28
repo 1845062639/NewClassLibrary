@@ -82,7 +82,7 @@ public static class TestRecordViewMapper
             .Select(group =>
             {
                 var totalCount = group.Count();
-                var dominant = group
+                var methodGroups = group
                     .GroupBy(profile => profile.MethodValue)
                     .Select(methodGroup => new
                     {
@@ -92,13 +92,25 @@ public static class TestRecordViewMapper
                     })
                     .OrderByDescending(x => x.Count)
                     .ThenBy(x => x.MethodValue)
-                    .First();
+                    .ToArray();
+                var dominant = methodGroups[0];
                 var baseline = group.FirstOrDefault(profile => profile.IsBaselineMethod)
                     ?? dominant.Profile;
                 var baselineCount = group.Count(profile => profile.MethodValue == baseline.MethodValue);
                 var dominantShare = totalCount <= 0
                     ? 0d
                     : Math.Round((double)dominant.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+                var distributions = methodGroups
+                    .Select(row => new MotorYMethodDistributionSnapshot
+                    {
+                        MethodValue = row.MethodValue,
+                        Count = row.Count,
+                        Share = totalCount <= 0
+                            ? 0d
+                            : Math.Round((double)row.Count / totalCount, 4, MidpointRounding.AwayFromZero),
+                        Route = MotorYLegacyAlgorithmRouteResolver.Resolve(row.Profile.CanonicalCode, row.MethodValue)
+                    })
+                    .ToArray();
 
                 return new MotorYMethodDecisionSnapshot
                 {
@@ -109,7 +121,8 @@ public static class TestRecordViewMapper
                     DominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(dominant.Profile.CanonicalCode, dominant.MethodValue),
                     DominantCount = dominant.Count,
                     ShouldPrioritizeDominantOverBaseline = dominant.MethodValue != baseline.MethodValue,
-                    DominantShare = dominantShare
+                    DominantShare = dominantShare,
+                    Distributions = distributions
                 };
             })
             .OrderBy(x => x.CanonicalCode, StringComparer.Ordinal)
