@@ -46,6 +46,7 @@ public sealed class MotorYTrialRecordBuilder
                 Rvw = rvw,
                 Rwu = rwu,
                 R1 = r1,
+                R1c = r1,
                 θ1c = 26.5,
                 ΔR = deltaR,
                 R = convertedR,
