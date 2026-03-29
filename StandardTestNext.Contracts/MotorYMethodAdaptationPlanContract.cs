@@ -79,6 +79,16 @@ public sealed class MotorYDecisionAnchorPrimaryFieldDistributionContract
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYRequiredResultPrimaryFieldDistributionContract
+{
+    public string PrimaryField { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public IReadOnlyList<string> BucketKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> DisplayNames { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYMethodAdaptationPlanContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -277,6 +287,8 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string LegacyDecisionAnchorGapPreviewSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYDecisionAnchorPriorityDistributionContract> DecisionAnchorPriorityDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPriorityDistributionContract>();
     public IReadOnlyList<MotorYDecisionAnchorPrimaryFieldDistributionContract> DecisionAnchorPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPrimaryFieldDistributionContract>();
+    public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionContract> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionContract>();
+    public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;

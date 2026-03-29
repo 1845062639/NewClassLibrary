@@ -19,6 +19,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
+        ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1326,6 +1327,72 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actualTop={loadBPlan.DecisionAnchorTopPriority}/{loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey}/{loadBPlan.DecisionAnchorTopPriorityPrimaryField}/'{loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary}'; actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
+        }
+    }
+
+    private static void ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:20:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-RESULT-FIELD-DIST-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 190, "I": 6.3, "P": 520, "Cos": 0.81 }
+                      ],
+                      "Un": 380,
+                      "K1": 1,
+                      "R1c": 1.25,
+                      "θ1c": 25
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y required-result primary-field distribution smoke test returned null detail.");
+
+        var noLoadPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var distributions = noLoadPlan.RequiredResultPrimaryFieldDistributions;
+        var coefficient = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var pfw = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var r0 = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "R0", StringComparison.Ordinal));
+
+        if (distributions.Count != 11
+            || coefficient is null
+            || coefficient.Count != 1
+            || coefficient.BucketKeys.Count != 1
+            || !string.Equals(coefficient.BucketKeys[0], "result-fields", StringComparison.Ordinal)
+            || coefficient.DisplayNames.Count != 1
+            || !string.Equals(coefficient.DisplayNames[0], "结果字段", StringComparison.Ordinal)
+            || !string.Equals(coefficient.Summary, "required-result primary field CoefficientOfPfe missing in 11/11 result buckets (9pp); buckets=result-fields; displays=结果字段", StringComparison.Ordinal)
+            || pfw is null
+            || pfw.Count != 2
+            || !pfw.BucketKeys.SequenceEqual(new[] { "intermediate-result-fields", "result-fields" }, StringComparer.Ordinal)
+            || !pfw.DisplayNames.SequenceEqual(new[] { "中间结果锚点", "结果字段" }, StringComparer.Ordinal)
+            || !string.Equals(pfw.Summary, "required-result primary field Pfw missing in 2/11 result buckets (18pp); buckets=intermediate-result-fields, result-fields; displays=中间结果锚点, 结果字段", StringComparison.Ordinal)
+            || r0 is null
+            || r0.Count != 1
+            || !r0.BucketKeys.SequenceEqual(new[] { "intermediate-result-fields" }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.RequiredResultPrimaryFieldSummary, "required-result primary fields: Pfw:2:intermediate-result-fields/result-fields, CoefficientOfPfe:1:result-fields, I0:1:result-fields", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y required-result primary-field distribution query smoke test mismatch. summary='{noLoadPlan.RequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", distributions.Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}"))}]");
         }
     }
 

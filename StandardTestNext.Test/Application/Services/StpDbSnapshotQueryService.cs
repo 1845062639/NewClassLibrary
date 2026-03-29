@@ -862,6 +862,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     .OrderByDescending(x => x.Count)
                     .ThenBy(x => x.PrimaryField, StringComparer.Ordinal)
                     .ToArray();
+                var requiredResultPrimaryFieldDistributions = BuildRequiredResultPrimaryFieldDistributions(resultCoverage, intermediateResultCoverage);
+                var requiredResultPrimaryFieldSummary = BuildRequiredResultPrimaryFieldSummary(requiredResultPrimaryFieldDistributions);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -1144,6 +1146,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                         })
                         .ToArray(),
                     DecisionAnchorPrimaryFieldDistributions = decisionAnchorPrimaryFieldDistributions,
+                    RequiredResultPrimaryFieldDistributions = requiredResultPrimaryFieldDistributions,
+                    RequiredResultPrimaryFieldSummary = requiredResultPrimaryFieldSummary,
                     DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,
                     SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
                     SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
@@ -1158,6 +1162,78 @@ WHERE COALESCE(curr.Code, '') <> ''
                 };
             })
             .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> BuildRequiredResultPrimaryFieldDistributions(
+        MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot intermediateResultCoverage)
+    {
+        var candidates = new[]
+        {
+            (BucketKey: "result-fields", DisplayName: "结果字段", MissingFields: resultCoverage.MissingRequiredResultFields),
+            (BucketKey: "intermediate-result-fields", DisplayName: "中间结果锚点", MissingFields: intermediateResultCoverage.MissingRequiredResultFields)
+        };
+
+        var groups = candidates
+            .SelectMany(bucket => bucket.MissingFields.Select(field => new { bucket.BucketKey, bucket.DisplayName, PrimaryField = field }))
+            .GroupBy(x => x.PrimaryField, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var items = group.ToArray();
+                var bucketKeys = items.Select(x => x.BucketKey).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var displayNames = items.Select(x => x.DisplayName).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                return new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+                {
+                    PrimaryField = group.Key,
+                    Count = items.Length,
+                    Share = 0d,
+                    BucketKeys = bucketKeys,
+                    DisplayNames = displayNames,
+                    Summary = string.Empty
+                };
+            })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.PrimaryField, StringComparer.Ordinal)
+            .ToArray();
+
+        if (groups.Length == 0)
+        {
+            return groups;
+        }
+
+        var totalCount = groups.Sum(x => x.Count);
+        return groups
+            .Select(x =>
+            {
+                var share = totalCount == 0
+                    ? 0d
+                    : Math.Round((double)x.Count / totalCount, 4, MidpointRounding.AwayFromZero);
+                return new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+                {
+                    PrimaryField = x.PrimaryField,
+                    Count = x.Count,
+                    Share = share,
+                    BucketKeys = x.BucketKeys,
+                    DisplayNames = x.DisplayNames,
+                    Summary = $"required-result primary field {x.PrimaryField} missing in {x.Count}/{totalCount} result buckets ({(int)Math.Round(share * 100d, MidpointRounding.AwayFromZero)}pp); buckets={(x.BucketKeys.Count == 0 ? "none" : string.Join(", ", x.BucketKeys))}; displays={(x.DisplayNames.Count == 0 ? "none" : string.Join(", ", x.DisplayNames))}"
+                };
+            })
+            .ToArray();
+    }
+
+    private static string BuildRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> distributions)
+    {
+        if (distributions.Count == 0)
+        {
+            return "required-result primary fields: none";
+        }
+
+        var preview = distributions
+            .Take(3)
+            .Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}")
+            .ToArray();
+
+        return $"required-result primary fields: {string.Join(", ", preview)}";
     }
 
     private static IReadOnlyList<string> BuildSuggestedNextSteps(
