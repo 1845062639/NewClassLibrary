@@ -152,7 +152,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
                 RequiredIntermediateResultFields = new[] { "firstSecondsInterval", "Rw", "Rn", "Rws", "θw", "θs", "θb" },
-                RequiredStructuredPayloadSignals = new[] { "Data1List.Time", "Data1List.P1", "Data1List.θ1", "Data1List.AmbientTemperature", "Data2List.Time", "Data2List.R" },
+                RequiredStructuredPayloadSignals = new[] { "Data1List.Time", "Data1List.P1", "Data1List.θ1", "Data1List.θb", "Data2List.Time", "Data2List.R" },
                 RequiredStructuredResultSignals = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
                 MinimumRawSampleCount = 0,
                 MinimumStructuredPayloadSampleCount = 2,
@@ -258,7 +258,8 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
                     ("gb-ratios-branch", new[] { "GB", "θs", "ratios" }),
                     ("correlation-refit", new[] { "A", "B", "R", "bad-point-refit" }),
-                    ("ps-iteration", new[] { "ResultDataList", "Ps", "cuC" })),
+                    ("ps-iteration", new[] { "ResultDataList", "Ps", "cuC" }),
+                    ("thermal-carryover", new[] { "θw", "θb" })),
                 Notes = "旧 FrmMotor_Y_Load_B 同时依赖空载试验的 Pfe/Pfw/R1c/θ1c 与热试验的 θw/θb；算法还按 GB 版本切换 ratios/θs 口径。"
             },
             [MotorYTestMethodCodes.LockedRotor] = new()

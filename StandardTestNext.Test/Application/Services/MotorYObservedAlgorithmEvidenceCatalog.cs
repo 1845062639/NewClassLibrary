@@ -60,7 +60,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         {
             [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "θ1c" },
             [MotorYTestMethodCodes.NoLoad] = new[] { "RConverseType", "Pfw", "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" },
-            [MotorYTestMethodCodes.HeatRun] = new[] { "Pn", "HotStateType", "GB", "Rn", "θw", "θs", "θb" },
+            [MotorYTestMethodCodes.HeatRun] = new[] { "Pn", "HotStateType", "GB", "Rn", "θw", "θs", "θb", "firstSecondsInterval" },
             [MotorYTestMethodCodes.LoadA] = new[] { "CoefficientOfPfe", "Pfw", "θa", "Pcu1", "Pcu2", "η", "ResultDataList" },
             [MotorYTestMethodCodes.LoadB] = new[] { "GB", "θw", "θb", "θs", "A", "B", "R", "Ps", "ResultDataList" },
             [MotorYTestMethodCodes.LockedRotor] = new[] { "TorqueCalType", "RCalType", "R1s", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "Un" }
