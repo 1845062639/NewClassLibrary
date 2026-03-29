@@ -118,7 +118,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
         var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
         var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
-        var suggestedDecisionAnchorNextSteps = BuildSuggestedDecisionAnchorNextSteps(decisionAnchorResolutions);
+        var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
         var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
             ? "no decision-anchor next-step recommendation"
             : string.Join("; ", suggestedDecisionAnchorNextSteps);
@@ -604,15 +604,6 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             Distributions = distributions,
             Summary = $"recommended legacy code '{recommended.LegacyCode}' for {canonicalCode} ({recommended.Count}/{distributions.Sum(x => x.Count)}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp)"
         };
-    }
-
-    private static IReadOnlyList<string> BuildSuggestedDecisionAnchorNextSteps(IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
-    {
-        return decisionAnchorResolutions
-            .Where(x => !x.ResolvedByObservedPayload)
-            .Select(x => $"先补决策锚点 {x.AnchorKey}: {FormatPreview(x.MissingPayloadFields, 4)}")
-            .Take(3)
-            .ToArray();
     }
 
     private static IReadOnlyList<string> BuildSuggestedNextSteps(

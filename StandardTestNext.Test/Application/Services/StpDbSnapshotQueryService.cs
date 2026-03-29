@@ -691,7 +691,11 @@ WHERE COALESCE(curr.Code, '') <> ''
                     ? 100
                     : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
                 var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
-        var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
+                var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
+                var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
+                var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
+                    ? "no decision-anchor next-step recommendation"
+                    : string.Join("; ", suggestedDecisionAnchorNextSteps);
                 var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
                 var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
                 var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
@@ -1035,6 +1039,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? 100
                         : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
                     LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
+                    LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
+                    LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
+                    SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
+                    SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
                     LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
                     FormulaSignalSummary = formulaCoverage.Summary,
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,

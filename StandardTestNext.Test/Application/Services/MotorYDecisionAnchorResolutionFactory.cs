@@ -63,6 +63,29 @@ internal static class MotorYDecisionAnchorResolutionFactory
             .ToArray();
     }
 
+    public static IReadOnlyList<string> BuildSuggestedNextSteps(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        if (resolutions.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        return resolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => new
+            {
+                x.AnchorKey,
+                MissingFields = x.MissingPayloadFields
+                    .Where(field => !string.IsNullOrWhiteSpace(field))
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(field => field, StringComparer.Ordinal)
+                    .ToArray()
+            })
+            .Where(x => x.MissingFields.Length > 0)
+            .Select(x => $"补齐决策锚点 {x.AnchorKey} 所需字段：{string.Join(" / ", x.MissingFields)}")
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
 
     public static string BuildNextActionSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
@@ -71,19 +94,15 @@ internal static class MotorYDecisionAnchorResolutionFactory
             return "decision anchor next actions unavailable";
         }
 
-        var unresolved = resolutions
-            .Where(x => !x.ResolvedByObservedPayload)
-            .ToArray();
-        if (unresolved.Length == 0)
+        var suggestedSteps = BuildSuggestedNextSteps(resolutions);
+        if (suggestedSteps.Count == 0)
         {
             return "decision anchors ready; no additional branch evidence required";
         }
 
-        var parts = unresolved
-            .Select(x => $"{x.AnchorKey} -> need {string.Join(", ", x.MissingPayloadFields)}")
-            .ToArray();
-        return $"decision anchor next actions: {string.Join("; ", parts)}";
+        return $"decision anchor next actions: {string.Join("; ", suggestedSteps)}";
     }
+
     public static string BuildSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
         if (resolutions.Count == 0)
