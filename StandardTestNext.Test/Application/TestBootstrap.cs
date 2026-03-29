@@ -280,7 +280,7 @@ public sealed class TestBootstrap
             : "anchor-priority=" + string.Join("|", plan.DecisionAnchorPriorityDistributions.Select(distribution => $"{distribution.Priority}:{distribution.Count}:{distribution.Share:P1}:{FormatPreview(distribution.AnchorKeys, 2)}:{FormatPreview(distribution.SuggestedNextStepFocuses, 2)}:fields={FormatPreview(distribution.SuggestedNextStepFields, 3)}:top={distribution.DominantAnchorKey}:{distribution.DominantSuggestedNextStepFocus}:top-fields={FormatPreview(distribution.DominantSuggestedNextStepFields, 3)}:next={distribution.SuggestedNextStepSummary}"));
         var topAnchorPriority = string.IsNullOrWhiteSpace(plan.DecisionAnchorTopPriority)
             ? "anchor-top-priority=<none>"
-            : $"anchor-top-priority={plan.DecisionAnchorTopPriority}:{plan.DecisionAnchorTopPriorityDominantAnchorKey}:{plan.DecisionAnchorTopPriorityFocus}:fields={FormatPreview(plan.DecisionAnchorTopPriorityFields, 3)}:next={plan.DecisionAnchorTopPriorityNextStepSummary}:summary={plan.DecisionAnchorTopPrioritySummary}";
+            : $"anchor-top-priority={plan.DecisionAnchorTopPriority}:{plan.DecisionAnchorTopPriorityDominantAnchorKey}:{plan.DecisionAnchorTopPriorityFocus}:fields={FormatPreview(plan.DecisionAnchorTopPriorityFields, 3)}:primary={plan.DecisionAnchorTopPriorityPrimaryField}:primary-summary={plan.DecisionAnchorTopPriorityPrimaryFieldSummary}:next={plan.DecisionAnchorTopPriorityNextStepSummary}:summary={plan.DecisionAnchorTopPrioritySummary}";
         var anchorGapPreview = $"anchor-gap={plan.LegacyDecisionAnchorGapPreviewSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"

@@ -83,6 +83,8 @@ public static class TestBootstrapFormattingSmokeTests
             DecisionAnchorTopPriorityFocus = "B法 Ps 非负迭代收敛字段",
             DecisionAnchorTopPriorityFields = new[] { "Ps", "cuC" },
             DecisionAnchorTopPriorityNextStepSummary = "继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC",
+            DecisionAnchorTopPriorityPrimaryField = "Ps",
+            DecisionAnchorTopPriorityPrimaryFieldSummary = "优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）",
             DecisionAnchorPrioritySummary = "decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段",
             DecisionAnchorPriorityDistributions = new[]
             {
@@ -134,7 +136,7 @@ public static class TestBootstrapFormattingSmokeTests
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
         if (!formatted.Contains("anchor-priority=blocking:1:100.0 %:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:top=ps-iteration:B法 Ps 非负迭代收敛字段:top-fields=Ps|cuC:next=priority blocking next steps: 继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
-            || !formatted.Contains("anchor-top-priority=blocking:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC:summary=top decision anchor priority=blocking; focus=B法 Ps 非负迭代收敛字段; anchor=ps-iteration; fields=Ps, cuC", StringComparison.Ordinal)
+            || !formatted.Contains("anchor-top-priority=blocking:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:primary=Ps:primary-summary=优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC:summary=top decision anchor priority=blocking; focus=B法 Ps 非负迭代收敛字段; anchor=ps-iteration; fields=Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("anchor-resolutions=ps-iteration:missing:33pp:obs=ResultDataList:miss=Ps+cuC:priority=blocking:coverage=decision anchor coverage 1/3 (33pp); missing: Ps, cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("priority-summary=decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal))
         {
