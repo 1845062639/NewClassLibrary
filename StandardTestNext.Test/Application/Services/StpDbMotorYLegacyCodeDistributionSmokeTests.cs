@@ -61,6 +61,7 @@ public static class StpDbMotorYLegacyCodeDistributionSmokeTests
 
         AssertAlias(actual, MotorYTestMethodCodes.NoLoad, "空载特性试验", 0, 351);
         AssertAlias(actual, MotorYTestMethodCodes.NoLoad, "空载试验", 59, 13);
+        AssertAlias(actual, MotorYTestMethodCodes.NoLoad, "陪试空载特性试验", 92, 8);
         AssertAlias(actual, MotorYTestMethodCodes.LockedRotor, "堵转特性试验", 11, 5);
         AssertAlias(actual, MotorYTestMethodCodes.LockedRotor, "堵转试验", 46, 1);
     }

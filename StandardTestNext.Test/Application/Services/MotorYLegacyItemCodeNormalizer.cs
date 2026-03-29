@@ -8,6 +8,7 @@ public static class MotorYLegacyItemCodeNormalizer
         ["陪试直流电阻测定"] = MotorYTestMethodCodes.DcResistance,
 
         ["空载特性试验"] = MotorYTestMethodCodes.NoLoad,
+        ["陪试空载特性试验"] = MotorYTestMethodCodes.NoLoad,
         ["空载试验"] = MotorYTestMethodCodes.NoLoad,
         ["空载试验（出厂）"] = MotorYTestMethodCodes.NoLoad,
         ["空载特性测量"] = MotorYTestMethodCodes.NoLoad,
