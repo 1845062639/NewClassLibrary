@@ -154,6 +154,25 @@ public static class StpDbMotorYMethodDecisionSmokeTests
                 || !string.Equals(plan.SuggestedDecisionAnchorNextStepSummary, "继续补齐热试验 firstSecondsInterval 判定依据：firstSecondsInterval; 继续补齐热试验 HotStateType 分支字段：HotStateType; 先补热试验 GB 温升分支关键字段：Rn", StringComparison.Ordinal)
                 || !string.Equals(plan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: gb-temperature-branch[partial]:Rn; first-seconds-interval[partial]:firstSecondsInterval; hot-state-branch[partial]:HotStateType", StringComparison.Ordinal)
                 || !string.Equals(plan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: continue filling HeatRun firstSecondsInterval fields firstSecondsInterval; continue filling HeatRun HotStateType fields HotStateType; need HeatRun GB temperature branch fields Rn", StringComparison.Ordinal)
+                || plan.LegacyDecisionAnchorObservationRules.Count != 3
+                || !plan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "first-seconds-interval", StringComparison.Ordinal)
+                    && !rule.CoveredByObservedPayload
+                    && rule.RequiredPayloadFields.SequenceEqual(new[] { "Pn", "firstSecondsInterval" }, StringComparer.Ordinal)
+                    && rule.ObservedPayloadFields.SequenceEqual(new[] { "Pn" }, StringComparer.Ordinal)
+                    && rule.MissingPayloadFields.SequenceEqual(new[] { "firstSecondsInterval" }, StringComparer.Ordinal)
+                    && string.Equals(rule.Summary, "decision-anchor-observation:first-seconds-interval missing observed payload fields 'firstSecondsInterval'", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "hot-state-branch", StringComparison.Ordinal)
+                    && !rule.CoveredByObservedPayload
+                    && rule.RequiredPayloadFields.SequenceEqual(new[] { "HotStateType", "θw" }, StringComparer.Ordinal)
+                    && rule.ObservedPayloadFields.SequenceEqual(new[] { "θw" }, StringComparer.Ordinal)
+                    && rule.MissingPayloadFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal)
+                    && string.Equals(rule.Summary, "decision-anchor-observation:hot-state-branch missing observed payload fields 'HotStateType'", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "gb-temperature-branch", StringComparison.Ordinal)
+                    && !rule.CoveredByObservedPayload
+                    && rule.RequiredPayloadFields.SequenceEqual(new[] { "GB", "Rn", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                    && rule.ObservedPayloadFields.SequenceEqual(new[] { "GB", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                    && rule.MissingPayloadFields.SequenceEqual(new[] { "Rn" }, StringComparer.Ordinal)
+                    && string.Equals(rule.Summary, "decision-anchor-observation:gb-temperature-branch missing observed payload fields 'Rn'", StringComparison.Ordinal))
                 || plan.LegacyDecisionAnchorResolutions.Count != 3
                 || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "first-seconds-interval", StringComparison.Ordinal)
                     && resolution.PartiallyResolvedByObservedPayload
