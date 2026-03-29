@@ -136,6 +136,7 @@
 - 本轮又补齐了 `Test -> Query -> App读取` 闭环中的一个字段投影缺口：`TestRecordQueryGatewayAdapter` 现在已把 `RequiredIntermediateResultFields` 及其 covered/missing/count/ratio/summary 全量映射到 App query contract，并由 `TestRecordQueryGatewayAdapterSmokeTests` 明确断言 `NoLoad` 场景下中间结果字段清单与覆盖摘要，避免 Test/SQLite 快照层已有的 Motor_Y 算法中间锚点信息在 App 读取侧被静默丢失。
 - 本轮把 `StandardTestNext.Test` 的 CLI/demo 输出继续前推到 Motor_Y 适配计划可读层：`TestBootstrap.FormatMethodAdaptationPlanSnapshot()` 现会直接打印 raw/structured sample gate、decision anchor readiness 与 payload/result/intermediate/raw/structured 覆盖率摘要。这样每次跑 `dotnet run --project StandardTestNext.Test` 时，不仅能验证 `Test -> SQLite -> App读取` 闭环，还能在控制台一眼看到 `stp.db` 真实方法分布下各核心试验项距离旧 `Algorithm_Motor_Y.cs` 输入就绪还差什么，便于后续 adapter 迁移按缺口推进。
 - 本轮又把上述 CLI/demo 可读层再补一格：`FormatMethodAdaptationPlanSnapshot()` 现在会额外输出 `DependencyBuckets` 摘要（upstream/rated-params/payload/result/intermediate/raw/structured/formula/rules/decision anchors 等每类依赖的 covered/missing 比例与缺口预览），这样每次做 `Test -> SQLite -> App读取` 验证时，控制台可以直接按依赖分类观察 Motor_Y 当前最缺哪一类输入，为后续优先补 builder payload、真实库字段映射或算法 adapter 提供更直接的推进锚点。
+- 本轮继续把 Motor_Y 决策锚点能力往 `App读取` 闭环补齐：`MotorYMethodAdaptationPlanContractMapper` 现在会把 `LegacyDecisionAnchorResolutions` 的完整字段（`RequiredPayloadFields / ObservedPayloadFields / CoverageRatio / CoveragePercentagePoints / ResolutionStage`）一并映射到 contract，不再只透出 `MissingPayloadFields + Summary`；同时补了 query smoke test 明确锁定 `NoLoad` 场景下 3 个决策锚点 resolution 的完整结构。这样后续 App 页面、报表提示或算法 adapter 可直接消费“这个锚点为什么 missing/partial、已经观测到了哪些字段、覆盖率是多少”，避免再回退到 Test/snapshot 层重算。
 
 ## 6. 参考范围
 

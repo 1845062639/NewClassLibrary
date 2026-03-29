@@ -453,7 +453,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     AnchorKey = resolution.AnchorKey,
                     ResolvedByObservedPayload = resolution.ResolvedByObservedPayload,
                     PartiallyResolvedByObservedPayload = resolution.PartiallyResolvedByObservedPayload,
+                    RequiredPayloadFields = resolution.RequiredPayloadFields,
+                    ObservedPayloadFields = resolution.ObservedPayloadFields,
                     MissingPayloadFields = resolution.MissingPayloadFields,
+                    CoverageRatio = resolution.CoverageRatio,
+                    CoveragePercentagePoints = resolution.CoveragePercentagePoints,
+                    ResolutionStage = resolution.ResolutionStage,
                     Summary = resolution.Summary
                 })
                 .ToArray(),
