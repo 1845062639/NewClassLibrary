@@ -55,9 +55,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             if (string.IsNullOrWhiteSpace(profile.Notes)
                 || string.IsNullOrWhiteSpace(profile.AlgorithmEntry)
                 || profile.FormulaSignals.Count == 0
-                || profile.LegacyAlgorithmRules.Count == 0)
+                || profile.LegacyAlgorithmRules.Count == 0
+                || profile.LegacyDecisionAnchors.Count == 0)
             {
-                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: notes/algorithm entry/formula rules missing for {row.Item1}.");
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: notes/algorithm entry/formula rules/decision anchors missing for {row.Item1}.");
             }
         }
 

@@ -20,6 +20,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> RequiredStructuredResultSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LegacyDecisionAnchors { get; init; } = Array.Empty<string>();
     public string Notes { get; init; } = string.Empty;
 }
 
@@ -70,6 +71,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "该项本身更偏采集/整理，不依赖上游试验项",
                     "后续算法默认把这里产出的 R1/θ1c 视为冷态绕组参考量"
                 },
+                LegacyDecisionAnchors = new[]
+                {
+                    "无上游试验依赖，可直接作为 Motor_Y 冷态基线入口",
+                    "结果字段 R1/θ1c 是否齐备，决定后续空载/热试验能否进入旧算法口径"
+                },
                 Notes = "旧 FrmMotor_Y_Direct_Current_Resistance 页面直接采集/整理后入库，供空载/热试验继续引用 R1/θ1c。"
             },
             [MotorYTestMethodCodes.NoLoad] = new()
@@ -95,6 +101,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "当 RConverseType=1 时优先由 R0 反算 θ0，否则取热态温度最大值再回算 R0",
                     "风摩损耗仅取 U0/Un<0.51 的样本做线性拟合",
                     "额定点 I0/ΔI0/P0/Pcu/Pfe 均由多项式在 1.0 pu 电压处回归得到"
+                },
+                LegacyDecisionAnchors = new[]
+                {
+                    "RConverseType=1 时走 R0→θ0 分支，否则走 θ0→R0 分支",
+                    "仅 U0/Un<0.51 的样本参与 Pfw 线性拟合，低压段样本覆盖度直接影响旧算法可信度",
+                    "最终 I0/ΔI0/P0/Pcu/Pfe 均取 1.0 pu 回归值，而不是简单取原始点"
                 },
                 Notes = "旧 FrmMotor_Y_NoLoad 会先读取直流电阻结果补 R1c/θ1c，再拟合空载曲线得到 Pfe/Pfw/CoefficientOfPfe。"
             },
@@ -122,6 +134,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "GB1032_2012/TB_朝阳电机 与 GB1032_2023 的温升公式不同，2023 版直接使用 Rn/Rc 比值口径",
                     "θs 在热电偶/外推模式下采用不同来源：实测 θ1 或 θw+25-θb"
                 },
+                LegacyDecisionAnchors = new[]
+                {
+                    "firstSecondsInterval 由 Pn 分段决定：≤50kW=30s、≤200kW=90s、>200kW=120s",
+                    "HotStateType=0 优先首个实测 Rn，HotStateType=1 强制按 firstSecondsInterval 外推",
+                    "GB2012/TB 与 GB2023 温升公式不同，适配层必须保留标准分支"
+                },
                 Notes = "旧 FrmMotor_Y_Thermal 先读取直流电阻结果补 Rc/θc；Algorithm_Motor_Y.Thermal 再按额定功率与 GB 版本计算 Rn/Rw/Δθ/θw。"
             },
             [MotorYTestMethodCodes.LoadA] = new()
@@ -147,6 +165,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "铁耗一律通过空载试验给出的 CoefficientOfPfe 在 Ub/Un 上回归求得",
                     "温度修正显式依赖 θa，而不是像 B 法那样再分 GB 版本处理 θs",
                     "该算法不直接依赖额定参数对象，但要求 payload 内已有 Pn/Un/PolePairs 等额定量"
+                },
+                LegacyDecisionAnchors = new[]
+                {
+                    "必须先拿到 NoLoad 的 CoefficientOfPfe/Pfw 与 HeatRun 的 θa 口径再进入 A 法计算",
+                    "A 法结果固定回归到 125/100/75/50/25% 五个额定负载点",
+                    "该分支不依赖 ratedParams 对象，但 payload 内额定量缺失时仍无法对齐旧算法"
                 },
                 Notes = "旧 FrmMotor_Y_Load_A 会先校验空载试验的铁耗系数，且从热试验引用 θa；转矩修正还依赖耦接空载/单空载结果。"
             },
@@ -174,6 +198,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs",
                     "结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负"
                 },
+                LegacyDecisionAnchors = new[]
+                {
+                    "GB 版本决定 ratios 负载点集与 θs 计算分支，B 法不能脱离 ratedParams.GB 运行",
+                    "当相关系数 R<0.95 时需先删坏点再重新拟合 A/B/R",
+                    "结果区会从 cuC=1 开始逐步下调，直到所有 Ps 非负，说明旧算法存在迭代收敛决策"
+                },
                 Notes = "旧 FrmMotor_Y_Load_B 同时依赖空载试验的 Pfe/Pfw/R1c/θ1c 与热试验的 θw/θb；算法还按 GB 版本切换 ratios/θs 口径。"
             },
             [MotorYTestMethodCodes.LockedRotor] = new()
@@ -199,6 +229,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "TorqueCalType=1 时才会先补算温升电阻与转矩相关中间量",
                     "RCalType 决定是由 R1c/θ1c/K1 动态换算电阻，还是直接使用 R1s",
                     "最终除返回 Ikn/Pkn/Tkn 外，还会同步输出 Ikn/In 与 Tkn/Tn 比值"
+                },
+                LegacyDecisionAnchors = new[]
+                {
+                    "最大堵转电压 <0.9Un 时走 log-log 拟合分支，否则走 Uk-I/P/T 多项式拟合分支",
+                    "TorqueCalType=1 时才会计算 θ1s/R/Pkcu1/Pfe/ns/Tk 等中间量",
+                    "RCalType 决定是冷态电阻换算还是直接使用 R1s，属于旧算法关键分支"
                 },
                 Notes = "旧 FrmMotor_Y_Lock_Rotor 会从空载试验引用 R1c/θ1c/K1；堵转算法再结合铁耗系数与额定量推导 Ikn/Pkn/Tkn。"
             }
