@@ -19,6 +19,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
+        ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
     }
 
@@ -1371,6 +1372,75 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && string.Equals(resolution.SuggestedNextStepSummary, "先补A法 payload 额定量结果字段：Pcu1, Pcu2, η", StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y LoadA decision-anchor query smoke test mismatch. next='{loadAPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{loadAPlan.SuggestedDecisionAnchorNextStepSummary}'");
+        }
+    }
+
+    private static void ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T00:20:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-LOADB-DECISION-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50, "θ1t": 85 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y LoadB decision-anchor smoke test returned null detail.");
+
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        if (!loadBPlan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+            {
+                "先补B法坏点剔除后二次拟合证据：A, B, R, bad-point-refit",
+                "先补B法 GB/ratios/θs 分支字段：GB, ratios, θs",
+                "先补B法 Ps 非负迭代收敛字段：Ps, ResultDataList, cuC",
+                "先补B法热态承接字段：θb, θw"
+            }, StringComparer.Ordinal)
+            || !string.Equals(loadBPlan.SuggestedDecisionAnchorNextStepSummary, "先补B法坏点剔除后二次拟合证据：A, B, R, bad-point-refit; 先补B法 GB/ratios/θs 分支字段：GB, ratios, θs; 先补B法 Ps 非负迭代收敛字段：Ps, ResultDataList, cuC; 先补B法热态承接字段：θb, θw", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: need LoadB correlation refit fields A, B, R, bad-point-refit; need LoadB GB/ratios/θs branch fields GB, ratios, θs; need LoadB Ps iteration fields Ps, ResultDataList, cuC; need LoadB thermal carryover fields θb, θw", StringComparison.Ordinal)
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "correlation-refit", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "regression-result", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "B法坏点剔除后二次拟合证据", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "A", "B", "R", "bad-point-refit" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补B法坏点剔除后二次拟合证据：A, B, R, bad-point-refit", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "gb-ratios-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "B法 GB/ratios/θs 分支字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "GB", "ratios", "θs" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补B法 GB/ratios/θs 分支字段：GB, ratios, θs", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "ps-iteration", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "iterative-convergence", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Ps", "ResultDataList", "cuC" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补B法 Ps 非负迭代收敛字段：Ps, ResultDataList, cuC", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "thermal-carryover", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "upstream-carryover", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "B法热态承接字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "θb", "θw" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补B法热态承接字段：θb, θw", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y LoadB decision-anchor query smoke test mismatch. next='{loadBPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{loadBPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
     }
 
