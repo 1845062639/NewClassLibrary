@@ -513,11 +513,65 @@ ORDER BY COALESCE(Code, ''), Method;";
             .ToArray();
     }
 
+    private static IReadOnlyDictionary<string, IReadOnlyDictionary<string, IReadOnlyList<string>>> LoadObservedLegacyCodesByCanonicalCode(SqliteConnection connection)
+    {
+        const string sql = @"
+SELECT
+    COALESCE(curr.Code, ''),
+    COALESCE(upstream.Code, '')
+FROM TestRecordItems curr
+JOIN TestRecordItems upstream ON upstream.TestRecordId = curr.TestRecordId
+WHERE COALESCE(curr.Code, '') <> ''
+  AND COALESCE(upstream.Code, '') <> ''
+  AND curr.TestRecordId IS NOT NULL;";
+
+        var buckets = new Dictionary<string, Dictionary<string, List<string>>>(StringComparer.Ordinal);
+        using var command = connection.CreateCommand();
+        command.CommandText = sql;
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var currentCode = reader.GetString(0);
+            var upstreamCode = reader.GetString(1);
+            var currentCanonical = MotorYLegacyItemCodeNormalizer.Normalize(currentCode);
+            var upstreamCanonical = MotorYLegacyItemCodeNormalizer.Normalize(upstreamCode);
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(currentCanonical)
+                || !MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(upstreamCanonical)
+                || string.Equals(currentCanonical, upstreamCanonical, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            if (!buckets.TryGetValue(currentCanonical, out var upstreamBuckets))
+            {
+                upstreamBuckets = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+                buckets[currentCanonical] = upstreamBuckets;
+            }
+
+            if (!upstreamBuckets.TryGetValue(upstreamCanonical, out var observedCodes))
+            {
+                observedCodes = new List<string>();
+                upstreamBuckets[upstreamCanonical] = observedCodes;
+            }
+
+            observedCodes.Add(upstreamCode);
+        }
+
+        return buckets.ToDictionary(
+            current => current.Key,
+            current => (IReadOnlyDictionary<string, IReadOnlyList<string>>)current.Value.ToDictionary(
+                upstream => upstream.Key,
+                upstream => (IReadOnlyList<string>)upstream.Value.ToArray(),
+                StringComparer.Ordinal),
+            StringComparer.Ordinal);
+    }
+
     private static IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> LoadMotorYMethodAdaptationPlans(SqliteConnection connection)
     {
         var samplePayloads = LoadMotorYSamplePayloadByCanonicalCode(connection);
         var sampleRatedParams = LoadMotorYSampleRatedParamsByCanonicalCode(connection);
         var legacyCodeDistributions = LoadMotorYLegacyCodeSelections(connection);
+        var observedLegacyCodesByCanonicalCode = LoadObservedLegacyCodesByCanonicalCode(connection);
 
         return LoadMotorYMethodDecisions(connection)
             .Select(decision =>
@@ -526,6 +580,17 @@ ORDER BY COALESCE(Code, ''), Method;";
                 var selectedRoute = selection.SelectedRoute;
                 var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
                 legacyCodeDistributions.TryGetValue(selection.CanonicalCode, out var legacyCodeSelection);
+                observedLegacyCodesByCanonicalCode.TryGetValue(selection.CanonicalCode, out var upstreamObservedLegacyCodes);
+                var upstreamLegacyAliases = dependencyProfile?.UpstreamLegacyAliases
+                    ?? new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+                var upstreamLegacyCodeDistributions = upstreamLegacyAliases
+                    .OrderBy(x => x.Key, StringComparer.Ordinal)
+                    .SelectMany(pair => MotorYLegacyUpstreamCodeCatalog.BuildDistributions(
+                        pair.Key,
+                        upstreamObservedLegacyCodes is not null && upstreamObservedLegacyCodes.TryGetValue(pair.Key, out var codes)
+                            ? codes
+                            : Array.Empty<string>()))
+                    .ToArray();
                 var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
                 var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
                     selection.CanonicalCode,
@@ -637,6 +702,8 @@ ORDER BY COALESCE(Code, ''), Method;";
                     LegacyCodeDistributions = legacyCodeSelection?.Distributions ?? Array.Empty<MotorYLegacyCodeDistributionSnapshot>(),
                     RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
                     UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                    UpstreamLegacyAliases = upstreamLegacyAliases,
+                    UpstreamLegacyCodeDistributions = upstreamLegacyCodeDistributions,
                     ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
                     ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
                     MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,

@@ -11,6 +11,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public string AlgorithmEntry { get; init; } = string.Empty;
     public bool RequiresRatedParams { get; init; }
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> UpstreamLegacyAliases { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
@@ -36,6 +37,15 @@ internal sealed class MotorYStructuredListCoverageSnapshot
 
 public static class MotorYLegacyAlgorithmDependencyCatalog
 {
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> BuildUpstreamLegacyAliases(params string[] canonicalCodes)
+        => canonicalCodes
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Distinct(StringComparer.Ordinal)
+            .ToDictionary(
+                code => code,
+                code => (IReadOnlyList<string>)MotorYLegacyItemCodeNormalizer.GetLegacyAliases(code),
+                StringComparer.Ordinal);
+
     private static readonly IReadOnlyDictionary<string, MotorYLegacyAlgorithmDependencyProfile> Profiles =
         new Dictionary<string, MotorYLegacyAlgorithmDependencyProfile>(StringComparer.Ordinal)
         {
@@ -68,6 +78,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.NoLoad,
                 RequiresRatedParams = false,
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
+                UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.DcResistance),
                 RequiredPayloadFields = new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" },
@@ -93,6 +104,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.Thermal,
                 RequiresRatedParams = true,
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
+                UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.DcResistance),
                 RequiredPayloadFields = new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
@@ -118,6 +130,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.LoadA,
                 RequiresRatedParams = false,
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
+                UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun),
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Pcu1", "Pcu2", "ResultDataList", "η" },
@@ -143,6 +156,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.LoadB,
                 RequiresRatedParams = true,
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
+                UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun),
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
@@ -168,6 +182,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.LockRotor,
                 RequiresRatedParams = false,
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad },
+                UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad),
                 RequiredPayloadFields = new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" },

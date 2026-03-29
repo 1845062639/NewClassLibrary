@@ -18,6 +18,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
             Array.Empty<string>());
+        var upstreamLegacyAliases = dependencyProfile?.UpstreamLegacyAliases
+            ?? new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+        var upstreamLegacyCodeDistributions = upstreamLegacyAliases
+            .OrderBy(x => x.Key, StringComparer.Ordinal)
+            .SelectMany(pair => MotorYLegacyUpstreamCodeCatalog.BuildDistributions(pair.Key, Array.Empty<string>()))
+            .ToArray();
         var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             requiredPayloadFields,
@@ -124,6 +130,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 .ToArray(),
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+            UpstreamLegacyAliases = upstreamLegacyAliases,
+            UpstreamLegacyCodeDistributions = upstreamLegacyCodeDistributions
+                .Select(MapUpstreamLegacyCodeDistribution)
+                .ToArray(),
             ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
             ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
             MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
@@ -243,6 +253,17 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         return legacyAlgorithmInputsReady
             ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
             : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
+    }
+
+    private static MotorYLegacyUpstreamCodeDistributionContract MapUpstreamLegacyCodeDistribution(MotorYLegacyUpstreamCodeDistributionSnapshot snapshot)
+    {
+        return new MotorYLegacyUpstreamCodeDistributionContract
+        {
+            CanonicalCode = snapshot.CanonicalCode,
+            LegacyCode = snapshot.LegacyCode,
+            Count = snapshot.Count,
+            Share = snapshot.Share
+        };
     }
 
     private static MotorYObservedAlgorithmEvidenceGapContract MapEvidenceGap(MotorYObservedAlgorithmEvidenceGap gap)

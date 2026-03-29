@@ -26,6 +26,16 @@ public static class MotorYLegacyItemCodeNormalizer
         ["堵转试验（出厂）"] = MotorYTestMethodCodes.LockedRotor
     };
 
+    private static readonly IReadOnlyDictionary<string, string[]> CanonicalToAliases = AliasToCanonical
+        .GroupBy(x => x.Value, StringComparer.Ordinal)
+        .ToDictionary(
+            group => group.Key,
+            group => group.Select(x => x.Key)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray(),
+            StringComparer.Ordinal);
+
     public static string Normalize(string? code)
     {
         if (string.IsNullOrWhiteSpace(code))
@@ -37,6 +47,18 @@ public static class MotorYLegacyItemCodeNormalizer
         return AliasToCanonical.TryGetValue(trimmed, out var canonical)
             ? canonical
             : trimmed;
+    }
+
+    public static IReadOnlyList<string> GetLegacyAliases(string? canonicalCode)
+    {
+        if (string.IsNullOrWhiteSpace(canonicalCode))
+        {
+            return Array.Empty<string>();
+        }
+
+        return CanonicalToAliases.TryGetValue(canonicalCode.Trim(), out var aliases)
+            ? aliases
+            : Array.Empty<string>();
     }
 
     public static bool IsMotorYCoreTrial(string? code)

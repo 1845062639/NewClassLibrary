@@ -10,6 +10,14 @@ public sealed class MotorYObservedAlgorithmEvidenceGapSnapshot
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYLegacyUpstreamCodeDistributionSnapshot
+{
+    public string CanonicalCode { get; init; } = string.Empty;
+    public string LegacyCode { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+}
+
 public sealed class MotorYMethodAdaptationPlanSnapshot
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -42,6 +50,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<MotorYLegacyCodeDistributionSnapshot> LegacyCodeDistributions { get; init; } = Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
     public bool RequiresRatedParams { get; init; }
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> UpstreamLegacyAliases { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
+    public IReadOnlyList<MotorYLegacyUpstreamCodeDistributionSnapshot> UpstreamLegacyCodeDistributions { get; init; } = Array.Empty<MotorYLegacyUpstreamCodeDistributionSnapshot>();
     public int ObservedUpstreamCanonicalCodeCount { get; init; }
     public IReadOnlyList<string> ObservedUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
