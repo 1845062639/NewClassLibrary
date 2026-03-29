@@ -694,25 +694,43 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
                 var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
                 var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
+                var rawSampleCountGap = Math.Max(0, minimumRawSampleCount - rawDataSignalCoverage.RawSampleCount);
                 var rawSampleCountSummary = minimumRawSampleCount <= 0
                     ? $"raw sample count requirement not set; observed {rawDataSignalCoverage.RawSampleCount}"
                     : rawSampleCountReady
                         ? $"raw sample count ready {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}"
                         : $"raw sample count insufficient {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}";
+                var rawSampleCountDecisionSummary = minimumRawSampleCount <= 0
+                    ? $"raw sample count gate disabled for {canonicalCode}; observed {rawDataSignalCoverage.RawSampleCount}"
+                    : rawSampleCountReady
+                        ? $"raw sample count gate passed for {canonicalCode}: observed {rawDataSignalCoverage.RawSampleCount} >= required {minimumRawSampleCount}"
+                        : $"raw sample count gate blocked for {canonicalCode}: observed {rawDataSignalCoverage.RawSampleCount}, still need {rawSampleCountGap} more samples to reach {minimumRawSampleCount}";
                 var minimumStructuredPayloadSampleCount = dependencyProfile?.MinimumStructuredPayloadSampleCount ?? 0;
                 var structuredPayloadSampleCountReady = structuredPayloadCoverage.SampleCount >= minimumStructuredPayloadSampleCount;
+                var structuredPayloadSampleCountGap = Math.Max(0, minimumStructuredPayloadSampleCount - structuredPayloadCoverage.SampleCount);
                 var structuredPayloadSampleCountSummary = minimumStructuredPayloadSampleCount <= 0
                     ? $"structured payload sample count requirement not set; observed {structuredPayloadCoverage.SampleCount}"
                     : structuredPayloadSampleCountReady
                         ? $"structured payload sample count ready {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}"
                         : $"structured payload sample count insufficient {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}";
+                var structuredPayloadSampleCountDecisionSummary = minimumStructuredPayloadSampleCount <= 0
+                    ? $"structured payload sample count gate disabled for {canonicalCode}; observed {structuredPayloadCoverage.SampleCount}"
+                    : structuredPayloadSampleCountReady
+                        ? $"structured payload sample count gate passed for {canonicalCode}: observed {structuredPayloadCoverage.SampleCount} >= required {minimumStructuredPayloadSampleCount}"
+                        : $"structured payload sample count gate blocked for {canonicalCode}: observed {structuredPayloadCoverage.SampleCount}, still need {structuredPayloadSampleCountGap} more samples to reach {minimumStructuredPayloadSampleCount}";
                 var minimumStructuredResultSampleCount = dependencyProfile?.MinimumStructuredResultSampleCount ?? 0;
                 var structuredResultSampleCountReady = structuredResultCoverage.SampleCount >= minimumStructuredResultSampleCount;
+                var structuredResultSampleCountGap = Math.Max(0, minimumStructuredResultSampleCount - structuredResultCoverage.SampleCount);
                 var structuredResultSampleCountSummary = minimumStructuredResultSampleCount <= 0
                     ? $"structured result sample count requirement not set; observed {structuredResultCoverage.SampleCount}"
                     : structuredResultSampleCountReady
                         ? $"structured result sample count ready {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}"
                         : $"structured result sample count insufficient {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}";
+                var structuredResultSampleCountDecisionSummary = minimumStructuredResultSampleCount <= 0
+                    ? $"structured result sample count gate disabled for {canonicalCode}; observed {structuredResultCoverage.SampleCount}"
+                    : structuredResultSampleCountReady
+                        ? $"structured result sample count gate passed for {canonicalCode}: observed {structuredResultCoverage.SampleCount} >= required {minimumStructuredResultSampleCount}"
+                        : $"structured result sample count gate blocked for {canonicalCode}: observed {structuredResultCoverage.SampleCount}, still need {structuredResultSampleCountGap} more samples to reach {minimumStructuredResultSampleCount}";
                 var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
                     .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
                     .Concat(resultCoverage.CoveredRequiredResultFields)
@@ -883,10 +901,14 @@ WHERE COALESCE(curr.Code, '') <> ''
                     MinimumRawSampleCount = minimumRawSampleCount,
                     RawSampleCountReady = rawSampleCountReady,
                     RawSampleCountReadinessSummary = rawSampleCountSummary,
+                    RawSampleCountGap = rawSampleCountGap,
+                    RawSampleCountDecisionSummary = rawSampleCountDecisionSummary,
                     RequiredStructuredPayloadSignals = dependencyProfile?.RequiredStructuredPayloadSignals ?? Array.Empty<string>(),
                     MinimumStructuredPayloadSampleCount = minimumStructuredPayloadSampleCount,
                     StructuredPayloadSampleCountReady = structuredPayloadSampleCountReady,
                     StructuredPayloadSampleCountReadinessSummary = structuredPayloadSampleCountSummary,
+                    StructuredPayloadSampleCountGap = structuredPayloadSampleCountGap,
+                    StructuredPayloadSampleCountDecisionSummary = structuredPayloadSampleCountDecisionSummary,
                     ObservedStructuredPayloadSignals = structuredPayloadCoverage.ObservedSignals,
                     MissingStructuredPayloadSignals = structuredPayloadCoverage.MissingSignals,
                     StructuredPayloadSignalCoveredCount = structuredPayloadCoverage.CoveredSignalCount,
@@ -909,6 +931,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     MinimumStructuredResultSampleCount = minimumStructuredResultSampleCount,
                     StructuredResultSampleCountReady = structuredResultSampleCountReady,
                     StructuredResultSampleCountReadinessSummary = structuredResultSampleCountSummary,
+                    StructuredResultSampleCountGap = structuredResultSampleCountGap,
+                    StructuredResultSampleCountDecisionSummary = structuredResultSampleCountDecisionSummary,
                     LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
                     FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),

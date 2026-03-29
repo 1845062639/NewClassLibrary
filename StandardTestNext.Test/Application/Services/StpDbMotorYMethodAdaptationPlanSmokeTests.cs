@@ -249,14 +249,39 @@ GROUP BY COALESCE(Code, '');";
                 ? $"structured result sample count ready {snapshot.StructuredResultSampleCount}/{snapshot.MinimumStructuredResultSampleCount}"
                 : $"structured result sample count insufficient {snapshot.StructuredResultSampleCount}/{snapshot.MinimumStructuredResultSampleCount}";
 
+        var expectedRawGap = Math.Max(0, snapshot.MinimumRawSampleCount - snapshot.RawDataSampleCount);
+        var expectedStructuredPayloadGap = Math.Max(0, snapshot.MinimumStructuredPayloadSampleCount - snapshot.StructuredPayloadSampleCount);
+        var expectedStructuredResultGap = Math.Max(0, snapshot.MinimumStructuredResultSampleCount - snapshot.StructuredResultSampleCount);
+        var expectedRawDecisionSummary = snapshot.MinimumRawSampleCount <= 0
+            ? $"raw sample count gate disabled for {snapshot.CanonicalCode}; observed {snapshot.RawDataSampleCount}"
+            : expectedRawReady
+                ? $"raw sample count gate passed for {snapshot.CanonicalCode}: observed {snapshot.RawDataSampleCount} >= required {snapshot.MinimumRawSampleCount}"
+                : $"raw sample count gate blocked for {snapshot.CanonicalCode}: observed {snapshot.RawDataSampleCount}, still need {expectedRawGap} more samples to reach {snapshot.MinimumRawSampleCount}";
+        var expectedStructuredPayloadDecisionSummary = snapshot.MinimumStructuredPayloadSampleCount <= 0
+            ? $"structured payload sample count gate disabled for {snapshot.CanonicalCode}; observed {snapshot.StructuredPayloadSampleCount}"
+            : expectedStructuredPayloadReady
+                ? $"structured payload sample count gate passed for {snapshot.CanonicalCode}: observed {snapshot.StructuredPayloadSampleCount} >= required {snapshot.MinimumStructuredPayloadSampleCount}"
+                : $"structured payload sample count gate blocked for {snapshot.CanonicalCode}: observed {snapshot.StructuredPayloadSampleCount}, still need {expectedStructuredPayloadGap} more samples to reach {snapshot.MinimumStructuredPayloadSampleCount}";
+        var expectedStructuredResultDecisionSummary = snapshot.MinimumStructuredResultSampleCount <= 0
+            ? $"structured result sample count gate disabled for {snapshot.CanonicalCode}; observed {snapshot.StructuredResultSampleCount}"
+            : expectedStructuredResultReady
+                ? $"structured result sample count gate passed for {snapshot.CanonicalCode}: observed {snapshot.StructuredResultSampleCount} >= required {snapshot.MinimumStructuredResultSampleCount}"
+                : $"structured result sample count gate blocked for {snapshot.CanonicalCode}: observed {snapshot.StructuredResultSampleCount}, still need {expectedStructuredResultGap} more samples to reach {snapshot.MinimumStructuredResultSampleCount}";
+
         if (snapshot.RawSampleCountReady != expectedRawReady
             || snapshot.StructuredPayloadSampleCountReady != expectedStructuredPayloadReady
             || snapshot.StructuredResultSampleCountReady != expectedStructuredResultReady
+            || snapshot.RawSampleCountGap != expectedRawGap
+            || snapshot.StructuredPayloadSampleCountGap != expectedStructuredPayloadGap
+            || snapshot.StructuredResultSampleCountGap != expectedStructuredResultGap
             || !string.Equals(snapshot.RawSampleCountReadinessSummary, expectedRawSummary, StringComparison.Ordinal)
             || !string.Equals(snapshot.StructuredPayloadSampleCountReadinessSummary, expectedStructuredPayloadSummary, StringComparison.Ordinal)
-            || !string.Equals(snapshot.StructuredResultSampleCountReadinessSummary, expectedStructuredResultSummary, StringComparison.Ordinal))
+            || !string.Equals(snapshot.StructuredResultSampleCountReadinessSummary, expectedStructuredResultSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.RawSampleCountDecisionSummary, expectedRawDecisionSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.StructuredPayloadSampleCountDecisionSummary, expectedStructuredPayloadDecisionSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.StructuredResultSampleCountDecisionSummary, expectedStructuredResultDecisionSummary, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: sample-count readiness mismatch for {snapshot.CanonicalCode}. raw='{snapshot.RawSampleCountReadinessSummary}', structuredPayload='{snapshot.StructuredPayloadSampleCountReadinessSummary}', structuredResult='{snapshot.StructuredResultSampleCountReadinessSummary}'");
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: sample-count readiness mismatch for {snapshot.CanonicalCode}. raw='{snapshot.RawSampleCountReadinessSummary}' gap={snapshot.RawSampleCountGap} decision='{snapshot.RawSampleCountDecisionSummary}', structuredPayload='{snapshot.StructuredPayloadSampleCountReadinessSummary}' gap={snapshot.StructuredPayloadSampleCountGap} decision='{snapshot.StructuredPayloadSampleCountDecisionSummary}', structuredResult='{snapshot.StructuredResultSampleCountReadinessSummary}' gap={snapshot.StructuredResultSampleCountGap} decision='{snapshot.StructuredResultSampleCountDecisionSummary}'");
         }
     }
 

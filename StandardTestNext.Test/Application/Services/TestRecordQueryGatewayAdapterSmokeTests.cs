@@ -612,6 +612,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadPlan.StructuredPayloadAvailable
             || noLoadPlan.StructuredPayloadSignalCoverageRatio != 0d
             || noLoadPlan.StructuredPayloadSignalCoveragePercentagePoints != 0
+            || noLoadPlan.MinimumStructuredPayloadSampleCount != 3
+            || noLoadPlan.StructuredPayloadSampleCountReady
+            || noLoadPlan.StructuredPayloadSampleCountGap != 3
+            || !string.Equals(noLoadPlan.StructuredPayloadSampleCountReadinessSummary, "structured payload sample count insufficient 0/3", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.StructuredPayloadSampleCountDecisionSummary, "structured payload sample count gate blocked for MotorY.NoLoad: observed 0, still need 3 more samples to reach 3", StringComparison.Ordinal)
             || !string.Equals(noLoadPlan.StructuredPayloadSignalCoverageSummary, "structured payload signals covered 0/8 (0pp); samples=0; missing: DataList.U0, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.n0, DataList.T0; observed: none", StringComparison.Ordinal)
             || !noLoadPlan.RequiredStructuredResultSignals.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "CoefficientOfPfe", "I0", "P0", "Pcu", "Pfe", "Pfw", "ΔI0" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
             || noLoadPlan.ObservedStructuredResultSignals.Count != 0
@@ -622,9 +627,19 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadPlan.StructuredResultAvailable
             || noLoadPlan.StructuredResultSignalCoverageRatio != 0d
             || noLoadPlan.StructuredResultSignalCoveragePercentagePoints != 0
-            || !string.Equals(noLoadPlan.StructuredResultSignalCoverageSummary, "structured result signals covered 0/7 (0pp); samples=0; missing: P0, I0, ΔI0, Pcu, Pfw, Pfe, CoefficientOfPfe; observed: none", StringComparison.Ordinal))
+            || noLoadPlan.MinimumStructuredResultSampleCount != 1
+            || noLoadPlan.StructuredResultSampleCountReady
+            || noLoadPlan.StructuredResultSampleCountGap != 1
+            || !string.Equals(noLoadPlan.StructuredResultSampleCountReadinessSummary, "structured result sample count insufficient 0/1", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.StructuredResultSampleCountDecisionSummary, "structured result sample count gate blocked for MotorY.NoLoad: observed 0, still need 1 more samples to reach 1", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.StructuredResultSignalCoverageSummary, "structured result signals covered 0/7 (0pp); samples=0; missing: P0, I0, ΔI0, Pcu, Pfw, Pfe, CoefficientOfPfe; observed: none", StringComparison.Ordinal)
+            || noLoadPlan.MinimumRawSampleCount != 0
+            || !noLoadPlan.RawSampleCountReady
+            || noLoadPlan.RawSampleCountGap != 0
+            || !string.Equals(noLoadPlan.RawSampleCountReadinessSummary, "raw sample count requirement not set; observed 0", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.RawSampleCountDecisionSummary, "raw sample count gate disabled for MotorY.NoLoad; observed 0", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test structured signal coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. payload='{noLoadPlan.StructuredPayloadSignalCoverageSummary}', result='{noLoadPlan.StructuredResultSignalCoverageSummary}'");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test structured/sample-count coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. payload='{noLoadPlan.StructuredPayloadSignalCoverageSummary}', payloadDecision='{noLoadPlan.StructuredPayloadSampleCountDecisionSummary}', result='{noLoadPlan.StructuredResultSignalCoverageSummary}', resultDecision='{noLoadPlan.StructuredResultSampleCountDecisionSummary}', rawDecision='{noLoadPlan.RawSampleCountDecisionSummary}'");
         }
 
         if (!string.Equals(noLoadPlan.BaselineDominantComparisonSummary, "baseline 0 (baseline)=1/4 (25.00%), dominant 59 (delivery)=3/4 (75.00%)", StringComparison.Ordinal))

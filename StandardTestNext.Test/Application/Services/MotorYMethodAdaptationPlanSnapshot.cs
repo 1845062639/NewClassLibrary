@@ -139,12 +139,18 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public int MinimumRawSampleCount { get; init; }
     public bool RawSampleCountReady { get; init; }
     public string RawSampleCountReadinessSummary { get; init; } = string.Empty;
+    public int RawSampleCountGap { get; init; }
+    public string RawSampleCountDecisionSummary { get; init; } = string.Empty;
     public int MinimumStructuredPayloadSampleCount { get; init; }
     public bool StructuredPayloadSampleCountReady { get; init; }
     public string StructuredPayloadSampleCountReadinessSummary { get; init; } = string.Empty;
+    public int StructuredPayloadSampleCountGap { get; init; }
+    public string StructuredPayloadSampleCountDecisionSummary { get; init; } = string.Empty;
     public int MinimumStructuredResultSampleCount { get; init; }
     public bool StructuredResultSampleCountReady { get; init; }
     public string StructuredResultSampleCountReadinessSummary { get; init; } = string.Empty;
+    public int StructuredResultSampleCountGap { get; init; }
+    public string StructuredResultSampleCountDecisionSummary { get; init; } = string.Empty;
     public IReadOnlyList<string> ObservedStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public int StructuredPayloadSignalCoveredCount { get; init; }
