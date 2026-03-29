@@ -32,6 +32,10 @@ internal sealed class MotorYDecisionAnchorPriorityDistribution
     public IReadOnlyList<string> SuggestedNextStepFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
     public string SuggestedNextStepSummary { get; init; } = string.Empty;
+    public string DominantAnchorKey { get; init; } = string.Empty;
+    public string DominantSuggestedNextStepFocus { get; init; } = string.Empty;
+    public IReadOnlyList<string> DominantSuggestedNextStepFields { get; init; } = Array.Empty<string>();
+    public string DominantSuggestedNextStepSummary { get; init; } = string.Empty;
 }
 
 internal static class MotorYDecisionAnchorResolutionFactory
@@ -310,6 +314,12 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     ? "decision anchor priority next steps unavailable"
                     : $"priority {group.Key} next steps: {string.Join("; ", suggestedSteps.Take(3))}{(suggestedSteps.Length > 3 ? "; ..." : string.Empty)}";
 
+                var dominantResolution = ordered
+                    .OrderByDescending(x => x.MissingPayloadFields.Count)
+                    .ThenByDescending(x => x.CoveragePercentagePoints)
+                    .ThenBy(x => x.AnchorKey, StringComparer.Ordinal)
+                    .First();
+
                 return new MotorYDecisionAnchorPriorityDistribution
                 {
                     Priority = group.Key,
@@ -323,7 +333,11 @@ internal static class MotorYDecisionAnchorResolutionFactory
                         .ToArray(),
                     SuggestedNextStepFields = suggestedFields,
                     SuggestedNextSteps = suggestedSteps,
-                    SuggestedNextStepSummary = suggestedStepSummary
+                    SuggestedNextStepSummary = suggestedStepSummary,
+                    DominantAnchorKey = dominantResolution.AnchorKey,
+                    DominantSuggestedNextStepFocus = dominantResolution.SuggestedNextStepFocus,
+                    DominantSuggestedNextStepFields = dominantResolution.SuggestedNextStepFields,
+                    DominantSuggestedNextStepSummary = dominantResolution.SuggestedNextStepSummary
                 };
             })
             .ToArray();

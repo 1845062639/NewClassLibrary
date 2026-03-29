@@ -277,7 +277,7 @@ public sealed class TestBootstrap
         var anchorNextSteps = $"anchor-next={FormatPreview(plan.SuggestedDecisionAnchorNextSteps, 3)}:{plan.SuggestedDecisionAnchorNextStepSummary}";
         var anchorPriorities = plan.DecisionAnchorPriorityDistributions.Count == 0
             ? "anchor-priority=<none>"
-            : "anchor-priority=" + string.Join("|", plan.DecisionAnchorPriorityDistributions.Select(distribution => $"{distribution.Priority}:{distribution.Count}:{distribution.Share:P1}:{FormatPreview(distribution.AnchorKeys, 2)}:{FormatPreview(distribution.SuggestedNextStepFocuses, 2)}:fields={FormatPreview(distribution.SuggestedNextStepFields, 3)}:next={distribution.SuggestedNextStepSummary}"));
+            : "anchor-priority=" + string.Join("|", plan.DecisionAnchorPriorityDistributions.Select(distribution => $"{distribution.Priority}:{distribution.Count}:{distribution.Share:P1}:{FormatPreview(distribution.AnchorKeys, 2)}:{FormatPreview(distribution.SuggestedNextStepFocuses, 2)}:fields={FormatPreview(distribution.SuggestedNextStepFields, 3)}:top={distribution.DominantAnchorKey}:{distribution.DominantSuggestedNextStepFocus}:top-fields={FormatPreview(distribution.DominantSuggestedNextStepFields, 3)}:next={distribution.SuggestedNextStepSummary}"));
         var anchorGapPreview = $"anchor-gap={plan.LegacyDecisionAnchorGapPreviewSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"

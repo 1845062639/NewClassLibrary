@@ -509,7 +509,11 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses,
                     SuggestedNextStepFields = distribution.SuggestedNextStepFields,
                     SuggestedNextSteps = distribution.SuggestedNextSteps,
-                    SuggestedNextStepSummary = distribution.SuggestedNextStepSummary
+                    SuggestedNextStepSummary = distribution.SuggestedNextStepSummary,
+                    DominantAnchorKey = distribution.DominantAnchorKey,
+                    DominantSuggestedNextStepFocus = distribution.DominantSuggestedNextStepFocus,
+                    DominantSuggestedNextStepFields = distribution.DominantSuggestedNextStepFields,
+                    DominantSuggestedNextStepSummary = distribution.DominantSuggestedNextStepSummary
                 })
                 .ToArray(),
             DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,

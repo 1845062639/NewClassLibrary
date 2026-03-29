@@ -60,6 +60,10 @@ public sealed class MotorYDecisionAnchorPriorityDistributionSnapshot
     public IReadOnlyList<string> SuggestedNextStepFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
     public string SuggestedNextStepSummary { get; init; } = string.Empty;
+    public string DominantAnchorKey { get; init; } = string.Empty;
+    public string DominantSuggestedNextStepFocus { get; init; } = string.Empty;
+    public IReadOnlyList<string> DominantSuggestedNextStepFields { get; init; } = Array.Empty<string>();
+    public string DominantSuggestedNextStepSummary { get; init; } = string.Empty;
 }
 
 public sealed class MotorYMethodAdaptationPlanSnapshot

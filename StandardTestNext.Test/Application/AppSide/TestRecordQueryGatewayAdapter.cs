@@ -395,7 +395,14 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Count = x.Count,
                 Share = x.Share,
                 AnchorKeys = x.AnchorKeys,
-                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepFields = x.SuggestedNextStepFields,
+                SuggestedNextSteps = x.SuggestedNextSteps,
+                SuggestedNextStepSummary = x.SuggestedNextStepSummary,
+                DominantAnchorKey = x.DominantAnchorKey,
+                DominantSuggestedNextStepFocus = x.DominantSuggestedNextStepFocus,
+                DominantSuggestedNextStepFields = x.DominantSuggestedNextStepFields,
+                DominantSuggestedNextStepSummary = x.DominantSuggestedNextStepSummary
             }).ToArray(),
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
             EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
