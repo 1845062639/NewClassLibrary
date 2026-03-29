@@ -79,6 +79,18 @@ public sealed class MotorYDecisionAnchorPrimaryFieldDistributionContract
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYDecisionAnchorTopPriorityContract
+{
+    public string Priority { get; init; } = string.Empty;
+    public string AnchorKey { get; init; } = string.Empty;
+    public string Focus { get; init; } = string.Empty;
+    public IReadOnlyList<string> Fields { get; init; } = Array.Empty<string>();
+    public string NextStepSummary { get; init; } = string.Empty;
+    public string PrimaryField { get; init; } = string.Empty;
+    public string PrimaryFieldSummary { get; init; } = string.Empty;
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYRequiredResultPrimaryFieldDistributionContract
 {
     public string PrimaryField { get; init; } = string.Empty;
@@ -100,6 +112,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string DecisionAnchorTopPriorityNextStepSummary { get; init; } = string.Empty;
     public string DecisionAnchorTopPriorityPrimaryField { get; init; } = string.Empty;
     public string DecisionAnchorTopPriorityPrimaryFieldSummary { get; init; } = string.Empty;
+    public MotorYDecisionAnchorTopPriorityContract? DecisionAnchorTopPriorityDetail { get; init; }
     public int TotalCount { get; init; }
     public MotorYBuildProfileContract? BaselineProfile { get; init; }
     public int BaselineCount { get; init; }

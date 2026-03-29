@@ -878,6 +878,21 @@ WHERE COALESCE(curr.Code, '') <> ''
                     DecisionAnchorTopPriorityNextStepSummary = topDecisionAnchorPriority?.DominantSuggestedNextStepSummary ?? string.Empty,
                     DecisionAnchorTopPriorityPrimaryField = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority?.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextField ?? string.Empty,
                     DecisionAnchorTopPriorityPrimaryFieldSummary = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority?.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
+                    DecisionAnchorTopPriorityDetail = topDecisionAnchorPriority is null
+                        ? null
+                        : new MotorYDecisionAnchorTopPrioritySnapshot
+                        {
+                            Priority = topDecisionAnchorPriority.Priority,
+                            AnchorKey = topDecisionAnchorPriority.DominantAnchorKey,
+                            Focus = topDecisionAnchorPriority.DominantSuggestedNextStepFocus,
+                            Fields = topDecisionAnchorPriority.DominantSuggestedNextStepFields,
+                            NextStepSummary = topDecisionAnchorPriority.DominantSuggestedNextStepSummary,
+                            PrimaryField = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextField ?? string.Empty,
+                            PrimaryFieldSummary = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
+                            Summary = topDecisionAnchorPriority is null
+                                ? "decision anchor top priority unavailable"
+                                : $"top decision anchor priority={topDecisionAnchorPriority.Priority}; focus={topDecisionAnchorPriority.DominantSuggestedNextStepFocus}; anchor={topDecisionAnchorPriority.DominantAnchorKey}; fields={(topDecisionAnchorPriority.DominantSuggestedNextStepFields.Count == 0 ? "none" : string.Join(", ", topDecisionAnchorPriority.DominantSuggestedNextStepFields))}"
+                        },
                     TotalCount = selection.TotalCount,
                     BaselineRoute = selection.BaselineRoute,
                     BaselineCount = selection.BaselineCount,

@@ -183,6 +183,19 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             DecisionAnchorTopPriorityNextStepSummary = snapshot.DecisionAnchorTopPriorityNextStepSummary,
             DecisionAnchorTopPriorityPrimaryField = snapshot.DecisionAnchorTopPriorityPrimaryField,
             DecisionAnchorTopPriorityPrimaryFieldSummary = snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary,
+            DecisionAnchorTopPriorityDetail = snapshot.DecisionAnchorTopPriorityDetail is null
+                ? null
+                : new MotorYDecisionAnchorTopPriorityContract
+                {
+                    Priority = snapshot.DecisionAnchorTopPriorityDetail.Priority,
+                    AnchorKey = snapshot.DecisionAnchorTopPriorityDetail.AnchorKey,
+                    Focus = snapshot.DecisionAnchorTopPriorityDetail.Focus,
+                    Fields = snapshot.DecisionAnchorTopPriorityDetail.Fields,
+                    NextStepSummary = snapshot.DecisionAnchorTopPriorityDetail.NextStepSummary,
+                    PrimaryField = snapshot.DecisionAnchorTopPriorityDetail.PrimaryField,
+                    PrimaryFieldSummary = snapshot.DecisionAnchorTopPriorityDetail.PrimaryFieldSummary,
+                    Summary = snapshot.DecisionAnchorTopPriorityDetail.Summary
+                },
             TotalCount = snapshot.TotalCount,
             BaselineProfile = MapBuildProfile(snapshot.BaselineRoute),
             BaselineCount = snapshot.BaselineCount,

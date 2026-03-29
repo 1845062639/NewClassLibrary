@@ -1324,7 +1324,16 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(loadBPlan.DecisionAnchorTopPriority, "blocking", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey, "correlation-refit", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryField, "R", StringComparison.Ordinal)
-            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal))
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal)
+            || loadBPlan.DecisionAnchorTopPriorityDetail is null
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.Priority, "blocking", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.AnchorKey, "correlation-refit", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.Focus, "B法坏点剔除后二次拟合证据", StringComparison.Ordinal)
+            || !loadBPlan.DecisionAnchorTopPriorityDetail.Fields.SequenceEqual(new[] { "R", "A", "B", "η", "T" }, StringComparer.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.NextStepSummary, "先补B法坏点剔除后二次拟合证据：R, A, B, η, T", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.PrimaryField, "R", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.PrimaryFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.Summary, "top decision anchor priority=blocking; focus=B法坏点剔除后二次拟合证据; anchor=correlation-refit; fields=R, A, B, η, T", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actualTop={loadBPlan.DecisionAnchorTopPriority}/{loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey}/{loadBPlan.DecisionAnchorTopPriorityPrimaryField}/'{loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary}'; actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
         }

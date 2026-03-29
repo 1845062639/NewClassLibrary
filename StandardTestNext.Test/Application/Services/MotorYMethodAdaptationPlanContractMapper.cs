@@ -308,6 +308,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             DecisionAnchorTopPriorityNextStepSummary = topDecisionAnchorPriority?.DominantSuggestedNextStepSummary ?? string.Empty,
             DecisionAnchorTopPriorityPrimaryField = topDecisionAnchorResolution?.SuggestedPrimaryNextField ?? string.Empty,
             DecisionAnchorTopPriorityPrimaryFieldSummary = topDecisionAnchorResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
+            DecisionAnchorTopPriorityDetail = topDecisionAnchorPriority is null
+                ? null
+                : new MotorYDecisionAnchorTopPriorityContract
+                {
+                    Priority = topDecisionAnchorPriority.Priority,
+                    AnchorKey = topDecisionAnchorPriority.DominantAnchorKey,
+                    Focus = topDecisionAnchorPriority.DominantSuggestedNextStepFocus,
+                    Fields = topDecisionAnchorPriority.DominantSuggestedNextStepFields,
+                    NextStepSummary = topDecisionAnchorPriority.DominantSuggestedNextStepSummary,
+                    PrimaryField = topDecisionAnchorResolution?.SuggestedPrimaryNextField ?? string.Empty,
+                    PrimaryFieldSummary = topDecisionAnchorResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
+                    Summary = topDecisionAnchorPriority is null
+                        ? "decision anchor top priority unavailable"
+                        : $"top decision anchor priority={topDecisionAnchorPriority.Priority}; focus={topDecisionAnchorPriority.DominantSuggestedNextStepFocus}; anchor={topDecisionAnchorPriority.DominantAnchorKey}; fields={(topDecisionAnchorPriority.DominantSuggestedNextStepFields.Count == 0 ? "none" : string.Join(", ", topDecisionAnchorPriority.DominantSuggestedNextStepFields))}"
+                },
             TotalCount = selection.TotalCount,
             BaselineProfile = profileMapper(selection.BaselineRoute),
             BaselineCount = selection.BaselineCount,
