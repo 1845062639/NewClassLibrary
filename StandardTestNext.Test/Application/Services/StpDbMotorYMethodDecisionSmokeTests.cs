@@ -1,4 +1,5 @@
 using Microsoft.Data.Sqlite;
+using StandardTestNext.Contracts;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -118,6 +119,119 @@ public static class StpDbMotorYMethodDecisionSmokeTests
                 }
 
                 AssertRoute(actualDistribution.Route, row.CanonicalCode, distribution.MethodValue, $"distribution/{row.CanonicalCode}:{distribution.MethodValue}");
+            }
+
+            AssertDecisionAnchorProjection(snapshot, row.CanonicalCode);
+        }
+    }
+
+    private static void AssertDecisionAnchorProjection(MotorYMethodDecisionSnapshot snapshot, string canonicalCode)
+    {
+        var service = new StpDbSnapshotQueryService(DbPath);
+        var plan = service.ListMotorYMethodAdaptationPlans().FirstOrDefault(x => string.Equals(x.CanonicalCode, canonicalCode, StringComparison.Ordinal))
+            ?? throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: missing adaptation plan for {canonicalCode}.");
+
+        if (!string.Equals(snapshot.RecommendedRoute?.CanonicalCode, plan.CanonicalCode, StringComparison.Ordinal)
+            || snapshot.RecommendedRoute?.MethodValue != plan.SelectedRoute?.MethodValue)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: route mismatch between decision and adaptation plan for {canonicalCode}.");
+        }
+
+        if (!string.Equals(snapshot.RecommendedMethodSummary, plan.SelectedMethodSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.BaselineDominantComparisonSummary, plan.BaselineDominantComparisonSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: summary mismatch between decision and adaptation plan for {canonicalCode}.");
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
+        {
+            if (!plan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+                {
+                    "继续补齐热试验 firstSecondsInterval 判定依据：firstSecondsInterval",
+                    "继续补齐热试验 HotStateType 分支字段：HotStateType",
+                    "先补热试验 GB 温升分支关键字段：Rn"
+                }, StringComparer.Ordinal)
+                || !string.Equals(plan.SuggestedDecisionAnchorNextStepSummary, "继续补齐热试验 firstSecondsInterval 判定依据：firstSecondsInterval; 继续补齐热试验 HotStateType 分支字段：HotStateType; 先补热试验 GB 温升分支关键字段：Rn", StringComparison.Ordinal)
+                || !string.Equals(plan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: gb-temperature-branch[partial]:Rn; first-seconds-interval[partial]:firstSecondsInterval; hot-state-branch[partial]:HotStateType", StringComparison.Ordinal)
+                || !string.Equals(plan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: continue filling HeatRun firstSecondsInterval fields firstSecondsInterval; continue filling HeatRun HotStateType fields HotStateType; need HeatRun GB temperature branch fields Rn", StringComparison.Ordinal)
+                || plan.LegacyDecisionAnchorResolutions.Count != 3
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "first-seconds-interval", StringComparison.Ordinal)
+                    && resolution.PartiallyResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "Pn", "firstSecondsInterval" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.SequenceEqual(new[] { "Pn" }, StringComparer.Ordinal)
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "firstSecondsInterval" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "decision-interval", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "热试验 firstSecondsInterval 判定依据", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "firstSecondsInterval" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "继续补齐热试验 firstSecondsInterval 判定依据：firstSecondsInterval", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "hot-state-branch", StringComparison.Ordinal)
+                    && resolution.PartiallyResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "HotStateType", "θw" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.SequenceEqual(new[] { "θw" }, StringComparer.Ordinal)
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "热试验 HotStateType 分支字段", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "继续补齐热试验 HotStateType 分支字段：HotStateType", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "gb-temperature-branch", StringComparison.Ordinal)
+                    && resolution.PartiallyResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "GB", "Rn", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.SequenceEqual(new[] { "GB", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "Rn" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "热试验 GB 温升分支关键字段", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Rn" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "先补热试验 GB 温升分支关键字段：Rn", StringComparison.Ordinal)))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: HeatRun decision-anchor projection mismatch. next='{plan.LegacyDecisionAnchorNextActionSummary}', suggested='{plan.SuggestedDecisionAnchorNextStepSummary}'");
+            }
+
+            return;
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
+        {
+            if (!plan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+                {
+                    "继续补齐A法上游空载/热试验承接字段：θa",
+                    "先补A法额定负载点回归结果：ResultDataList",
+                    "先补A法 payload 额定量结果字段：Pcu1, Pcu2, η"
+                }, StringComparer.Ordinal)
+                || !string.Equals(plan.SuggestedDecisionAnchorNextStepSummary, "继续补齐A法上游空载/热试验承接字段：θa; 先补A法额定负载点回归结果：ResultDataList; 先补A法 payload 额定量结果字段：Pcu1, Pcu2, η", StringComparison.Ordinal)
+                || !string.Equals(plan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: payload-rated-quantity-ready[missing]:Pcu1, Pcu2, η; upstream-ready[partial]:θa; rated-load-fit-grid[missing]:ResultDataList", StringComparison.Ordinal)
+                || !string.Equals(plan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: continue filling LoadA upstream fields θa; need LoadA rated-load fit fields ResultDataList; need LoadA payload rated-result fields Pcu1, Pcu2, η", StringComparison.Ordinal)
+                || plan.LegacyDecisionAnchorResolutions.Count != 3
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "upstream-ready", StringComparison.Ordinal)
+                    && resolution.PartiallyResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "CoefficientOfPfe", "Pfw", "θa" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.SequenceEqual(new[] { "CoefficientOfPfe", "Pfw" }, StringComparer.Ordinal)
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "θa" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "upstream-carryover", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "A法上游空载/热试验承接字段", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "θa" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "继续补齐A法上游空载/热试验承接字段：θa", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "rated-load-fit-grid", StringComparison.Ordinal)
+                    && !resolution.PartiallyResolvedByObservedPayload
+                    && !resolution.ResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.Count == 0
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "fit-grid", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "A法额定负载点回归结果", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "先补A法额定负载点回归结果：ResultDataList", StringComparison.Ordinal))
+                || !plan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "payload-rated-quantity-ready", StringComparison.Ordinal)
+                    && !resolution.PartiallyResolvedByObservedPayload
+                    && !resolution.ResolvedByObservedPayload
+                    && resolution.RequiredPayloadFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)
+                    && resolution.ObservedPayloadFields.Count == 0
+                    && resolution.MissingPayloadFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepCategory, "rated-quantity", StringComparison.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepFocus, "A法 payload 额定量结果字段", StringComparison.Ordinal)
+                    && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)
+                    && string.Equals(resolution.SuggestedNextStepSummary, "先补A法 payload 额定量结果字段：Pcu1, Pcu2, η", StringComparison.Ordinal)))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method decision smoke test failed: LoadA decision-anchor projection mismatch. next='{plan.LegacyDecisionAnchorNextActionSummary}', suggested='{plan.SuggestedDecisionAnchorNextStepSummary}'");
             }
         }
     }
