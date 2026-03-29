@@ -439,6 +439,9 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             CoverageRatio = snapshot.CoverageRatio,
             CoveragePercentagePoints = snapshot.CoveragePercentagePoints,
             ResolutionStage = snapshot.ResolutionStage,
+            SuggestedNextStepCategory = snapshot.SuggestedNextStepCategory,
+            SuggestedNextStepFocus = snapshot.SuggestedNextStepFocus,
+            SuggestedNextStepFields = snapshot.SuggestedNextStepFields,
             SuggestedNextSteps = snapshot.SuggestedNextSteps,
             SuggestedNextStepSummary = snapshot.SuggestedNextStepSummary,
             Summary = snapshot.Summary

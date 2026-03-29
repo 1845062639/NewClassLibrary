@@ -752,6 +752,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "空载旧算法的 R0/θ0 换算分支标记", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "RConverseType" }, StringComparer.Ordinal)
                 && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补空载旧算法的 R0/θ0 换算分支标记：RConverseType" }, StringComparer.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepSummary, "先补空载旧算法的 R0/θ0 换算分支标记：RConverseType", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'rconverse-branch' unresolved by observed payload (0/1, 0pp); missing: RConverseType", StringComparison.Ordinal))
@@ -764,6 +767,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "fit-window", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "空载低压段风摩损耗拟合结果", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pfw" }, StringComparer.Ordinal)
                 && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补空载低压段风摩损耗拟合结果：Pfw" }, StringComparer.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepSummary, "先补空载低压段风摩损耗拟合结果：Pfw", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'pfw-fit-window' unresolved by observed payload (0/1, 0pp); missing: Pfw", StringComparison.Ordinal))
@@ -776,6 +782,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "regression-result", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "空载 1.0pu 回归结果字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "CoefficientOfPfe", "I0", "P0", "Pcu", "Pfe", "ΔI0" }, StringComparer.Ordinal)
                 && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补空载 1.0pu 回归结果字段：CoefficientOfPfe, I0, P0, Pcu, Pfe, ΔI0" }, StringComparer.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepSummary, "先补空载 1.0pu 回归结果字段：CoefficientOfPfe, I0, P0, Pcu, Pfe, ΔI0", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'rated-regression-ready' unresolved by observed payload (0/6, 0pp); missing: CoefficientOfPfe, I0, ΔI0, P0, Pcu, Pfe", StringComparison.Ordinal))
