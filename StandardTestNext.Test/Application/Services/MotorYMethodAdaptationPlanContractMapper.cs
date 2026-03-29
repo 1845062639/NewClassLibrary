@@ -87,6 +87,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             decisionAnchorObservedFields,
             observedStructuredSignals);
+        var decisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
+            selection.CanonicalCode,
+            decisionAnchorObservedFields,
+            observedStructuredSignals);
         var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
             dependencyProfile?.LegacyDecisionAnchors,
             decisionAnchorEvidence.ObservedPayloadFields,
@@ -303,7 +307,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
             LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
             LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
-            LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorEvidence.SignalOrRuleGaps.Select(MapEvidenceGap).ToArray(),
+            LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps.Select(MapEvidenceGap).ToArray(),
             LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,

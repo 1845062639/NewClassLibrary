@@ -21,6 +21,12 @@ internal sealed class MotorYObservedAlgorithmEvidenceSnapshot
     public string Summary { get; init; } = string.Empty;
 }
 
+internal sealed class MotorYDecisionAnchorObservationRule
+{
+    public string AnchorKey { get; init; } = string.Empty;
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+}
+
 internal static class MotorYObservedAlgorithmEvidenceCatalog
 {
     private static readonly IReadOnlyDictionary<string, string[]> FormulaSignalObservedFieldsByCanonicalCode =
@@ -56,6 +62,46 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             [MotorYTestMethodCodes.LockedRotor] = new[] { "TorqueCalType", "RCalType", "R1s", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "Un" }
         };
 
+    private static readonly IReadOnlyDictionary<string, IReadOnlyList<MotorYDecisionAnchorObservationRule>> DecisionAnchorObservationRulesByCanonicalCode =
+        new Dictionary<string, IReadOnlyList<MotorYDecisionAnchorObservationRule>>(StringComparer.Ordinal)
+        {
+            [MotorYTestMethodCodes.DcResistance] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "cold-baseline-ready", RequiredPayloadFields = new[] { "R1", "θ1c" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "downstream-ready", RequiredPayloadFields = new[] { "R1", "θ1c" } }
+            },
+            [MotorYTestMethodCodes.NoLoad] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "rconverse-branch", RequiredPayloadFields = new[] { "RConverseType" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "pfw-fit-window", RequiredPayloadFields = new[] { "Pfw" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "rated-regression-ready", RequiredPayloadFields = new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" } }
+            },
+            [MotorYTestMethodCodes.HeatRun] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "first-seconds-interval", RequiredPayloadFields = new[] { "Pn" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "hot-state-branch", RequiredPayloadFields = new[] { "HotStateType" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "gb-temperature-branch", RequiredPayloadFields = new[] { "GB", "Rn", "θw", "θs", "θb" } }
+            },
+            [MotorYTestMethodCodes.LoadA] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "upstream-ready", RequiredPayloadFields = new[] { "CoefficientOfPfe", "Pfw", "θa" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "rated-load-fit-grid", RequiredPayloadFields = new[] { "ResultDataList" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "payload-rated-quantity-ready", RequiredPayloadFields = new[] { "Pcu1", "Pcu2", "η" } }
+            },
+            [MotorYTestMethodCodes.LoadB] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "gb-ratios-branch", RequiredPayloadFields = new[] { "GB", "θs" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "correlation-refit", RequiredPayloadFields = new[] { "A", "B", "R" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "ps-iteration", RequiredPayloadFields = new[] { "Ps", "ResultDataList" } }
+            },
+            [MotorYTestMethodCodes.LockedRotor] = new[]
+            {
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "voltage-fit-branch", RequiredPayloadFields = new[] { "Un" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "torquecal-branch", RequiredPayloadFields = new[] { "TorqueCalType" } },
+                new MotorYDecisionAnchorObservationRule { AnchorKey = "rcal-branch", RequiredPayloadFields = new[] { "RCalType", "R1s" } }
+            }
+        };
+
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(
         string canonicalCode,
         IReadOnlyList<string>? observedPayloadFields,
@@ -73,6 +119,51 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         IReadOnlyList<string>? observedPayloadFields,
         IReadOnlyList<string>? observedStructuredSignals = null)
         => Build(canonicalCode, observedPayloadFields, observedStructuredSignals, LegacyDecisionAnchorObservedFieldsByCanonicalCode, "legacy decision anchor observed payload", "decision-anchor");
+
+    public static IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> BuildDecisionAnchorObservationGaps(
+        string canonicalCode,
+        IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals = null)
+    {
+        if (!DecisionAnchorObservationRulesByCanonicalCode.TryGetValue(canonicalCode, out var rules)
+            || rules.Count == 0)
+        {
+            return Array.Empty<MotorYObservedAlgorithmEvidenceGap>();
+        }
+
+        var observed = (observedPayloadFields ?? Array.Empty<string>())
+            .Concat(observedStructuredSignals ?? Array.Empty<string>())
+            .Where(field => !string.IsNullOrWhiteSpace(field))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return rules
+            .Select(rule =>
+            {
+                var matched = rule.RequiredPayloadFields
+                    .Where(field => observed.Contains(field, StringComparer.Ordinal))
+                    .OrderBy(field => field, StringComparer.Ordinal)
+                    .ToArray();
+                var missing = rule.RequiredPayloadFields
+                    .Where(field => !matched.Contains(field, StringComparer.Ordinal))
+                    .ToArray();
+                var covered = missing.Length == 0;
+                var label = $"decision-anchor-observation:{rule.AnchorKey}";
+
+                return new MotorYObservedAlgorithmEvidenceGap
+                {
+                    SignalOrRule = label,
+                    RequiredPayloadFields = rule.RequiredPayloadFields,
+                    ObservedPayloadFields = matched,
+                    MissingPayloadFields = missing,
+                    CoveredByObservedPayload = covered,
+                    Summary = covered
+                        ? $"{label} covered by observed payload fields '{string.Join("', '", matched)}'"
+                        : $"{label} missing observed payload fields '{string.Join("', '", missing)}'"
+                };
+            })
+            .ToArray();
+    }
 
     private static MotorYObservedAlgorithmEvidenceSnapshot Build(
         string canonicalCode,

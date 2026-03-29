@@ -105,6 +105,31 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             ]
         };
 
+        var loadBDecisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
+            MotorYTestMethodCodes.LoadB,
+            new[] { "A", "B", "GB", "R", "ResultDataList", "θb", "θs", "θw" },
+            null);
+
+        if (loadBDecisionAnchorObservationGaps.Count != 3
+            || loadBDecisionAnchorObservationGaps.Count(gap => gap.CoveredByObservedPayload) != 2
+            || loadBDecisionAnchorObservationGaps.Count(gap => !gap.CoveredByObservedPayload) != 1
+            || !loadBDecisionAnchorObservationGaps.Any(gap => string.Equals(gap.SignalOrRule, "decision-anchor-observation:gb-ratios-branch", StringComparison.Ordinal)
+                && gap.CoveredByObservedPayload
+                && gap.ObservedPayloadFields.SequenceEqual(new[] { "GB", "θs" }, StringComparer.Ordinal)
+                && gap.MissingPayloadFields.Count == 0)
+            || !loadBDecisionAnchorObservationGaps.Any(gap => string.Equals(gap.SignalOrRule, "decision-anchor-observation:correlation-refit", StringComparison.Ordinal)
+                && gap.CoveredByObservedPayload
+                && gap.ObservedPayloadFields.SequenceEqual(new[] { "A", "B", "R" }, StringComparer.Ordinal)
+                && gap.MissingPayloadFields.Count == 0)
+            || !loadBDecisionAnchorObservationGaps.Any(gap => string.Equals(gap.SignalOrRule, "decision-anchor-observation:ps-iteration", StringComparison.Ordinal)
+                && !gap.CoveredByObservedPayload
+                && gap.ObservedPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                && gap.MissingPayloadFields.SequenceEqual(new[] { "Ps" }, StringComparer.Ordinal)
+                && string.Equals(gap.Summary, "decision-anchor-observation:ps-iteration missing observed payload fields 'Ps'", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor observation rule projection mismatch for LoadB. actual=[{string.Join(" | ", loadBDecisionAnchorObservationGaps.Select(gap => $"{gap.SignalOrRule}:{gap.CoveredByObservedPayload}:{string.Join(",", gap.ObservedPayloadFields)}:{string.Join(",", gap.MissingPayloadFields)}"))}]");
+        }
+
         var contract = MotorYMethodAdaptationPlanContractMapper.Map(decision, route => route is null
             ? null
             : new MotorYBuildProfileContract

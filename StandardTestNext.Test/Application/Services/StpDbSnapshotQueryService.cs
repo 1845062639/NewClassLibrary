@@ -661,6 +661,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     decisionAnchorObservedFields,
                     observedStructuredSignals);
+                var decisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
+                    selection.CanonicalCode,
+                    decisionAnchorObservedFields,
+                    observedStructuredSignals);
                 var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
                     dependencyProfile?.LegacyDecisionAnchors,
                     decisionAnchorEvidence.ObservedPayloadFields,
@@ -893,7 +897,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     LegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
                     LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
                     LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
-                    LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorEvidence.SignalOrRuleGaps
+                    LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps
                         .Select(gap => new MotorYObservedAlgorithmEvidenceGapSnapshot
                         {
                             SignalOrRule = gap.SignalOrRule,
