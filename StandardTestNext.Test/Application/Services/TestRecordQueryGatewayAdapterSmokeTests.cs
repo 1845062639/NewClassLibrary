@@ -14,6 +14,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldPreserveReportSelectionMetadataThroughAppQueryGateway();
         ShouldReturnNullDetailForUnknownRecordCode();
         ShouldExposeMotorYTrialPayloadShapesThroughAppQueryGateway();
+        ShouldPreferCanonicalLegacyCodeAliasForAppMethodAdaptationPlan();
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
@@ -326,6 +327,111 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !item.BuildProfile.IsBaselineMethod)
         {
             throw new InvalidOperationException($"Motor_Y query smoke test build profile mismatch for '{itemCode}'.");
+        }
+    }
+
+    private static void ShouldPreferCanonicalLegacyCodeAliasForAppMethodAdaptationPlan()
+    {
+        var builder = new MotorYTrialRecordBuilder();
+        var rated = new MotorRatedParamsContract
+        {
+            ProductKind = "Motor_Y",
+            Model = "Y2-315M-4",
+            RatedPower = 132,
+            RatedCurrent = 240,
+            RatedVoltage = 380,
+            RatedSpeed = 1480,
+            RatedFrequency = 50,
+            Pole = 4,
+            PolePairs = 2,
+            Connection = "Δ"
+        };
+
+        var baseTime = DateTimeOffset.Parse("2026-03-29T09:30:00+08:00");
+        var samples = new[]
+        {
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime,
+                ProductKind = "Motor_Y",
+                VoltageAverage = 381.2,
+                CurrentAverage = 52.6,
+                Power = 24.8,
+                Frequency = 50,
+                Speed = 1492,
+                Torque = 118.2,
+                IsRecordPoint = true
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(10),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 379.8,
+                CurrentAverage = 66.4,
+                Power = 31.2,
+                Frequency = 50,
+                Speed = 1476,
+                Torque = 136.5,
+                IsRecordPoint = false
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(20),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 382.5,
+                CurrentAverage = 74.1,
+                Power = 36.7,
+                Frequency = 50,
+                Speed = 1468,
+                Torque = 149.3,
+                IsRecordPoint = true
+            }
+        };
+
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-ALIAS-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime
+        };
+
+        foreach (var item in builder.BuildTrialItems(rated, samples))
+        {
+            record.Items.Add(item);
+        }
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y app alias preference smoke test returned null detail.");
+
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
+            ?? throw new InvalidOperationException("Motor_Y app alias preference smoke test missing Load_B adaptation plan.");
+
+        if (!string.Equals(loadBPlan.RecommendedLegacyCode, "负载试验B法", StringComparison.Ordinal)
+            || loadBPlan.RecommendedLegacyCodeCount != 1
+            || Math.Abs(loadBPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected canonical alias 负载试验B法/1/1.0, actual={loadBPlan.RecommendedLegacyCode}/{loadBPlan.RecommendedLegacyCodeCount}/{loadBPlan.RecommendedLegacyCodeShare}.");
+        }
+
+        if (loadBPlan.LegacyCodeDistributions.Count != 1)
+        {
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected single canonical legacy-code distribution, actual={loadBPlan.LegacyCodeDistributions.Count}.");
+        }
+
+        var distribution = loadBPlan.LegacyCodeDistributions.Single();
+        if (!string.Equals(distribution.LegacyCode, "负载试验B法", StringComparison.Ordinal)
+            || distribution.Count != 1
+            || Math.Abs(distribution.Share - 1d) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: legacy-code distribution mismatch. actual={distribution.LegacyCode}/{distribution.Count}/{distribution.Share}.");
+        }
+
+        if (!string.Equals(loadBPlan.LegacyCodeSelectionSummary, "selected legacy code 负载试验B法 for MotorY.LoadB (1/1, 100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: unexpected selection summary '{loadBPlan.LegacyCodeSelectionSummary}'.");
         }
     }
 

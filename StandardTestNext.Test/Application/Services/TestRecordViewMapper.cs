@@ -141,6 +141,28 @@ public static class TestRecordViewMapper
         IReadOnlyList<TestRecordItemDetail> items,
         string canonicalCode)
     {
+        var relevantCount = items.Count(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal));
+        if (relevantCount <= 0)
+        {
+            return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
+        }
+
+        var preferredLegacyCodes = MotorYLegacyItemCodeNormalizer.GetLegacyAliases(canonicalCode);
+        if (preferredLegacyCodes.Count > 0)
+        {
+            var primaryLegacyCode = preferredLegacyCodes[0];
+            return new[]
+            {
+                new MotorYLegacyCodeDistributionSnapshot
+                {
+                    CanonicalCode = canonicalCode,
+                    LegacyCode = primaryLegacyCode,
+                    Count = relevantCount,
+                    Share = 1d
+                }
+            };
+        }
+
         var relevant = items
             .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
             .Select(item => string.IsNullOrWhiteSpace(item.DisplayName)
