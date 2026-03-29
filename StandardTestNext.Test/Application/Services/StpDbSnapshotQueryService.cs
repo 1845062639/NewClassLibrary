@@ -613,9 +613,13 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
                     sampleDataJson);
+                var formulaEvidenceObservedFields = resultCoverage.CoveredRequiredResultFields
+                    .Concat(rawDataSignalCoverage.ObservedSignals)
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
                 var formulaEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildFormulaSignalEvidence(
                     selection.CanonicalCode,
-                    resultCoverage.CoveredRequiredResultFields);
+                    formulaEvidenceObservedFields);
                 var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
                     dependencyProfile?.FormulaSignals,
                     formulaEvidence.ObservedPayloadFields,
@@ -623,6 +627,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var ruleObservedFields = coverage.CoveredRequiredPayloadFields
                     .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
                     .Concat(resultCoverage.CoveredRequiredResultFields)
+                    .Concat(rawDataSignalCoverage.ObservedSignals)
                     .Distinct(StringComparer.Ordinal)
                     .ToArray();
                 var ruleEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyRuleEvidence(
