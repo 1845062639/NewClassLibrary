@@ -134,10 +134,10 @@ internal static class MotorYDecisionAnchorResolutionFactory
                         ? "partial"
                         : "missing";
                 var summary = resolved
-                    ? $"decision anchor '{rule.AnchorKey}' resolved by observed payload ({observed}/{total}, {percentagePoints}pp)"
+                    ? $"decision-anchor-resolution:{rule.AnchorKey} resolved {observed}/{total}"
                     : partial
-                        ? $"decision anchor '{rule.AnchorKey}' partially resolved by observed payload ({observed}/{total}, {percentagePoints}pp); missing: {string.Join(", ", rule.MissingPayloadFields)}"
-                        : $"decision anchor '{rule.AnchorKey}' unresolved by observed payload (0/{total}, 0pp); missing: {string.Join(", ", rule.MissingPayloadFields)}";
+                        ? $"decision-anchor-resolution:{rule.AnchorKey} partial {observed}/{total}; missing '{string.Join("', '", rule.MissingPayloadFields)}'"
+                        : $"decision-anchor-resolution:{rule.AnchorKey} missing observed payload fields '{string.Join("', '", rule.MissingPayloadFields)}'";
 
                 var suggestion = BuildResolutionSuggestionParts(canonicalCode, rule.AnchorKey, rule.MissingPayloadFields);
                 var suggestedNextSteps = BuildResolutionSuggestedNextSteps(canonicalCode, rule.AnchorKey, rule.MissingPayloadFields, partial);
