@@ -155,7 +155,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
         }
 
         var bucketMap = loadBPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
-        if (bucketMap.Count != 9
+        if (bucketMap.Count != 10
             || !bucketMap.TryGetValue("upstream", out var upstreamBucket)
             || upstreamBucket.CoveredCount != 2
             || upstreamBucket.MissingCount != 0
@@ -174,7 +174,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !bucketMap.TryGetValue("legacy-rules", out var ruleBucket)
             || ruleBucket.RequiredCount != 3
             || ruleBucket.CoveredCount != 0
-            || ruleBucket.MissingCount != 3)
+            || ruleBucket.MissingCount != 3
+            || !bucketMap.TryGetValue("legacy-decision-anchors", out var decisionAnchorBucket)
+            || decisionAnchorBucket.RequiredCount != 3
+            || decisionAnchorBucket.CoveredCount != 0
+            || decisionAnchorBucket.MissingCount != 3)
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: dependency bucket projection mismatch for LoadB.");
         }

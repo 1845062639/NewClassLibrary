@@ -26,7 +26,8 @@ internal static class MotorYDependencyBucketSummaryFactory
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
         MotorYStructuredListCoverageSnapshot formulaCoverage,
-        MotorYStructuredListCoverageSnapshot ruleCoverage)
+        MotorYStructuredListCoverageSnapshot ruleCoverage,
+        MotorYStructuredListCoverageSnapshot decisionAnchorCoverage)
     {
         return new MotorYDependencyBucketSummarySnapshot[]
         {
@@ -155,6 +156,20 @@ internal static class MotorYDependencyBucketSummaryFactory
                 CoveredItems = ruleCoverage.CoveredItems,
                 MissingItems = ruleCoverage.MissingItems,
                 Summary = ruleCoverage.Summary
+            },
+            new()
+            {
+                BucketKey = "legacy-decision-anchors",
+                DisplayName = "旧算法决策锚点",
+                RequiredCount = decisionAnchorCoverage.RequiredCount,
+                CoveredCount = decisionAnchorCoverage.CoveredCount,
+                MissingCount = decisionAnchorCoverage.MissingCount,
+                CoverageRatio = decisionAnchorCoverage.CoverageRatio,
+                CoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
+                RequiredItems = decisionAnchorCoverage.CoveredItems.Concat(decisionAnchorCoverage.MissingItems).ToArray(),
+                CoveredItems = decisionAnchorCoverage.CoveredItems,
+                MissingItems = decisionAnchorCoverage.MissingItems,
+                Summary = decisionAnchorCoverage.Summary
             }
         };
     }

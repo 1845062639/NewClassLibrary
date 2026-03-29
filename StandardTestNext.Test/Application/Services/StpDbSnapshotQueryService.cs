@@ -632,6 +632,14 @@ WHERE COALESCE(curr.Code, '') <> ''
                     dependencyProfile?.LegacyAlgorithmRules,
                     ruleEvidence.ObservedPayloadFields,
                     "legacy algorithm rules");
+                var decisionAnchorObservedFields = ruleObservedFields;
+                var decisionAnchorEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyDecisionAnchorEvidence(
+                    selection.CanonicalCode,
+                    decisionAnchorObservedFields);
+                var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+                    dependencyProfile?.LegacyDecisionAnchors,
+                    decisionAnchorEvidence.ObservedPayloadFields,
+                    "legacy decision anchors");
                 var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
                     dependencyProfile?.RequiredStructuredPayloadSignals,
                     sampleDataJson,
@@ -668,7 +676,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     structuredPayloadCoverage,
                     structuredResultCoverage,
                     formulaCoverage,
-                    ruleCoverage);
+                    ruleCoverage,
+                    decisionAnchorCoverage);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -811,8 +820,30 @@ WHERE COALESCE(curr.Code, '') <> ''
                         })
                         .ToArray(),
                     LegacyAlgorithmRulesObservedPayloadSummary = ruleEvidence.Summary,
+                    LegacyDecisionAnchors = dependencyProfile?.LegacyDecisionAnchors ?? Array.Empty<string>(),
+                    CoveredLegacyDecisionAnchorCount = decisionAnchorCoverage.CoveredCount,
+                    MissingLegacyDecisionAnchorCount = decisionAnchorCoverage.MissingCount,
+                    CoveredLegacyDecisionAnchors = decisionAnchorCoverage.CoveredItems,
+                    MissingLegacyDecisionAnchors = decisionAnchorCoverage.MissingItems,
+                    LegacyDecisionAnchorCoverageRatio = decisionAnchorCoverage.CoverageRatio,
+                    LegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
+                    LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
+                    LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
+                    LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorEvidence.SignalOrRuleGaps
+                        .Select(gap => new MotorYObservedAlgorithmEvidenceGapSnapshot
+                        {
+                            SignalOrRule = gap.SignalOrRule,
+                            RequiredPayloadFields = gap.RequiredPayloadFields,
+                            ObservedPayloadFields = gap.ObservedPayloadFields,
+                            MissingPayloadFields = gap.MissingPayloadFields,
+                            CoveredByObservedPayload = gap.CoveredByObservedPayload,
+                            Summary = gap.Summary
+                        })
+                        .ToArray(),
+                    LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
                     FormulaSignalSummary = formulaCoverage.Summary,
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
+                    LegacyDecisionAnchorSummary = decisionAnchorCoverage.Summary,
                     SelectedMethodSummary = selection.SelectedMethodSummary,
                     BaselineDominantComparisonSummary = selection.BaselineDominantComparisonSummary,
                     DependencyBuckets = dependencyBuckets,

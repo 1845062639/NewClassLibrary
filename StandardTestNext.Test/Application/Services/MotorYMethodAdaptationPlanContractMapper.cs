@@ -102,7 +102,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             structuredPayloadCoverage,
             structuredResultCoverage,
             formulaCoverage,
-            ruleCoverage);
+            ruleCoverage,
+            decisionAnchorCoverage);
 
         return new MotorYMethodAdaptationPlanContract
         {
