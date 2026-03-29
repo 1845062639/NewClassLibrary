@@ -466,6 +466,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     SuggestedNextStepFields = resolution.SuggestedNextStepFields,
                     SuggestedNextSteps = resolution.SuggestedNextSteps,
                     SuggestedNextStepSummary = resolution.SuggestedNextStepSummary,
+                    SuggestedNextStepPriority = resolution.SuggestedNextStepPriority,
+                    SuggestedNextStepPrioritySummary = resolution.SuggestedNextStepPrioritySummary,
+                    SuggestedNextStepCoverageSummary = resolution.SuggestedNextStepCoverageSummary,
                     Summary = resolution.Summary
                 })
                 .ToArray(),

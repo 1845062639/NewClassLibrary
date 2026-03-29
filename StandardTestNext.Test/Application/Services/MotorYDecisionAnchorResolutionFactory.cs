@@ -16,6 +16,9 @@ internal sealed class MotorYDecisionAnchorResolution
     public IReadOnlyList<string> SuggestedNextStepFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
     public string SuggestedNextStepSummary { get; init; } = string.Empty;
+    public string SuggestedNextStepPriority { get; init; } = string.Empty;
+    public string SuggestedNextStepPrioritySummary { get; init; } = string.Empty;
+    public string SuggestedNextStepCoverageSummary { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
 }
 
@@ -117,6 +120,34 @@ internal static class MotorYDecisionAnchorResolutionFactory
         };
     }
 
+    private static string BuildResolutionPriority(bool resolved, bool partial)
+        => resolved
+            ? "resolved"
+            : partial
+                ? "follow-up"
+                : "blocking";
+
+    private static string BuildResolutionPrioritySummary(string priority, string focus)
+        => priority switch
+        {
+            "resolved" => $"{focus}已满足，无需继续补字段",
+            "follow-up" => $"{focus}仍有部分缺口，建议继续追齐剩余字段",
+            _ => $"{focus}仍阻塞旧算法决策分支，建议优先补齐"
+        };
+
+    private static string BuildResolutionCoverageSummary(int observed, int total, int percentagePoints, IReadOnlyList<string> missingPayloadFields)
+    {
+        if (total == 0)
+        {
+            return "decision anchor coverage 0/0 (100pp); no required payload fields";
+        }
+
+        var missingPreview = missingPayloadFields.Count == 0
+            ? "none"
+            : string.Join(", ", missingPayloadFields.Take(4)) + (missingPayloadFields.Count > 4 ? ", ..." : string.Empty);
+        return $"decision anchor coverage {observed}/{total} ({percentagePoints}pp); missing: {missingPreview}";
+    }
+
     public static IReadOnlyList<MotorYDecisionAnchorResolution> Build(
         string canonicalCode,
         IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)
@@ -153,6 +184,9 @@ internal static class MotorYDecisionAnchorResolutionFactory
                 var suggestedNextStepSummary = suggestedNextSteps.Count == 0
                     ? "decision anchor already resolved"
                     : string.Join("; ", suggestedNextSteps);
+                var suggestedNextStepPriority = BuildResolutionPriority(resolved, partial);
+                var suggestedNextStepPrioritySummary = BuildResolutionPrioritySummary(suggestedNextStepPriority, suggestion.Focus);
+                var suggestedNextStepCoverageSummary = BuildResolutionCoverageSummary(observed, total, percentagePoints, rule.MissingPayloadFields);
 
                 return new MotorYDecisionAnchorResolution
                 {
@@ -170,6 +204,9 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     SuggestedNextStepFields = suggestion.Fields,
                     SuggestedNextSteps = suggestedNextSteps,
                     SuggestedNextStepSummary = suggestedNextStepSummary,
+                    SuggestedNextStepPriority = suggestedNextStepPriority,
+                    SuggestedNextStepPrioritySummary = suggestedNextStepPrioritySummary,
+                    SuggestedNextStepCoverageSummary = suggestedNextStepCoverageSummary,
                     Summary = summary
                 };
             })
