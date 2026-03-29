@@ -1041,6 +1041,17 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? 100
                         : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
                     LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
+                    ResolvedLegacyDecisionAnchorCount = decisionAnchorResolutions.Count(resolution => resolution.ResolvedByObservedPayload),
+                    PartialLegacyDecisionAnchorCount = decisionAnchorResolutions.Count(resolution => resolution.PartiallyResolvedByObservedPayload),
+                    MissingLegacyDecisionAnchorResolutionCount = decisionAnchorResolutions.Count(resolution => !resolution.ResolvedByObservedPayload && !resolution.PartiallyResolvedByObservedPayload),
+                    EffectiveLegacyDecisionAnchorCoverageCount = decisionAnchorResolutions.Count(resolution => resolution.ResolvedByObservedPayload || resolution.PartiallyResolvedByObservedPayload),
+                    EffectiveLegacyDecisionAnchorGapCount = decisionAnchorResolutions.Count(resolution => !resolution.ResolvedByObservedPayload && !resolution.PartiallyResolvedByObservedPayload),
+                    EffectiveLegacyDecisionAnchorCoverageRatio = decisionAnchorResolutions.Count == 0
+                        ? 1d
+                        : Math.Round((double)decisionAnchorResolutions.Count(resolution => resolution.ResolvedByObservedPayload || resolution.PartiallyResolvedByObservedPayload) / decisionAnchorResolutions.Count, 4, MidpointRounding.AwayFromZero),
+                    EffectiveLegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorResolutions.Count == 0
+                        ? 100
+                        : (int)Math.Round((double)decisionAnchorResolutions.Count(resolution => resolution.ResolvedByObservedPayload || resolution.PartiallyResolvedByObservedPayload) / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero),
                     LegacyDecisionAnchorResolutions = decisionAnchorResolutions
                         .Select(resolution => new MotorYDecisionAnchorResolutionSnapshot
                         {

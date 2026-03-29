@@ -472,8 +472,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             ResolvedLegacyDecisionAnchorCount = resolvedDecisionAnchorCount,
             PartialLegacyDecisionAnchorCount = partialDecisionAnchorCount,
             MissingLegacyDecisionAnchorResolutionCount = missingDecisionAnchorResolutionCount,
+            EffectiveLegacyDecisionAnchorCoverageCount = resolvedDecisionAnchorCount + partialDecisionAnchorCount,
+            EffectiveLegacyDecisionAnchorGapCount = missingDecisionAnchorResolutionCount,
             LegacyDecisionAnchorResolutionCoverageRatio = decisionAnchorResolutionCoverageRatio,
             LegacyDecisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutionCoveragePercentagePoints,
+            EffectiveLegacyDecisionAnchorCoverageRatio = decisionAnchorResolutions.Count == 0
+                ? 1d
+                : Math.Round((double)(resolvedDecisionAnchorCount + partialDecisionAnchorCount) / decisionAnchorResolutions.Count, 4, MidpointRounding.AwayFromZero),
+            EffectiveLegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorResolutions.Count == 0
+                ? 100
+                : (int)Math.Round((double)(resolvedDecisionAnchorCount + partialDecisionAnchorCount) / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero),
             LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
             LegacyDecisionAnchorGapPreviewSummary = decisionAnchorGapPreviewSummary,

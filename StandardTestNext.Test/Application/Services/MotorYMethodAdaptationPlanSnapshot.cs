@@ -219,10 +219,14 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public int ResolvedLegacyDecisionAnchorCount { get; init; }
     public int PartialLegacyDecisionAnchorCount { get; init; }
     public int MissingLegacyDecisionAnchorResolutionCount { get; init; }
+    public int EffectiveLegacyDecisionAnchorCoverageCount { get; init; }
+    public int EffectiveLegacyDecisionAnchorGapCount { get; init; }
     public double LegacyDecisionAnchorObservationRuleCoverageRatio { get; init; }
     public int LegacyDecisionAnchorObservationRuleCoveragePercentagePoints { get; init; }
     public double LegacyDecisionAnchorResolutionCoverageRatio { get; init; }
     public int LegacyDecisionAnchorResolutionCoveragePercentagePoints { get; init; }
+    public double EffectiveLegacyDecisionAnchorCoverageRatio { get; init; }
+    public int EffectiveLegacyDecisionAnchorCoveragePercentagePoints { get; init; }
     public string LegacyDecisionAnchorObservationRuleSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorResolutionSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorNextActionSummary { get; init; } = string.Empty;
