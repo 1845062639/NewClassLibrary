@@ -303,8 +303,14 @@ public sealed class TestBootstrap
         var next = string.IsNullOrWhiteSpace(resolution.SuggestedNextStepSummary)
             ? "none"
             : resolution.SuggestedNextStepSummary;
+        var priority = string.IsNullOrWhiteSpace(resolution.SuggestedNextStepPriority)
+            ? "none"
+            : resolution.SuggestedNextStepPriority;
+        var coverage = string.IsNullOrWhiteSpace(resolution.SuggestedNextStepCoverageSummary)
+            ? "none"
+            : resolution.SuggestedNextStepCoverageSummary;
 
-        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}:next={next}";
+        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}:priority={priority}:coverage={coverage}:next={next}";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
