@@ -1122,6 +1122,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                             SuggestedNextStepPriority = resolution.SuggestedNextStepPriority,
                             SuggestedNextStepPrioritySummary = resolution.SuggestedNextStepPrioritySummary,
                             SuggestedNextStepCoverageSummary = resolution.SuggestedNextStepCoverageSummary,
+                            SuggestedPrimaryNextField = resolution.SuggestedPrimaryNextField,
+                            SuggestedPrimaryNextFieldSummary = resolution.SuggestedPrimaryNextFieldSummary,
                             Summary = resolution.Summary
                         })
                         .ToArray(),
