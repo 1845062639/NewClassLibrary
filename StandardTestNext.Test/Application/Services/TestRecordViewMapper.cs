@@ -487,6 +487,8 @@ public static class TestRecordViewMapper
             LegacyDecisionAnchorObservationRuleSummary = contract.LegacyDecisionAnchorObservationRuleSummary,
             LegacyDecisionAnchorResolutionSummary = contract.LegacyDecisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = contract.LegacyDecisionAnchorNextActionSummary,
+            SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
+            SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = contract.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = contract.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = contract.LegacyAlgorithmRuleSummary,

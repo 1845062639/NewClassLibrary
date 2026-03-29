@@ -221,6 +221,8 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string LegacyDecisionAnchorObservationRuleSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorResolutionSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorNextActionSummary { get; init; } = string.Empty;
+    public IReadOnlyList<string> SuggestedDecisionAnchorNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedDecisionAnchorNextStepSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;

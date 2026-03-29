@@ -118,6 +118,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
         var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
         var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
+        var suggestedDecisionAnchorNextSteps = BuildSuggestedDecisionAnchorNextSteps(decisionAnchorResolutions);
+        var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
+            ? "no decision-anchor next-step recommendation"
+            : string.Join("; ", suggestedDecisionAnchorNextSteps);
         var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
         var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
         var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
@@ -428,6 +432,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
             LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
+            SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
+            SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
@@ -552,6 +558,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             ResolutionStage = resolution.ResolutionStage,
             Summary = resolution.Summary
         };
+    }
+
+    private static IReadOnlyList<string> BuildSuggestedDecisionAnchorNextSteps(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        return resolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x =>
+            {
+                var missing = FormatPreview(x.MissingPayloadFields, 4);
+                return x.PartiallyResolvedByObservedPayload
+                    ? $"补齐决策锚点 {x.AnchorKey} 剩余观测字段: {missing}"
+                    : $"先补决策锚点 {x.AnchorKey}: {missing}";
+            })
+            .Take(3)
+            .ToArray();
     }
 
     private static MotorYDependencyBucketSummaryContract MapDependencyBucket(MotorYDependencyBucketSummarySnapshot snapshot)

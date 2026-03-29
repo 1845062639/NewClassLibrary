@@ -700,9 +700,16 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadPlan.LegacyDecisionAnchorResolutionCoveragePercentagePoints != 0
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorObservationRuleSummary, "decision anchor observation rules covered 0/3 (0pp); missing: rconverse-branch, pfw-fit-window, rated-regression-ready", StringComparison.Ordinal)
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorResolutionSummary, "decision anchor resolutions resolved 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: rconverse-branch -> need RConverseType; pfw-fit-window -> need Pfw; rated-regression-ready -> need CoefficientOfPfe, I0, ΔI0, P0, Pcu, Pfe", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: rconverse-branch -> need RConverseType; pfw-fit-window -> need Pfw; rated-regression-ready -> need CoefficientOfPfe, I0, ΔI0, P0, Pcu, Pfe", StringComparison.Ordinal)
+            || !noLoadPlan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+            {
+                "先补决策锚点 rconverse-branch: RConverseType",
+                "先补决策锚点 pfw-fit-window: Pfw",
+                "先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, ΔI0, P0, ..."
+            }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.SuggestedDecisionAnchorNextStepSummary, "先补决策锚点 rconverse-branch: RConverseType; 先补决策锚点 pfw-fit-window: Pfw; 先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, ΔI0, P0, ...", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. anchors='{noLoadPlan.LegacyDecisionAnchorSummary}', observed='{noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary}', rules='{noLoadPlan.LegacyDecisionAnchorObservationRuleSummary}', next='{noLoadPlan.LegacyDecisionAnchorNextActionSummary}'");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. anchors='{noLoadPlan.LegacyDecisionAnchorSummary}', observed='{noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary}', rules='{noLoadPlan.LegacyDecisionAnchorObservationRuleSummary}', next='{noLoadPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{noLoadPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
 
         var noLoadAnchorRuleMap = noLoadPlan.LegacyDecisionAnchorObservationRules.ToDictionary(x => x.AnchorKey, StringComparer.Ordinal);
