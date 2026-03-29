@@ -386,6 +386,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             LegacyDecisionAnchorObservationRuleSummary = snapshot.LegacyDecisionAnchorObservationRuleSummary,
             LegacyDecisionAnchorResolutionSummary = snapshot.LegacyDecisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = snapshot.LegacyDecisionAnchorNextActionSummary,
+            LegacyDecisionAnchorGapPreviewSummary = snapshot.LegacyDecisionAnchorGapPreviewSummary,
             SuggestedDecisionAnchorNextSteps = snapshot.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = snapshot.SuggestedDecisionAnchorNextStepSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = snapshot.LegacyDecisionAnchorsObservedPayloadSummary,

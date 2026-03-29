@@ -692,6 +692,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
                 var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
                 var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
+                var decisionAnchorGapPreviewSummary = MotorYDecisionAnchorResolutionFactory.BuildGapPreviewSummary(decisionAnchorResolutions);
                 var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
                 var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
                     ? "no decision-anchor next-step recommendation"
@@ -1042,6 +1043,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
                     LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
                     LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
+                    LegacyDecisionAnchorGapPreviewSummary = decisionAnchorGapPreviewSummary,
                     SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
                     SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
                     LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,

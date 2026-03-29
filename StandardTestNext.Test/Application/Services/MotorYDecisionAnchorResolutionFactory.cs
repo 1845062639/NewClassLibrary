@@ -103,6 +103,26 @@ internal static class MotorYDecisionAnchorResolutionFactory
         return $"decision anchor next actions: {string.Join("; ", suggestedSteps)}";
     }
 
+    public static string BuildGapPreviewSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        if (resolutions.Count == 0)
+        {
+            return "decision anchor gap preview unavailable";
+        }
+
+        var preview = resolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .OrderByDescending(x => x.MissingPayloadFields.Count)
+            .ThenBy(x => x.AnchorKey, StringComparer.Ordinal)
+            .Take(3)
+            .Select(x => $"{x.AnchorKey}[{(x.PartiallyResolvedByObservedPayload ? "partial" : "missing")}]:{(x.MissingPayloadFields.Count == 0 ? "none" : string.Join(", ", x.MissingPayloadFields.Take(3)) + (x.MissingPayloadFields.Count > 3 ? ", ..." : string.Empty))}")
+            .ToArray();
+
+        return preview.Length == 0
+            ? "decision anchor gaps: none"
+            : $"decision anchor gaps: {string.Join("; ", preview)}";
+    }
+
     public static string BuildSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
         if (resolutions.Count == 0)

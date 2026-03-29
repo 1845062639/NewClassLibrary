@@ -707,6 +707,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorObservationRuleSummary, "decision anchor observation rules covered 0/3 (0pp); missing: rconverse-branch, pfw-fit-window, rated-regression-ready", StringComparison.Ordinal)
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorResolutionSummary, "decision anchor resolutions resolved 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal)
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: rconverse-branch -> need RConverseType; pfw-fit-window -> need Pfw; rated-regression-ready -> need CoefficientOfPfe, I0, ΔI0, P0, Pcu, Pfe", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: rated-regression-ready[missing]:CoefficientOfPfe, I0, ΔI0, ...; pfw-fit-window[missing]:Pfw; rconverse-branch[missing]:RConverseType", StringComparison.Ordinal)
             || !noLoadPlan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
             {
                 "先补决策锚点 rconverse-branch: RConverseType",

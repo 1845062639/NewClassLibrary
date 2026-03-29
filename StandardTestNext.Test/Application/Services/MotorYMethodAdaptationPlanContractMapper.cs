@@ -118,6 +118,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
         var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
         var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
+        var decisionAnchorGapPreviewSummary = MotorYDecisionAnchorResolutionFactory.BuildGapPreviewSummary(decisionAnchorResolutions);
         var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
         var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
             ? "no decision-anchor next-step recommendation"
@@ -470,6 +471,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutionCoveragePercentagePoints,
             LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
+            LegacyDecisionAnchorGapPreviewSummary = decisionAnchorGapPreviewSummary,
             SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
             SelectedMethodSummary = selection.SelectedMethodSummary,
