@@ -15,6 +15,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredStructuredResultSignals { get; init; } = Array.Empty<string>();
@@ -59,6 +60,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "R1", "θ1c" },
+                RequiredIntermediateResultFields = new[] { "R1", "θ1c" },
                 RequiredStructuredPayloadSignals = new[] { "Ruv", "Rvw", "Rwu" },
                 RequiredStructuredResultSignals = new[] { "R1", "θ1c" },
                 FormulaSignals = new[]
@@ -88,6 +90,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" },
+                RequiredIntermediateResultFields = new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" },
                 RequiredStructuredPayloadSignals = new[] { "DataList.U0", "DataList.I0", "DataList.P0", "DataList.P0cu1", "DataList.Pcon", "DataList.Pfe", "DataList.n0", "DataList.T0" },
                 RequiredStructuredResultSignals = new[] { "P0", "I0", "ΔI0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" },
                 FormulaSignals = new[]
@@ -120,6 +123,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
+                RequiredIntermediateResultFields = new[] { "firstSecondsInterval", "Rw", "Rn", "Rws", "θw", "θs", "θb" },
                 RequiredStructuredPayloadSignals = new[] { "Data1List.Time", "Data1List.P1", "Data1List.θ1", "Data1List.AmbientTemperature", "Data2List.Time", "Data2List.R" },
                 RequiredStructuredResultSignals = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
                 FormulaSignals = new[]
@@ -152,6 +156,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Pcu1", "Pcu2", "ResultDataList", "η" },
+                RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "P2x", "η" },
                 RequiredStructuredPayloadSignals = new[] { "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "ResultDataList.P2", "ResultDataList.η" },
                 RequiredStructuredResultSignals = new[] { "Pcu1", "Pcu2", "η", "ResultDataList" },
                 FormulaSignals = new[]
@@ -184,6 +189,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
+                RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl", "A", "B", "R", "Ps", "cuC", "θs" },
                 RequiredStructuredPayloadSignals = new[] { "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "RawDataList.θa", "RawDataList.Pl", "ResultDataList.P2", "ResultDataList.Ps" },
                 RequiredStructuredResultSignals = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
                 FormulaSignals = new[]
@@ -216,6 +222,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredPayloadFields = new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" },
+                RequiredIntermediateResultFields = new[] { "θ1s", "R", "Pkcu1", "Pfe", "ns", "Tk", "Ikn", "Pkn", "Tkn" },
                 RequiredStructuredPayloadSignals = new[] { "DataList.Uk", "DataList.Ik", "DataList.Pk", "DataList.Tk", "DataList.Pkcu1", "DataList.Pfe", "DataList.ns" },
                 RequiredStructuredResultSignals = new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" },
                 FormulaSignals = new[]

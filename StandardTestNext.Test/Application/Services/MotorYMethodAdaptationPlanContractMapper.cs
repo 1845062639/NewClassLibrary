@@ -39,6 +39,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             null);
+        var intermediateResultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
+            selection.CanonicalCode,
+            dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
+            null);
         var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
             dependencyProfile?.RequiredStructuredPayloadSignals,
             null,
@@ -188,6 +192,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RequiredPayloadFields = requiredPayloadFields,
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
+            RequiredIntermediateResultFields = dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
+            CoveredRequiredIntermediateResultFieldCount = intermediateResultCoverage.CoveredRequiredResultFieldCount,
+            MissingRequiredIntermediateResultFieldCount = intermediateResultCoverage.MissingRequiredResultFieldCount,
+            MissingRequiredIntermediateResultFields = intermediateResultCoverage.MissingRequiredResultFields,
+            CoveredRequiredIntermediateResultFields = intermediateResultCoverage.CoveredRequiredResultFields,
+            RequiredIntermediateResultFieldCoverageRatio = intermediateResultCoverage.RequiredResultFieldCoverageRatio,
+            RequiredIntermediateResultFieldCoveragePercentagePoints = intermediateResultCoverage.RequiredResultFieldCoveragePercentagePoints,
+            RequiredIntermediateResultFieldCoverageSummary = intermediateResultCoverage.RequiredResultFieldCoverageSummary,
             CoveredRequiredResultFieldCount = resultCoverage.CoveredRequiredResultFieldCount,
             MissingRequiredResultFieldCount = resultCoverage.MissingRequiredResultFieldCount,
             MissingRequiredResultFields = resultCoverage.MissingRequiredResultFields,

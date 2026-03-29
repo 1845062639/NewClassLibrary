@@ -613,6 +613,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
                     sampleDataJson);
+                var intermediateResultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
+                    selection.CanonicalCode,
+                    dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
+                    sampleDataJson);
                 var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
                     dependencyProfile?.RequiredStructuredPayloadSignals,
                     sampleDataJson,
@@ -758,6 +762,14 @@ WHERE COALESCE(curr.Code, '') <> ''
                     RequiredPayloadFields = requiredPayloadFields,
                     RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
+                    RequiredIntermediateResultFields = dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
+                    CoveredRequiredIntermediateResultFieldCount = intermediateResultCoverage.CoveredRequiredResultFieldCount,
+                    MissingRequiredIntermediateResultFieldCount = intermediateResultCoverage.MissingRequiredResultFieldCount,
+                    MissingRequiredIntermediateResultFields = intermediateResultCoverage.MissingRequiredResultFields,
+                    CoveredRequiredIntermediateResultFields = intermediateResultCoverage.CoveredRequiredResultFields,
+                    RequiredIntermediateResultFieldCoverageRatio = intermediateResultCoverage.RequiredResultFieldCoverageRatio,
+                    RequiredIntermediateResultFieldCoveragePercentagePoints = intermediateResultCoverage.RequiredResultFieldCoveragePercentagePoints,
+                    RequiredIntermediateResultFieldCoverageSummary = intermediateResultCoverage.RequiredResultFieldCoverageSummary,
                     CoveredRequiredResultFieldCount = resultCoverage.CoveredRequiredResultFieldCount,
                     MissingRequiredResultFieldCount = resultCoverage.MissingRequiredResultFieldCount,
                     MissingRequiredResultFields = resultCoverage.MissingRequiredResultFields,
