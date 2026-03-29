@@ -519,6 +519,16 @@ public static class TestRecordViewMapper
                 DominantSuggestedNextStepFields = x.DominantSuggestedNextStepFields,
                 DominantSuggestedNextStepSummary = x.DominantSuggestedNextStepSummary
             }).ToArray(),
+            DecisionAnchorPrimaryFieldDistributions = contract.DecisionAnchorPrimaryFieldDistributions.Select(x => new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
             DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,

@@ -419,6 +419,16 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 DominantSuggestedNextStepFields = x.DominantSuggestedNextStepFields,
                 DominantSuggestedNextStepSummary = x.DominantSuggestedNextStepSummary
             }).ToArray(),
+            DecisionAnchorPrimaryFieldDistributions = snapshot.DecisionAnchorPrimaryFieldDistributions.Select(x => new MotorYDecisionAnchorPrimaryFieldDistributionContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
             EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
             EffectiveLegacyDecisionAnchorGapCount = snapshot.EffectiveLegacyDecisionAnchorGapCount,
