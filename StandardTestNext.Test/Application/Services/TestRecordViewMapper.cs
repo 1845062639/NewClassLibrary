@@ -483,6 +483,8 @@ public static class TestRecordViewMapper
                 SuggestedNextStepPriority = x.SuggestedNextStepPriority,
                 SuggestedNextStepPrioritySummary = x.SuggestedNextStepPrioritySummary,
                 SuggestedNextStepCoverageSummary = x.SuggestedNextStepCoverageSummary,
+                SuggestedPrimaryNextField = x.SuggestedPrimaryNextField,
+                SuggestedPrimaryNextFieldSummary = x.SuggestedPrimaryNextFieldSummary,
                 Summary = x.Summary
             }).ToArray(),
             CoveredLegacyDecisionAnchorObservationRuleCount = contract.CoveredLegacyDecisionAnchorObservationRuleCount,

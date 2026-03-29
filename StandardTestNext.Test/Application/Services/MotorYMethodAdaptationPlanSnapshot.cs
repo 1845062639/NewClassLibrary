@@ -39,6 +39,8 @@ public sealed class MotorYDecisionAnchorResolutionSnapshot
     public string SuggestedNextStepPriority { get; init; } = string.Empty;
     public string SuggestedNextStepPrioritySummary { get; init; } = string.Empty;
     public string SuggestedNextStepCoverageSummary { get; init; } = string.Empty;
+    public string SuggestedPrimaryNextField { get; init; } = string.Empty;
+    public string SuggestedPrimaryNextFieldSummary { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
 }
 

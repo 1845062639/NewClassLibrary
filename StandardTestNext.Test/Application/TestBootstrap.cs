@@ -313,7 +313,10 @@ public sealed class TestBootstrap
             ? "none"
             : resolution.SuggestedNextStepCoverageSummary;
 
-        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}:priority={priority}:coverage={coverage}:next={next}";
+        var primary = string.IsNullOrWhiteSpace(resolution.SuggestedPrimaryNextField)
+            ? "none"
+            : resolution.SuggestedPrimaryNextField;
+        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}:priority={priority}:primary={primary}:coverage={coverage}:next={next}";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)

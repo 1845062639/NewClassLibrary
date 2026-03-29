@@ -19,6 +19,8 @@ internal sealed class MotorYDecisionAnchorResolution
     public string SuggestedNextStepPriority { get; init; } = string.Empty;
     public string SuggestedNextStepPrioritySummary { get; init; } = string.Empty;
     public string SuggestedNextStepCoverageSummary { get; init; } = string.Empty;
+    public string SuggestedPrimaryNextField { get; init; } = string.Empty;
+    public string SuggestedPrimaryNextFieldSummary { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
 }
 
@@ -164,6 +166,116 @@ internal static class MotorYDecisionAnchorResolutionFactory
         return $"decision anchor coverage {observed}/{total} ({percentagePoints}pp); missing: {missingPreview}";
     }
 
+    private static string BuildPrimaryNextField(string canonicalCode, string anchorKey, IReadOnlyList<string> missingPayloadFields)
+    {
+        if (missingPayloadFields.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "rconverse-branch" => missingPayloadFields.Contains("RConverseType", StringComparer.Ordinal) ? "RConverseType" : missingPayloadFields[0],
+                "pfw-fit-window" => missingPayloadFields.Contains("Pfw", StringComparer.Ordinal) ? "Pfw" : missingPayloadFields[0],
+                "rated-regression-ready" => missingPayloadFields.Contains("CoefficientOfPfe", StringComparer.Ordinal)
+                    ? "CoefficientOfPfe"
+                    : missingPayloadFields.Contains("Pfe", StringComparer.Ordinal)
+                        ? "Pfe"
+                        : missingPayloadFields[0],
+                _ => missingPayloadFields[0]
+            };
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.DcResistance, StringComparison.Ordinal))
+        {
+            return missingPayloadFields.Contains("R1", StringComparer.Ordinal)
+                ? "R1"
+                : missingPayloadFields[0];
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "first-seconds-interval" => missingPayloadFields.Contains("Pn", StringComparer.Ordinal) ? "Pn" : missingPayloadFields[0],
+                "hot-state-branch" => missingPayloadFields.Contains("HotStateType", StringComparer.Ordinal) ? "HotStateType" : missingPayloadFields[0],
+                "gb-temperature-branch" => missingPayloadFields.Contains("GB", StringComparer.Ordinal) ? "GB" : missingPayloadFields[0],
+                _ => missingPayloadFields[0]
+            };
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "upstream-ready" => missingPayloadFields.Contains("CoefficientOfPfe", StringComparer.Ordinal)
+                    ? "CoefficientOfPfe"
+                    : missingPayloadFields.Contains("Pfw", StringComparer.Ordinal)
+                        ? "Pfw"
+                        : missingPayloadFields[0],
+                "rated-load-fit-grid" => missingPayloadFields.Contains("ResultDataList", StringComparer.Ordinal) ? "ResultDataList" : missingPayloadFields[0],
+                "payload-rated-quantity-ready" => missingPayloadFields.Contains("η", StringComparer.Ordinal)
+                    ? "η"
+                    : missingPayloadFields.Contains("Pcu2", StringComparer.Ordinal)
+                        ? "Pcu2"
+                        : missingPayloadFields[0],
+                _ => missingPayloadFields[0]
+            };
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "gb-ratios-branch" => missingPayloadFields.Contains("GB", StringComparer.Ordinal) ? "GB" : missingPayloadFields[0],
+                "correlation-refit" => missingPayloadFields.Contains("R", StringComparer.Ordinal)
+                    ? "R"
+                    : missingPayloadFields.Contains("A", StringComparer.Ordinal)
+                        ? "A"
+                        : missingPayloadFields[0],
+                "ps-iteration" => missingPayloadFields.Contains("Ps", StringComparer.Ordinal)
+                    ? "Ps"
+                    : missingPayloadFields.Contains("cuC", StringComparer.Ordinal)
+                        ? "cuC"
+                        : missingPayloadFields[0],
+                "thermal-carryover" => missingPayloadFields.Contains("θw", StringComparer.Ordinal) ? "θw" : missingPayloadFields[0],
+                _ => missingPayloadFields[0]
+            };
+        }
+
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "voltage-fit-branch" => missingPayloadFields.Contains("Un", StringComparer.Ordinal) ? "Un" : missingPayloadFields[0],
+                "torquecal-branch" => missingPayloadFields.Contains("TorqueCalType", StringComparer.Ordinal) ? "TorqueCalType" : missingPayloadFields[0],
+                "rcal-branch" => missingPayloadFields.Contains("RCalType", StringComparer.Ordinal)
+                    ? "RCalType"
+                    : missingPayloadFields.Contains("R1s", StringComparer.Ordinal)
+                        ? "R1s"
+                        : missingPayloadFields[0],
+                _ => missingPayloadFields[0]
+            };
+        }
+
+        return missingPayloadFields[0];
+    }
+
+    private static string BuildPrimaryNextFieldSummary(string canonicalCode, string anchorKey, string focus, string primaryField)
+    {
+        if (string.IsNullOrWhiteSpace(primaryField))
+        {
+            return "decision anchor already resolved";
+        }
+
+        var anchorLabel = string.IsNullOrWhiteSpace(anchorKey)
+            ? focus
+            : $"{focus}（{anchorKey}）";
+        return $"优先补字段 {primaryField}，用于推进 {anchorLabel}";
+    }
+
     public static IReadOnlyList<MotorYDecisionAnchorResolution> Build(
         string canonicalCode,
         IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)
@@ -203,6 +315,8 @@ internal static class MotorYDecisionAnchorResolutionFactory
                 var suggestedNextStepPriority = BuildResolutionPriority(resolved, partial);
                 var suggestedNextStepPrioritySummary = BuildResolutionPrioritySummary(suggestedNextStepPriority, suggestion.Focus);
                 var suggestedNextStepCoverageSummary = BuildResolutionCoverageSummary(observed, total, percentagePoints, rule.MissingPayloadFields);
+                var suggestedPrimaryNextField = BuildPrimaryNextField(canonicalCode, rule.AnchorKey, rule.MissingPayloadFields);
+                var suggestedPrimaryNextFieldSummary = BuildPrimaryNextFieldSummary(canonicalCode, rule.AnchorKey, suggestion.Focus, suggestedPrimaryNextField);
 
                 return new MotorYDecisionAnchorResolution
                 {
@@ -223,6 +337,8 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     SuggestedNextStepPriority = suggestedNextStepPriority,
                     SuggestedNextStepPrioritySummary = suggestedNextStepPrioritySummary,
                     SuggestedNextStepCoverageSummary = suggestedNextStepCoverageSummary,
+                    SuggestedPrimaryNextField = suggestedPrimaryNextField,
+                    SuggestedPrimaryNextFieldSummary = suggestedPrimaryNextFieldSummary,
                     Summary = summary
                 };
             })
