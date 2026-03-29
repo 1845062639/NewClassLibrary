@@ -117,6 +117,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             ? 100
             : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
         var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
+        var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
         var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
         var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
         var rawSampleCountSummary = minimumRawSampleCount <= 0
@@ -179,7 +180,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             && structuredSignalsReady
             && rawSampleCountReady
             && structuredPayloadSampleCountReady
-            && structuredResultSampleCountReady;
+            && structuredResultSampleCountReady
+            && legacyDecisionAnchorReady;
         var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
             upstream,
             coverage,
@@ -189,6 +191,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             rawDataSignalCoverage,
             structuredPayloadCoverage,
             structuredResultCoverage,
+            legacyDecisionAnchorReady,
+            decisionAnchorResolutionSummary,
             legacyAlgorithmInputsReady);
         var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
             upstream,
@@ -361,6 +365,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorCoverageRatio = decisionAnchorCoverage.CoverageRatio,
             LegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
             LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
+            LegacyDecisionAnchorReady = legacyDecisionAnchorReady,
             LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
             LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps.Select(MapEvidenceGap).ToArray(),
             LegacyDecisionAnchorObservationRules = decisionAnchorObservationRules.Select(MapDecisionAnchorObservationRule).ToArray(),
@@ -402,6 +407,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
+        bool legacyDecisionAnchorReady,
+        string decisionAnchorResolutionSummary,
         bool legacyAlgorithmInputsReady)
     {
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
@@ -412,6 +419,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var rawDataStatus = rawDataCoverage.Summary;
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
+        var decisionAnchorStatus = legacyDecisionAnchorReady
+            ? $"decision anchor ready; {decisionAnchorResolutionSummary}"
+            : $"decision anchor incomplete; {decisionAnchorResolutionSummary}";
 
         var rawSampleStatus = rawDataCoverage.RawSampleCount <= 0
             ? "raw sample count observed 0"
@@ -424,8 +434,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             : $"structured result sample count observed {structuredResultCoverage.SampleCount}";
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}; {decisionAnchorStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}; {decisionAnchorStatus}";
     }
 
     private static MotorYLegacyUpstreamCodeDistributionContract MapUpstreamLegacyCodeDistribution(MotorYLegacyUpstreamCodeDistributionSnapshot snapshot)

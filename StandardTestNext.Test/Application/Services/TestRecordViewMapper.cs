@@ -373,6 +373,7 @@ public static class TestRecordViewMapper
             LegacyDecisionAnchorCoverageRatio = contract.LegacyDecisionAnchorCoverageRatio,
             LegacyDecisionAnchorCoveragePercentagePoints = contract.LegacyDecisionAnchorCoveragePercentagePoints,
             LegacyDecisionAnchorsBackedByObservedPayload = contract.LegacyDecisionAnchorsBackedByObservedPayload,
+            LegacyDecisionAnchorReady = contract.LegacyDecisionAnchorReady,
             LegacyDecisionAnchorsObservedPayloadFields = contract.LegacyDecisionAnchorsObservedPayloadFields,
             LegacyDecisionAnchorsObservedPayloadGaps = contract.LegacyDecisionAnchorsObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapSnapshot
             {

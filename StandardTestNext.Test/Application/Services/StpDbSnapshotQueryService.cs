@@ -680,6 +680,18 @@ WHERE COALESCE(curr.Code, '') <> ''
                     dependencyProfile?.LegacyDecisionAnchors,
                     decisionAnchorEvidence.ObservedPayloadFields,
                     "legacy decision anchors");
+                var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(decisionAnchorObservationRules);
+                var resolvedDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.ResolvedByObservedPayload);
+                var partialDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload);
+                var missingDecisionAnchorResolutionCount = decisionAnchorResolutions.Count - resolvedDecisionAnchorCount - partialDecisionAnchorCount;
+                var decisionAnchorResolutionCoverageRatio = decisionAnchorResolutions.Count == 0
+                    ? 1d
+                    : Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count, 4, MidpointRounding.AwayFromZero);
+                var decisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutions.Count == 0
+                    ? 100
+                    : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
+                var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
+                var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
                 var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
                 var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
                 var rawSampleCountSummary = minimumRawSampleCount <= 0
@@ -742,7 +754,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     && structuredSignalsReady
                     && rawSampleCountReady
                     && structuredPayloadSampleCountReady
-                    && structuredResultSampleCountReady;
+                    && structuredResultSampleCountReady
+                    && legacyDecisionAnchorReady;
                 var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
                     upstream,
                     coverage,
@@ -758,6 +771,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     structuredPayloadSampleCountSummary,
                     structuredResultSampleCountReady,
                     structuredResultSampleCountSummary,
+                    legacyDecisionAnchorReady,
+                    decisionAnchorResolutionSummary,
                     legacyAlgorithmInputsReady);
                 var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
                     upstream,
@@ -946,6 +961,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     LegacyDecisionAnchorCoverageRatio = decisionAnchorCoverage.CoverageRatio,
                     LegacyDecisionAnchorCoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
                     LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
+                    LegacyDecisionAnchorReady = legacyDecisionAnchorReady,
                     LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
                     LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps
                         .Select(gap => new MotorYObservedAlgorithmEvidenceGapSnapshot
@@ -1025,6 +1041,8 @@ WHERE COALESCE(curr.Code, '') <> ''
         string structuredPayloadSampleCountSummary,
         bool structuredResultSampleCountReady,
         string structuredResultSampleCountSummary,
+        bool legacyDecisionAnchorReady,
+        string decisionAnchorResolutionSummary,
         bool legacyAlgorithmInputsReady)
     {
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
@@ -1035,6 +1053,9 @@ WHERE COALESCE(curr.Code, '') <> ''
         var rawDataStatus = rawDataCoverage.Summary;
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
+        var decisionAnchorStatus = legacyDecisionAnchorReady
+            ? $"decision anchor ready; {decisionAnchorResolutionSummary}"
+            : $"decision anchor incomplete; {decisionAnchorResolutionSummary}";
         var rawSampleStatus = rawSampleCountReady
             ? rawSampleCountSummary
             : rawSampleCountSummary;
@@ -1046,8 +1067,8 @@ WHERE COALESCE(curr.Code, '') <> ''
             : structuredResultSampleCountSummary;
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}; {decisionAnchorStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}; {decisionAnchorStatus}";
     }
 
     private static IReadOnlyList<MotorYMethodRouteSelectionSnapshot> LoadMotorYMethodRouteSelections(SqliteConnection connection)

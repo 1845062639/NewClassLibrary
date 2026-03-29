@@ -196,6 +196,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public double LegacyDecisionAnchorCoverageRatio { get; init; }
     public int LegacyDecisionAnchorCoveragePercentagePoints { get; init; }
     public bool LegacyDecisionAnchorsBackedByObservedPayload { get; init; }
+    public bool LegacyDecisionAnchorReady { get; init; }
     public IReadOnlyList<string> LegacyDecisionAnchorsObservedPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapContract> LegacyDecisionAnchorsObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapContract>();
     public IReadOnlyList<MotorYDecisionAnchorObservationRuleContract> LegacyDecisionAnchorObservationRules { get; init; } = Array.Empty<MotorYDecisionAnchorObservationRuleContract>();
