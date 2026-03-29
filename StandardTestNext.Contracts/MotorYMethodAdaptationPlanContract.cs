@@ -172,6 +172,8 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string StructuredResultSignalCoverageSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmInputReadinessSummary { get; init; } = string.Empty;
     public string DependencyNotes { get; init; } = string.Empty;
+    public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedNextStepSummary { get; init; } = string.Empty;
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
     public int CoveredFormulaSignalCount { get; init; }
     public int MissingFormulaSignalCount { get; init; }

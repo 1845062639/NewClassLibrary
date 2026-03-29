@@ -793,6 +793,20 @@ WHERE COALESCE(curr.Code, '') <> ''
                     legacyDecisionAnchorReady,
                     decisionAnchorResolutionSummary,
                     legacyAlgorithmInputsReady);
+                var suggestedNextSteps = BuildSuggestedNextSteps(
+                    selection.CanonicalCode,
+                    upstream,
+                    coverage,
+                    ratedCoverage,
+                    resultCoverage,
+                    intermediateResultCoverage,
+                    rawDataSignalCoverage,
+                    structuredPayloadCoverage,
+                    structuredResultCoverage,
+                    decisionAnchorResolutions);
+                var suggestedNextStepSummary = suggestedNextSteps.Count == 0
+                    ? "no immediate next-step recommendation"
+                    : string.Join("; ", suggestedNextSteps);
                 var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
                     upstream,
                     coverage,
@@ -936,6 +950,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     StructuredResultSampleCountDecisionSummary = structuredResultSampleCountDecisionSummary,
                     LegacyAlgorithmInputReadinessSummary = legacyAlgorithmInputReadinessSummary,
                     DependencyNotes = dependencyProfile?.Notes ?? string.Empty,
+                    SuggestedNextSteps = suggestedNextSteps,
+                    SuggestedNextStepSummary = suggestedNextStepSummary,
                     FormulaSignals = dependencyProfile?.FormulaSignals ?? Array.Empty<string>(),
                     CoveredFormulaSignalCount = formulaCoverage.CoveredCount,
                     MissingFormulaSignalCount = formulaCoverage.MissingCount,
@@ -1030,6 +1046,99 @@ WHERE COALESCE(curr.Code, '') <> ''
                 };
             })
             .ToArray();
+    }
+
+    private static IReadOnlyList<string> BuildSuggestedNextSteps(
+        string canonicalCode,
+        MotorYUpstreamDependencySnapshot upstream,
+        MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
+        MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot intermediateResultCoverage,
+        MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
+        MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
+        IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
+    {
+        var steps = new List<string>();
+
+        if (upstream.MissingUpstreamCanonicalCodes.Count > 0)
+        {
+            steps.Add($"补齐上游试验项: {string.Join(", ", upstream.MissingUpstreamCanonicalCodes)}");
+        }
+
+        if (payloadCoverage.MissingRequiredPayloadFields.Count > 0)
+        {
+            steps.Add($"补齐 payload 字段: {FormatPreview(payloadCoverage.MissingRequiredPayloadFields, 4)}");
+        }
+
+        if (ratedCoverage.MissingRequiredRatedParamFields.Count > 0)
+        {
+            steps.Add($"补齐额定参数字段: {FormatPreview(ratedCoverage.MissingRequiredRatedParamFields, 4)}");
+        }
+
+        if (intermediateResultCoverage.MissingRequiredResultFields.Count > 0)
+        {
+            steps.Add($"优先回填中间结果字段: {FormatPreview(intermediateResultCoverage.MissingRequiredResultFields, 4)}");
+        }
+
+        if (resultCoverage.MissingRequiredResultFields.Count > 0)
+        {
+            steps.Add($"补齐结果字段: {FormatPreview(resultCoverage.MissingRequiredResultFields, 4)}");
+        }
+
+        if (rawDataCoverage.MissingSignals.Count > 0)
+        {
+            steps.Add($"补齐原始采样信号: {FormatPreview(rawDataCoverage.MissingSignals, 4)}");
+        }
+
+        if (structuredPayloadCoverage.MissingSignals.Count > 0)
+        {
+            steps.Add($"补齐结构化 payload 信号: {FormatPreview(structuredPayloadCoverage.MissingSignals, 4)}");
+        }
+
+        if (structuredResultCoverage.MissingSignals.Count > 0)
+        {
+            steps.Add($"补齐结构化结果信号: {FormatPreview(structuredResultCoverage.MissingSignals, 4)}");
+        }
+
+        var unresolvedAnchors = decisionAnchorResolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (unresolvedAnchors.Length > 0)
+        {
+            steps.Add($"补齐决策锚点观测依据: {FormatPreview(unresolvedAnchors, 3)}");
+        }
+
+        if (steps.Count == 0)
+        {
+            steps.Add($"{canonicalCode} 已具备旧算法适配输入，可进入 adapter 迁移/结果校对");
+        }
+
+        return steps.Take(4).ToArray();
+    }
+
+    private static string FormatPreview(IEnumerable<string> values, int maxCount)
+    {
+        var items = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Distinct(StringComparer.Ordinal)
+            .Take(maxCount + 1)
+            .ToArray();
+
+        if (items.Length == 0)
+        {
+            return "none";
+        }
+
+        if (items.Length <= maxCount)
+        {
+            return string.Join(", ", items);
+        }
+
+        return string.Join(", ", items.Take(maxCount)) + ", ...";
     }
 
     private static string BuildDecisionAnchorObservationRuleSummary(IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)

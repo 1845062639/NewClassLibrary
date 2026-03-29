@@ -314,6 +314,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             StructuredResultSignalCoverageSummary = snapshot.StructuredResultSignalCoverageSummary,
             LegacyAlgorithmInputReadinessSummary = snapshot.LegacyAlgorithmInputReadinessSummary,
             DependencyNotes = snapshot.DependencyNotes,
+            SuggestedNextSteps = snapshot.SuggestedNextSteps,
+            SuggestedNextStepSummary = snapshot.SuggestedNextStepSummary,
             FormulaSignals = snapshot.FormulaSignals,
             CoveredFormulaSignalCount = snapshot.CoveredFormulaSignalCount,
             MissingFormulaSignalCount = snapshot.MissingFormulaSignalCount,
