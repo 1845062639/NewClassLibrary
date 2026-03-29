@@ -78,8 +78,30 @@ internal static class MotorYDecisionAnchorResolutionFactory
         }
 
         if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
-    }
+        {
+            return anchorKey switch
+            {
+                "gb-ratios-branch" => ("legacy-branch", "B法 GB/ratios/θs 分支字段", orderedFields),
+                "correlation-refit" => ("regression-result", "B法坏点剔除后二次拟合证据", orderedFields),
+                "ps-iteration" => ("iterative-convergence", "B法 Ps 非负迭代收敛字段", orderedFields),
+                "thermal-carryover" => ("upstream-carryover", "B法热态承接字段", orderedFields),
+                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
+            };
+        }
 
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "voltage-fit-branch" => ("fit-window", "堵转电压拟合分支基准", orderedFields),
+                "torquecal-branch" => ("legacy-branch", "堵转 TorqueCalType 分支字段", orderedFields),
+                "rcal-branch" => ("legacy-branch", "堵转 RCalType/R1s 电阻分支字段", orderedFields),
+                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
+            };
+        }
+
+        return ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields);
+    }
     private static IReadOnlyList<string> BuildResolutionSuggestedNextSteps(string canonicalCode, string anchorKey, IReadOnlyList<string> missingPayloadFields, bool partial)
     {
         var suggestion = BuildResolutionSuggestionParts(canonicalCode, anchorKey, missingPayloadFields);
