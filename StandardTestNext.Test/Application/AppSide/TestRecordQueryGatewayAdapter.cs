@@ -383,6 +383,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             LegacyDecisionAnchorResolutionCoveragePercentagePoints = snapshot.LegacyDecisionAnchorResolutionCoveragePercentagePoints,
             LegacyDecisionAnchorObservationRuleSummary = snapshot.LegacyDecisionAnchorObservationRuleSummary,
             LegacyDecisionAnchorResolutionSummary = snapshot.LegacyDecisionAnchorResolutionSummary,
+            LegacyDecisionAnchorNextActionSummary = snapshot.LegacyDecisionAnchorNextActionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = snapshot.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = snapshot.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = snapshot.LegacyAlgorithmRuleSummary,

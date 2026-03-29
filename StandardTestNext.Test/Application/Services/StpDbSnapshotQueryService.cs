@@ -691,6 +691,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     ? 100
                     : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
                 var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
+        var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
                 var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
                 var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
                 var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;

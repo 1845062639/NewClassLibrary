@@ -63,6 +63,27 @@ internal static class MotorYDecisionAnchorResolutionFactory
             .ToArray();
     }
 
+
+    public static string BuildNextActionSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        if (resolutions.Count == 0)
+        {
+            return "decision anchor next actions unavailable";
+        }
+
+        var unresolved = resolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .ToArray();
+        if (unresolved.Length == 0)
+        {
+            return "decision anchors ready; no additional branch evidence required";
+        }
+
+        var parts = unresolved
+            .Select(x => $"{x.AnchorKey} -> need {string.Join(", ", x.MissingPayloadFields)}")
+            .ToArray();
+        return $"decision anchor next actions: {string.Join("; ", parts)}";
+    }
     public static string BuildSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
         if (resolutions.Count == 0)

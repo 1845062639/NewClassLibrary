@@ -486,6 +486,7 @@ public static class TestRecordViewMapper
             LegacyDecisionAnchorResolutionCoveragePercentagePoints = contract.LegacyDecisionAnchorResolutionCoveragePercentagePoints,
             LegacyDecisionAnchorObservationRuleSummary = contract.LegacyDecisionAnchorObservationRuleSummary,
             LegacyDecisionAnchorResolutionSummary = contract.LegacyDecisionAnchorResolutionSummary,
+            LegacyDecisionAnchorNextActionSummary = contract.LegacyDecisionAnchorNextActionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = contract.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = contract.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = contract.LegacyAlgorithmRuleSummary,

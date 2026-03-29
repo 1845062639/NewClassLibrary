@@ -117,6 +117,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             ? 100
             : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
         var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
+        var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
         var legacyDecisionAnchorReady = missingDecisionAnchorResolutionCount == 0;
         var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
         var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
@@ -409,6 +410,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutionCoveragePercentagePoints,
             LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
             LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
+            LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
