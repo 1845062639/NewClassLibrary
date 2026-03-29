@@ -525,6 +525,51 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result bucket mismatch for '{MotorYTestMethodCodes.NoLoad}'. bucketCount={noLoadBuckets.Count}, summary='{(noLoadBuckets.TryGetValue("intermediate-result-fields", out var bucket) ? bucket.Summary : "<missing>")}'");
         }
 
+        if (noLoadPlan.LegacyDecisionAnchors.Count != 3
+            || noLoadPlan.CoveredLegacyDecisionAnchorCount != 0
+            || noLoadPlan.MissingLegacyDecisionAnchorCount != 3
+            || noLoadPlan.CoveredLegacyDecisionAnchors.Count != 0
+            || !noLoadPlan.MissingLegacyDecisionAnchors.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(noLoadPlan.LegacyDecisionAnchors.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
+            || noLoadPlan.LegacyDecisionAnchorCoverageRatio != 0d
+            || noLoadPlan.LegacyDecisionAnchorCoveragePercentagePoints != 0
+            || noLoadPlan.LegacyDecisionAnchorsBackedByObservedPayload
+            || noLoadPlan.LegacyDecisionAnchorsObservedPayloadFields.Count != 0
+            || noLoadPlan.LegacyDecisionAnchorsObservedPayloadGaps.Count != 8
+            || noLoadPlan.LegacyDecisionAnchorObservationRules.Count != 3
+            || noLoadPlan.CoveredLegacyDecisionAnchorObservationRuleCount != 0
+            || noLoadPlan.MissingLegacyDecisionAnchorObservationRuleCount != 3
+            || noLoadPlan.LegacyDecisionAnchorObservationRuleCoverageRatio != 0d
+            || noLoadPlan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorSummary, "legacy decision anchors covered 0/8 (0pp); missing: CoefficientOfPfe, I0, P0, Pcu, Pfe, Pfw, RConverseType, ΔI0; observed: none", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary, "legacy decision anchor observed payload fields observed 0/8 (0pp); missing: CoefficientOfPfe, I0, P0, Pcu, Pfe, Pfw, RConverseType, ΔI0; observed: none", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorObservationRuleSummary, "decision-anchor observation rules covered 0/3 (0pp); missing: rconverse-branch, pfw-fit-window, rated-regression-ready; observed: none", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. anchors='{noLoadPlan.LegacyDecisionAnchorSummary}', observed='{noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary}', rules='{noLoadPlan.LegacyDecisionAnchorObservationRuleSummary}'");
+        }
+
+        var noLoadAnchorRuleMap = noLoadPlan.LegacyDecisionAnchorObservationRules.ToDictionary(x => x.AnchorKey, StringComparer.Ordinal);
+        if (!noLoadAnchorRuleMap.TryGetValue("rconverse-branch", out var rconverseRule)
+            || !rconverseRule.RequiredPayloadFields.SequenceEqual(new[] { "RConverseType" }, StringComparer.Ordinal)
+            || rconverseRule.ObservedPayloadFields.Count != 0
+            || !rconverseRule.MissingPayloadFields.SequenceEqual(new[] { "RConverseType" }, StringComparer.Ordinal)
+            || rconverseRule.CoveredByObservedPayload
+            || !string.Equals(rconverseRule.Summary, "decision-anchor-observation:rconverse-branch missing observed payload fields 'RConverseType'", StringComparison.Ordinal)
+            || !noLoadAnchorRuleMap.TryGetValue("pfw-fit-window", out var pfwRule)
+            || !pfwRule.RequiredPayloadFields.SequenceEqual(new[] { "Pfw" }, StringComparer.Ordinal)
+            || pfwRule.ObservedPayloadFields.Count != 0
+            || !pfwRule.MissingPayloadFields.SequenceEqual(new[] { "Pfw" }, StringComparer.Ordinal)
+            || pfwRule.CoveredByObservedPayload
+            || !string.Equals(pfwRule.Summary, "decision-anchor-observation:pfw-fit-window missing observed payload fields 'Pfw'", StringComparison.Ordinal)
+            || !noLoadAnchorRuleMap.TryGetValue("rated-regression-ready", out var regressionRule)
+            || !regressionRule.RequiredPayloadFields.SequenceEqual(new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" }, StringComparer.Ordinal)
+            || regressionRule.ObservedPayloadFields.Count != 0
+            || !regressionRule.MissingPayloadFields.SequenceEqual(new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" }, StringComparer.Ordinal)
+            || regressionRule.CoveredByObservedPayload
+            || !string.Equals(regressionRule.Summary, "decision-anchor-observation:rated-regression-ready missing observed payload fields 'CoefficientOfPfe', 'I0', 'ΔI0', 'P0', 'Pcu', 'Pfe'", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor observation rule mismatch for '{MotorYTestMethodCodes.NoLoad}'. rules={string.Join(" | ", noLoadPlan.LegacyDecisionAnchorObservationRules.Select(x => $"{x.AnchorKey}:{x.Summary}"))}");
+        }
+
         if (Math.Abs(noLoadPlan.BaselineShare - 0.25d) > 0.0001d
             || Math.Abs(noLoadPlan.DominantShare - 0.75d) > 0.0001d
             || Math.Abs(noLoadPlan.SelectedShare - 0.75d) > 0.0001d

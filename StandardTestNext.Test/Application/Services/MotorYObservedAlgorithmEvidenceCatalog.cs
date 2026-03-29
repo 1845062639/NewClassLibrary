@@ -25,6 +25,10 @@ internal sealed class MotorYDecisionAnchorObservationRule
 {
     public string AnchorKey { get; init; } = string.Empty;
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public bool CoveredByObservedPayload { get; init; }
+    public string Summary { get; init; } = string.Empty;
 }
 
 internal static class MotorYObservedAlgorithmEvidenceCatalog
@@ -120,7 +124,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         IReadOnlyList<string>? observedStructuredSignals = null)
         => Build(canonicalCode, observedPayloadFields, observedStructuredSignals, LegacyDecisionAnchorObservedFieldsByCanonicalCode, "legacy decision anchor observed payload", "decision-anchor");
 
-    public static IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> BuildDecisionAnchorObservationGaps(
+    public static IReadOnlyList<MotorYDecisionAnchorObservationRule> BuildDecisionAnchorObservationRules(
         string canonicalCode,
         IReadOnlyList<string>? observedPayloadFields,
         IReadOnlyList<string>? observedStructuredSignals = null)
@@ -128,7 +132,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         if (!DecisionAnchorObservationRulesByCanonicalCode.TryGetValue(canonicalCode, out var rules)
             || rules.Count == 0)
         {
-            return Array.Empty<MotorYObservedAlgorithmEvidenceGap>();
+            return Array.Empty<MotorYDecisionAnchorObservationRule>();
         }
 
         var observed = (observedPayloadFields ?? Array.Empty<string>())
@@ -150,9 +154,9 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
                 var covered = missing.Length == 0;
                 var label = $"decision-anchor-observation:{rule.AnchorKey}";
 
-                return new MotorYObservedAlgorithmEvidenceGap
+                return new MotorYDecisionAnchorObservationRule
                 {
-                    SignalOrRule = label,
+                    AnchorKey = rule.AnchorKey,
                     RequiredPayloadFields = rule.RequiredPayloadFields,
                     ObservedPayloadFields = matched,
                     MissingPayloadFields = missing,
@@ -161,6 +165,24 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
                         ? $"{label} covered by observed payload fields '{string.Join("', '", matched)}'"
                         : $"{label} missing observed payload fields '{string.Join("', '", missing)}'"
                 };
+            })
+            .ToArray();
+    }
+
+    public static IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> BuildDecisionAnchorObservationGaps(
+        string canonicalCode,
+        IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals = null)
+    {
+        return BuildDecisionAnchorObservationRules(canonicalCode, observedPayloadFields, observedStructuredSignals)
+            .Select(rule => new MotorYObservedAlgorithmEvidenceGap
+            {
+                SignalOrRule = $"decision-anchor-observation:{rule.AnchorKey}",
+                RequiredPayloadFields = rule.RequiredPayloadFields,
+                ObservedPayloadFields = rule.ObservedPayloadFields,
+                MissingPayloadFields = rule.MissingPayloadFields,
+                CoveredByObservedPayload = rule.CoveredByObservedPayload,
+                Summary = rule.Summary
             })
             .ToArray();
     }

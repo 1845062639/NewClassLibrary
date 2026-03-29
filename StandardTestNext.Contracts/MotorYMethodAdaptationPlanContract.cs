@@ -10,6 +10,16 @@ public sealed class MotorYObservedAlgorithmEvidenceGapContract
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYDecisionAnchorObservationRuleContract
+{
+    public string AnchorKey { get; init; } = string.Empty;
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public bool CoveredByObservedPayload { get; init; }
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYLegacyUpstreamCodeDistributionContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -174,6 +184,12 @@ public sealed class MotorYMethodAdaptationPlanContract
     public bool LegacyDecisionAnchorsBackedByObservedPayload { get; init; }
     public IReadOnlyList<string> LegacyDecisionAnchorsObservedPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapContract> LegacyDecisionAnchorsObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapContract>();
+    public IReadOnlyList<MotorYDecisionAnchorObservationRuleContract> LegacyDecisionAnchorObservationRules { get; init; } = Array.Empty<MotorYDecisionAnchorObservationRuleContract>();
+    public int CoveredLegacyDecisionAnchorObservationRuleCount { get; init; }
+    public int MissingLegacyDecisionAnchorObservationRuleCount { get; init; }
+    public double LegacyDecisionAnchorObservationRuleCoverageRatio { get; init; }
+    public int LegacyDecisionAnchorObservationRuleCoveragePercentagePoints { get; init; }
+    public string LegacyDecisionAnchorObservationRuleSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;

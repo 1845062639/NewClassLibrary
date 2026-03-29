@@ -87,10 +87,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             decisionAnchorObservedFields,
             observedStructuredSignals);
-        var decisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
+        var decisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
             selection.CanonicalCode,
             decisionAnchorObservedFields,
             observedStructuredSignals);
+        var decisionAnchorObservationGaps = decisionAnchorObservationRules
+            .Select(rule => new MotorYObservedAlgorithmEvidenceGap
+            {
+                SignalOrRule = $"decision-anchor-observation:{rule.AnchorKey}",
+                RequiredPayloadFields = rule.RequiredPayloadFields,
+                ObservedPayloadFields = rule.ObservedPayloadFields,
+                MissingPayloadFields = rule.MissingPayloadFields,
+                CoveredByObservedPayload = rule.CoveredByObservedPayload,
+                Summary = rule.Summary
+            })
+            .ToArray();
         var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
             dependencyProfile?.LegacyDecisionAnchors,
             decisionAnchorEvidence.ObservedPayloadFields,
@@ -341,6 +352,16 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorsBackedByObservedPayload = decisionAnchorEvidence.BackedByObservedPayload,
             LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
             LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps.Select(MapEvidenceGap).ToArray(),
+            LegacyDecisionAnchorObservationRules = decisionAnchorObservationRules.Select(MapDecisionAnchorObservationRule).ToArray(),
+            CoveredLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload),
+            MissingLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => !rule.CoveredByObservedPayload),
+            LegacyDecisionAnchorObservationRuleCoverageRatio = decisionAnchorObservationRules.Count == 0
+                ? 1d
+                : Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count, 4, MidpointRounding.AwayFromZero),
+            LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = decisionAnchorObservationRules.Count == 0
+                ? 100
+                : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
+            LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
             LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
@@ -411,6 +432,38 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             CoveredByObservedPayload = gap.CoveredByObservedPayload,
             Summary = gap.Summary
         };
+    }
+
+    private static MotorYDecisionAnchorObservationRuleContract MapDecisionAnchorObservationRule(MotorYDecisionAnchorObservationRule rule)
+    {
+        return new MotorYDecisionAnchorObservationRuleContract
+        {
+            AnchorKey = rule.AnchorKey,
+            RequiredPayloadFields = rule.RequiredPayloadFields,
+            ObservedPayloadFields = rule.ObservedPayloadFields,
+            MissingPayloadFields = rule.MissingPayloadFields,
+            CoveredByObservedPayload = rule.CoveredByObservedPayload,
+            Summary = rule.Summary
+        };
+    }
+
+    private static string BuildDecisionAnchorObservationRuleSummary(IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)
+    {
+        if (rules.Count == 0)
+        {
+            return "decision anchor observation rules unavailable";
+        }
+
+        var covered = rules.Count(rule => rule.CoveredByObservedPayload);
+        var missing = rules.Count - covered;
+        var ratio = Math.Round((double)covered / rules.Count, 4, MidpointRounding.AwayFromZero);
+        var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
+        var missingAnchorKeys = rules
+            .Where(rule => !rule.CoveredByObservedPayload)
+            .Select(rule => rule.AnchorKey)
+            .ToArray();
+
+        return $"decision anchor observation rules covered {covered}/{rules.Count} ({percentagePoints}pp); missing: {(missing == 0 ? "none" : string.Join(", ", missingAnchorKeys))}";
     }
 
     private static MotorYDependencyBucketSummaryContract MapDependencyBucket(MotorYDependencyBucketSummarySnapshot snapshot)

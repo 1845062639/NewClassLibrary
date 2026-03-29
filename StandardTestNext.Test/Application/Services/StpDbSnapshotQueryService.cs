@@ -661,10 +661,21 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     decisionAnchorObservedFields,
                     observedStructuredSignals);
-                var decisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
+                var decisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
                     selection.CanonicalCode,
                     decisionAnchorObservedFields,
                     observedStructuredSignals);
+                var decisionAnchorObservationGaps = decisionAnchorObservationRules
+                    .Select(rule => new MotorYObservedAlgorithmEvidenceGap
+                    {
+                        SignalOrRule = $"decision-anchor-observation:{rule.AnchorKey}",
+                        RequiredPayloadFields = rule.RequiredPayloadFields,
+                        ObservedPayloadFields = rule.ObservedPayloadFields,
+                        MissingPayloadFields = rule.MissingPayloadFields,
+                        CoveredByObservedPayload = rule.CoveredByObservedPayload,
+                        Summary = rule.Summary
+                    })
+                    .ToArray();
                 var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
                     dependencyProfile?.LegacyDecisionAnchors,
                     decisionAnchorEvidence.ObservedPayloadFields,
@@ -941,6 +952,26 @@ WHERE COALESCE(curr.Code, '') <> ''
                             Summary = gap.Summary
                         })
                         .ToArray(),
+                    LegacyDecisionAnchorObservationRules = decisionAnchorObservationRules
+                        .Select(rule => new MotorYDecisionAnchorObservationRuleSnapshot
+                        {
+                            AnchorKey = rule.AnchorKey,
+                            RequiredPayloadFields = rule.RequiredPayloadFields,
+                            ObservedPayloadFields = rule.ObservedPayloadFields,
+                            MissingPayloadFields = rule.MissingPayloadFields,
+                            CoveredByObservedPayload = rule.CoveredByObservedPayload,
+                            Summary = rule.Summary
+                        })
+                        .ToArray(),
+                    CoveredLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload),
+                    MissingLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => !rule.CoveredByObservedPayload),
+                    LegacyDecisionAnchorObservationRuleCoverageRatio = decisionAnchorObservationRules.Count == 0
+                        ? 1d
+                        : Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count, 4, MidpointRounding.AwayFromZero),
+                    LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = decisionAnchorObservationRules.Count == 0
+                        ? 100
+                        : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
+                    LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
                     LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
                     FormulaSignalSummary = formulaCoverage.Summary,
                     LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
@@ -952,6 +983,25 @@ WHERE COALESCE(curr.Code, '') <> ''
                 };
             })
             .ToArray();
+    }
+
+    private static string BuildDecisionAnchorObservationRuleSummary(IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)
+    {
+        if (rules.Count == 0)
+        {
+            return "decision anchor observation rules unavailable";
+        }
+
+        var covered = rules.Count(rule => rule.CoveredByObservedPayload);
+        var missing = rules.Count - covered;
+        var ratio = Math.Round((double)covered / rules.Count, 4, MidpointRounding.AwayFromZero);
+        var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
+        var missingAnchorKeys = rules
+            .Where(rule => !rule.CoveredByObservedPayload)
+            .Select(rule => rule.AnchorKey)
+            .ToArray();
+
+        return $"decision anchor observation rules covered {covered}/{rules.Count} ({percentagePoints}pp); missing: {(missing == 0 ? "none" : string.Join(", ", missingAnchorKeys))}";
     }
 
     private static string BuildLegacyAlgorithmInputReadinessSummary(
