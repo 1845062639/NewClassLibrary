@@ -473,6 +473,9 @@ public static class TestRecordViewMapper
                 CoverageRatio = x.CoverageRatio,
                 CoveragePercentagePoints = x.CoveragePercentagePoints,
                 ResolutionStage = x.ResolutionStage,
+                SuggestedNextStepCategory = x.SuggestedNextStepCategory,
+                SuggestedNextStepFocus = x.SuggestedNextStepFocus,
+                SuggestedNextStepFields = x.SuggestedNextStepFields,
                 SuggestedNextSteps = x.SuggestedNextSteps,
                 SuggestedNextStepSummary = x.SuggestedNextStepSummary,
                 Summary = x.Summary
