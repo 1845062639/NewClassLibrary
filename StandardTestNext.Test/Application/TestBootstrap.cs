@@ -262,11 +262,14 @@ public sealed class TestBootstrap
         var intermediate = $"midfields=covered {plan.CoveredRequiredIntermediateResultFieldCount}/{plan.RequiredIntermediateResultFields.Count}:{FormatPreview(plan.CoveredRequiredIntermediateResultFields, 4)}|missing={FormatPreview(plan.MissingRequiredIntermediateResultFields, 4)}";
         var structuredSignals = $"signals=payload {plan.StructuredPayloadSignalCoveredCount}/{plan.RequiredStructuredPayloadSignals.Count}:{FormatPreview(plan.ObservedStructuredPayloadSignals, 4)}|result {plan.StructuredResultSignalCoveredCount}/{plan.RequiredStructuredResultSignals.Count}:{FormatPreview(plan.ObservedStructuredResultSignals, 4)}";
         var evidence = $"evidence=formula {plan.FormulaSignalCoveragePercentagePoints}pp|rules {plan.LegacyAlgorithmRuleCoveragePercentagePoints}pp|decision {plan.LegacyDecisionAnchorCoveragePercentagePoints}pp|decision-rules {plan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints}pp|decision-resolve {plan.LegacyDecisionAnchorResolutionCoveragePercentagePoints}pp";
+        var bucketSummary = plan.DependencyBuckets.Count == 0
+            ? "buckets=<none>"
+            : "buckets=" + string.Join("|", plan.DependencyBuckets.Select(bucket => $"{bucket.BucketKey}:{bucket.CoveredCount}/{bucket.RequiredCount}:{bucket.CoveragePercentagePoints}pp:missing={FormatPreview(bucket.MissingItems, 3)}"));
         var nextSteps = $"next={FormatPreview(plan.SuggestedNextSteps, 3)}:{plan.SuggestedNextStepSummary}";
         var anchorNextSteps = $"anchor-next={FormatPreview(plan.SuggestedDecisionAnchorNextSteps, 3)}:{plan.SuggestedDecisionAnchorNextStepSummary}";
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{nextSteps};{anchorNextSteps};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{nextSteps};{anchorNextSteps};{summaries};{distributions}]";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
