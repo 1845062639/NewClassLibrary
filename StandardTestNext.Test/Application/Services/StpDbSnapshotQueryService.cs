@@ -760,6 +760,14 @@ WHERE COALESCE(curr.Code, '') <> ''
                     .Distinct(StringComparer.Ordinal)
                     .OrderBy(field => field, StringComparer.Ordinal)
                     .ToArray();
+                var observedAlgorithmInputFieldSources = MotorYObservedFieldSourceCatalog.Build(
+                    coverage.CoveredRequiredPayloadFields,
+                    ratedCoverage.CoveredRequiredRatedParamFields,
+                    resultCoverage.CoveredRequiredResultFields,
+                    intermediateResultCoverage.CoveredRequiredResultFields,
+                    rawDataSignalCoverage.ObservedSignals,
+                    structuredPayloadCoverage.ObservedSignals,
+                    structuredResultCoverage.ObservedSignals);
                 var totalAlgorithmInputFieldCount = observedAlgorithmInputFields.Length + missingAlgorithmInputFields.Length;
                 var algorithmInputFieldCoverageRatio = totalAlgorithmInputFieldCount == 0
                     ? 1d
@@ -914,6 +922,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
                     LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
                     ObservedAlgorithmInputFields = observedAlgorithmInputFields,
+                    ObservedAlgorithmInputFieldSources = observedAlgorithmInputFieldSources,
                     MissingAlgorithmInputFields = missingAlgorithmInputFields,
                     ObservedAlgorithmInputFieldCount = observedAlgorithmInputFields.Length,
                     MissingAlgorithmInputFieldCount = missingAlgorithmInputFields.Length,

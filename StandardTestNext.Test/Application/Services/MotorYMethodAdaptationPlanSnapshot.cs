@@ -152,6 +152,7 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string RequiredRatedParamFieldCoverageSummary { get; init; } = string.Empty;
     public bool LegacyAlgorithmInputsReady { get; init; }
     public IReadOnlyList<string> ObservedAlgorithmInputFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYObservedFieldSourceSnapshot> ObservedAlgorithmInputFieldSources { get; init; } = Array.Empty<MotorYObservedFieldSourceSnapshot>();
     public IReadOnlyList<string> MissingAlgorithmInputFields { get; init; } = Array.Empty<string>();
     public int ObservedAlgorithmInputFieldCount { get; init; }
     public int MissingAlgorithmInputFieldCount { get; init; }

@@ -186,6 +186,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .Distinct(StringComparer.Ordinal)
             .OrderBy(field => field, StringComparer.Ordinal)
             .ToArray();
+        var observedAlgorithmInputFieldSources = MotorYObservedFieldSourceCatalog.Build(
+            coverage.CoveredRequiredPayloadFields,
+            ratedCoverage.CoveredRequiredRatedParamFields,
+            resultCoverage.CoveredRequiredResultFields,
+            intermediateResultCoverage.CoveredRequiredResultFields,
+            rawDataSignalCoverage.ObservedSignals,
+            structuredPayloadCoverage.ObservedSignals,
+            structuredResultCoverage.ObservedSignals);
         var totalAlgorithmInputFieldCount = observedAlgorithmInputFields.Length + missingAlgorithmInputFields.Length;
         var algorithmInputFieldCoverageRatio = totalAlgorithmInputFieldCount == 0
             ? 1d
@@ -354,6 +362,15 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
             LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
             ObservedAlgorithmInputFields = observedAlgorithmInputFields,
+            ObservedAlgorithmInputFieldSources = observedAlgorithmInputFieldSources
+                .Select(x => new MotorYObservedFieldSourceContract
+                {
+                    FieldName = x.FieldName,
+                    SourceType = x.SourceType,
+                    SourceScope = x.SourceScope,
+                    SourceSummary = x.SourceSummary
+                })
+                .ToArray(),
             MissingAlgorithmInputFields = missingAlgorithmInputFields,
             ObservedAlgorithmInputFieldCount = observedAlgorithmInputFields.Length,
             MissingAlgorithmInputFieldCount = missingAlgorithmInputFields.Length,

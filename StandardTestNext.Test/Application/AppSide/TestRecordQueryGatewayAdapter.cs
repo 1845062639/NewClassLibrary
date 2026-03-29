@@ -270,6 +270,13 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             RequiredRatedParamFieldCoverageSummary = snapshot.RequiredRatedParamFieldCoverageSummary,
             LegacyAlgorithmInputsReady = snapshot.LegacyAlgorithmInputsReady,
             ObservedAlgorithmInputFields = snapshot.ObservedAlgorithmInputFields,
+            ObservedAlgorithmInputFieldSources = snapshot.ObservedAlgorithmInputFieldSources.Select(x => new MotorYObservedFieldSourceContract
+            {
+                FieldName = x.FieldName,
+                SourceType = x.SourceType,
+                SourceScope = x.SourceScope,
+                SourceSummary = x.SourceSummary
+            }).ToArray(),
             MissingAlgorithmInputFields = snapshot.MissingAlgorithmInputFields,
             ObservedAlgorithmInputFieldCount = snapshot.ObservedAlgorithmInputFieldCount,
             MissingAlgorithmInputFieldCount = snapshot.MissingAlgorithmInputFieldCount,
