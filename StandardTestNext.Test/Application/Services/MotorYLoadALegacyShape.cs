@@ -52,7 +52,23 @@ public sealed class MotorYLoadARawDataShape
     public double Nt { get; init; }
     public double P1t { get; init; }
     public double Frequency { get; init; }
+    public double θ1t { get; init; }
+    public double R1t { get; init; }
+    public double Pcu1t { get; init; }
+    public double Ub { get; init; }
+    public double Pfe { get; init; }
+    public double Pfw { get; init; }
+    public double Pcu2t { get; init; }
     public double Tt { get; init; }
+    public double Tx { get; init; }
+    public double P2tx { get; init; }
+    public double Pcu1x { get; init; }
+    public double ΔPcu1 { get; init; }
+    public double Sx { get; init; }
+    public double Pcu2x { get; init; }
+    public double ΔPcu2 { get; init; }
+    public double Nx { get; init; }
+    public double P1x { get; init; }
     public double P2x { get; init; }
     public double η { get; init; }
     public double Cosφ { get; init; }

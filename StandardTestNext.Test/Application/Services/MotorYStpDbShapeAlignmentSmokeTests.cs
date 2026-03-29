@@ -168,9 +168,12 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
 
         if (!item.DataJson.Contains("\"K2\"", StringComparison.Ordinal)
             || !item.DataJson.Contains("\"CoefficientOfPfe\"", StringComparison.Ordinal)
-            || !item.DataJson.Contains("\"CorrectionType\"", StringComparison.Ordinal))
+            || !item.DataJson.Contains("\"CorrectionType\"", StringComparison.Ordinal)
+            || shape.RawDataList.All(x => x.θ1t <= 0 || x.R1t <= 0 || x.Pcu1t <= 0 || x.Ub <= 0 || x.Pfe <= 0 || x.Pcu2t <= 0 || x.Tx <= 0 || x.P2tx <= 0)
+            || shape.RawDataList.All(x => x.Pcu1x <= 0 || x.Pcu2x <= 0 || x.Nx <= 0 || x.P1x <= 0 || x.P2x <= 0 || x.η <= 0 || x.Cosφ <= 0)
+            || shape.ResultDataList.All(x => x.P1 <= 0 || x.P2 <= 0 || x.I1 <= 0 || x.η <= 0 || x.Cosφ <= 0 || x.Percentage <= 0))
         {
-            throw new InvalidOperationException("Motor_Y A法负载 builder 未覆盖 stp.db 关键字段组。");
+            throw new InvalidOperationException("Motor_Y A法负载 builder 未覆盖 stp.db / 旧算法中间量关键字段组。");
         }
     }
 
@@ -190,9 +193,14 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
         var root = jsonDocument.RootElement;
         if (!root.TryGetProperty("TorqueCorrection", out _)
             || !root.TryGetProperty("θ1tChanelSelect", out _)
-            || !root.TryGetProperty("θaChanelSelect", out _))
+            || !root.TryGetProperty("θaChanelSelect", out _)
+            || !shape.HasCuC
+            || !shape.HasRatios
+            || !shape.HasBadPointRefitFlag
+            || shape.RawDataList.All(x => x.Iu <= 0 || x.Iv <= 0 || x.Iw <= 0 || x.Nst <= 0 || x.St < 0 || x.θa <= 0 || x.R1t <= 0 || x.Pcu1t <= 0 || x.Ub <= 0 || x.Pfe <= 0 || x.Pcu2t <= 0 || x.Tx <= 0 || x.P2tx <= 0 || x.Pl <= 0 || x.θs <= 0 || x.Ps <= 0 || x.Rs <= 0 || x.Pcu1x <= 0 || x.Sx < 0 || x.Pcu2x <= 0 || x.Nx <= 0 || x.PT <= 0 || x.P2x <= 0 || x.η <= 0 || x.Cosφ <= 0 || x.Pm <= 0)
+            || shape.ResultDataList.All(x => x.P1 <= 0 || x.P2 <= 0 || x.I1 <= 0 || x.η <= 0 || x.Cosφ <= 0 || x.S < 0 || x.Percentage <= 0 || x.Pcu1x <= 0 || x.Pcu2x <= 0 || x.Ps <= 0))
         {
-            throw new InvalidOperationException($"Motor_Y B法负载 builder 未覆盖 stp.db/旧结构关键字段组。payload={item.DataJson}");
+            throw new InvalidOperationException($"Motor_Y B法负载 builder 未覆盖 stp.db/旧算法关键字段组。payload={item.DataJson}");
         }
     }
 

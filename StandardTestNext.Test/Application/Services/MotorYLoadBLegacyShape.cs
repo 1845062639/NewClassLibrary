@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace StandardTestNext.Test.Application.Services;
 
@@ -33,6 +34,13 @@ public sealed class MotorYLoadBLegacyShape
     public int θ1tChanelSelect { get; init; }
     public int θaChanelSelect { get; init; }
 
+    [JsonExtensionData]
+    public Dictionary<string, JsonElement> ExtraFields { get; init; } = new(StringComparer.Ordinal);
+
+    public bool HasBadPointRefitFlag => ExtraFields.ContainsKey("bad-point-refit");
+    public bool HasRatios => ExtraFields.ContainsKey("ratios");
+    public bool HasCuC => ExtraFields.ContainsKey("cuC");
+
     public static MotorYLoadBLegacyShape? FromJson(string dataJson)
     {
         if (string.IsNullOrWhiteSpace(dataJson)) return null;
@@ -54,15 +62,38 @@ public sealed class MotorYLoadBRawDataShape
 {
     public double U { get; init; }
     public double I1 { get; init; }
+    public double Iu { get; init; }
+    public double Iv { get; init; }
+    public double Iw { get; init; }
     public double Nt { get; init; }
+    public double Nst { get; init; }
+    public double St { get; init; }
     public double P1t { get; init; }
     public double Frequency { get; init; }
     public double θ1t { get; init; }
     public double θa { get; init; }
+    public double R1t { get; init; }
+    public double Pcu1t { get; init; }
+    public double Ub { get; init; }
+    public double Pfe { get; init; }
+    public double Pfw { get; init; }
+    public double Pcu2t { get; init; }
     public double Tt { get; init; }
+    public double Tx { get; init; }
+    public double P2tx { get; init; }
+    public double Pl { get; init; }
+    public double θs { get; init; }
+    public double Ps { get; init; }
+    public double Rs { get; init; }
+    public double Pcu1x { get; init; }
+    public double Sx { get; init; }
+    public double Pcu2x { get; init; }
+    public double Nx { get; init; }
+    public double PT { get; init; }
     public double P2x { get; init; }
     public double η { get; init; }
     public double Cosφ { get; init; }
+    public double Pm { get; init; }
     public double AmbientTemperature { get; init; }
 }
 
