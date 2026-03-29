@@ -275,9 +275,29 @@ public sealed class TestBootstrap
                 .Select(bucket => $"{bucket.BucketKey}:{bucket.CoveragePercentagePoints}pp:missing={FormatPreview(bucket.MissingItems, 3)}"));
         var nextSteps = $"next={FormatPreview(plan.SuggestedNextSteps, 3)}:{plan.SuggestedNextStepSummary}";
         var anchorNextSteps = $"anchor-next={FormatPreview(plan.SuggestedDecisionAnchorNextSteps, 3)}:{plan.SuggestedDecisionAnchorNextStepSummary}";
+        var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
+            ? "anchor-resolutions=<none>"
+            : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorResolutions};{summaries};{distributions}]";
+    }
+
+    private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)
+    {
+        var status = resolution.ResolvedByObservedPayload
+            ? "ok"
+            : resolution.PartiallyResolvedByObservedPayload
+                ? "partial"
+                : "missing";
+        var observed = resolution.ObservedPayloadFields.Count == 0
+            ? "none"
+            : string.Join("+", resolution.ObservedPayloadFields.Take(3));
+        var missing = resolution.MissingPayloadFields.Count == 0
+            ? "none"
+            : string.Join("+", resolution.MissingPayloadFields.Take(3));
+
+        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
