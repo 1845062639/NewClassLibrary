@@ -78,40 +78,6 @@ internal static class MotorYDecisionAnchorResolutionFactory
         }
 
         if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
-        {
-            return anchorKey switch
-            {
-                "gb-ratios-branch" => ("legacy-branch", "B法 GB/ratios/θs 分支字段", orderedFields),
-                "correlation-refit" => ("refit-evidence", "B法坏点剔除后二次拟合证据", orderedFields),
-                "ps-iteration" => ("iteration-result", "B法 Ps 非负迭代收敛字段", orderedFields),
-                "thermal-carryover" => ("upstream-carryover", "B法热态承接字段", orderedFields),
-                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
-            };
-        }
-
-        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
-        {
-            return anchorKey switch
-            {
-                "voltage-fit-branch" => ("fit-branch", "堵转电压拟合分支基准", orderedFields),
-                "torquecal-branch" => ("legacy-branch", "堵转 TorqueCalType 分支字段", orderedFields),
-                "rcal-branch" => ("legacy-branch", "堵转 RCalType/R1s 电阻分支字段", orderedFields),
-                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
-            };
-        }
-
-        if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
-        {
-            return anchorKey switch
-            {
-                "upstream-ready" => ("upstream-carryover", "A法上游空载/热试验承接字段", orderedFields),
-                "rated-load-fit-grid" => ("fit-grid", "A法额定负载点回归结果", orderedFields),
-                "payload-rated-quantity-ready" => ("rated-quantity", "A法 payload 额定量结果字段", orderedFields),
-                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
-            };
-        }
-
-        return ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields);
     }
 
     private static IReadOnlyList<string> BuildResolutionSuggestedNextSteps(string canonicalCode, string anchorKey, IReadOnlyList<string> missingPayloadFields, bool partial)

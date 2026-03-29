@@ -1329,15 +1329,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !heatRunPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "first-seconds-interval", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "decision-interval", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "热试验 firstSecondsInterval 判定依据", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pn" }, StringComparer.Ordinal))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pn" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补热试验 firstSecondsInterval 判定依据：Pn", StringComparison.Ordinal))
             || !heatRunPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "hot-state-branch", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "热试验 HotStateType 分支字段", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补热试验 HotStateType 分支字段：HotStateType", StringComparison.Ordinal))
             || !heatRunPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "gb-temperature-branch", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "热试验 GB 温升分支关键字段", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "GB", "Rn", "θb", "θs", "θw" }, StringComparer.Ordinal)))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "GB", "Rn", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补热试验 GB 温升分支关键字段：GB, Rn, θb, θs, θw", StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y HeatRun decision-anchor query smoke test mismatch. next='{heatRunPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{heatRunPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
@@ -1354,15 +1357,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !loadAPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "upstream-ready", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "upstream-carryover", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "A法上游空载/热试验承接字段", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "CoefficientOfPfe", "Pfw", "θa" }, StringComparer.Ordinal))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "CoefficientOfPfe", "Pfw", "θa" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补A法上游空载/热试验承接字段：CoefficientOfPfe, Pfw, θa", StringComparison.Ordinal))
             || !loadAPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "rated-load-fit-grid", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "fit-grid", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "A法额定负载点回归结果", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补A法额定负载点回归结果：ResultDataList", StringComparison.Ordinal))
             || !loadAPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "payload-rated-quantity-ready", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepCategory, "rated-quantity", StringComparison.Ordinal)
                 && string.Equals(resolution.SuggestedNextStepFocus, "A法 payload 额定量结果字段", StringComparison.Ordinal)
-                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)))
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补A法 payload 额定量结果字段：Pcu1, Pcu2, η", StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y LoadA decision-anchor query smoke test mismatch. next='{loadAPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{loadAPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
