@@ -719,6 +719,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     coverage,
                     ratedCoverage,
                     resultCoverage,
+                    intermediateResultCoverage,
                     rawDataSignalCoverage,
                     structuredPayloadCoverage,
                     structuredResultCoverage,

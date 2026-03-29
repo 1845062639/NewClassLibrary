@@ -22,6 +22,7 @@ internal static class MotorYDependencyBucketSummaryFactory
         MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
         MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
         MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot intermediateResultCoverage,
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
@@ -86,6 +87,20 @@ internal static class MotorYDependencyBucketSummaryFactory
                 CoveredItems = resultCoverage.CoveredRequiredResultFields,
                 MissingItems = resultCoverage.MissingRequiredResultFields,
                 Summary = resultCoverage.RequiredResultFieldCoverageSummary
+            },
+            new()
+            {
+                BucketKey = "intermediate-result-fields",
+                DisplayName = "中间结果锚点",
+                RequiredCount = intermediateResultCoverage.CoveredRequiredResultFieldCount + intermediateResultCoverage.MissingRequiredResultFieldCount,
+                CoveredCount = intermediateResultCoverage.CoveredRequiredResultFieldCount,
+                MissingCount = intermediateResultCoverage.MissingRequiredResultFieldCount,
+                CoverageRatio = intermediateResultCoverage.RequiredResultFieldCoverageRatio,
+                CoveragePercentagePoints = intermediateResultCoverage.RequiredResultFieldCoveragePercentagePoints,
+                RequiredItems = intermediateResultCoverage.CoveredRequiredResultFields.Concat(intermediateResultCoverage.MissingRequiredResultFields).ToArray(),
+                CoveredItems = intermediateResultCoverage.CoveredRequiredResultFields,
+                MissingItems = intermediateResultCoverage.MissingRequiredResultFields,
+                Summary = intermediateResultCoverage.RequiredResultFieldCoverageSummary
             },
             new()
             {

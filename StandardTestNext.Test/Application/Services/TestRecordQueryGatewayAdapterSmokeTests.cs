@@ -513,6 +513,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test comparison summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.BaselineDominantComparisonSummary}'");
         }
 
+        var noLoadBuckets = noLoadPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
+        if (noLoadBuckets.Count != 11
+            || !noLoadBuckets.TryGetValue("intermediate-result-fields", out var noLoadIntermediateBucket)
+            || noLoadIntermediateBucket.RequiredCount != 7
+            || noLoadIntermediateBucket.CoveredCount != 0
+            || noLoadIntermediateBucket.MissingCount != 7
+            || !noLoadIntermediateBucket.MissingItems.SequenceEqual(new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" }, StringComparer.Ordinal)
+            || !string.Equals(noLoadIntermediateBucket.Summary, "result required fields covered 0/7 (0pp); missing: R0, θ0, Pcon, P0cu1, Pfw, Pfe, CoefficientOfPfe", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result bucket mismatch for '{MotorYTestMethodCodes.NoLoad}'. bucketCount={noLoadBuckets.Count}, summary='{(noLoadBuckets.TryGetValue("intermediate-result-fields", out var bucket) ? bucket.Summary : "<missing>")}'");
+        }
+
         if (Math.Abs(noLoadPlan.BaselineShare - 0.25d) > 0.0001d
             || Math.Abs(noLoadPlan.DominantShare - 0.75d) > 0.0001d
             || Math.Abs(noLoadPlan.SelectedShare - 0.75d) > 0.0001d

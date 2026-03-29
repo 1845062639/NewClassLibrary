@@ -145,6 +145,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             coverage,
             ratedCoverage,
             resultCoverage,
+            intermediateResultCoverage,
             rawDataSignalCoverage,
             structuredPayloadCoverage,
             structuredResultCoverage,
