@@ -1041,6 +1041,23 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? 100
                         : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
                     LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
+                    LegacyDecisionAnchorResolutions = decisionAnchorResolutions
+                        .Select(resolution => new MotorYDecisionAnchorResolutionSnapshot
+                        {
+                            AnchorKey = resolution.AnchorKey,
+                            ResolvedByObservedPayload = resolution.ResolvedByObservedPayload,
+                            PartiallyResolvedByObservedPayload = resolution.PartiallyResolvedByObservedPayload,
+                            RequiredPayloadFields = resolution.RequiredPayloadFields,
+                            ObservedPayloadFields = resolution.ObservedPayloadFields,
+                            MissingPayloadFields = resolution.MissingPayloadFields,
+                            CoverageRatio = resolution.CoverageRatio,
+                            CoveragePercentagePoints = resolution.CoveragePercentagePoints,
+                            ResolutionStage = resolution.ResolutionStage,
+                            SuggestedNextSteps = resolution.SuggestedNextSteps,
+                            SuggestedNextStepSummary = resolution.SuggestedNextStepSummary,
+                            Summary = resolution.Summary
+                        })
+                        .ToArray(),
                     LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
                     LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
                     LegacyDecisionAnchorGapPreviewSummary = decisionAnchorGapPreviewSummary,

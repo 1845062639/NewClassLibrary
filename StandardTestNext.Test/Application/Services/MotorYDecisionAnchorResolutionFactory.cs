@@ -11,11 +11,38 @@ internal sealed class MotorYDecisionAnchorResolution
     public double CoverageRatio { get; init; }
     public int CoveragePercentagePoints { get; init; }
     public string ResolutionStage { get; init; } = string.Empty;
+    public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedNextStepSummary { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
 }
 
 internal static class MotorYDecisionAnchorResolutionFactory
 {
+    private static IReadOnlyList<string> BuildResolutionSuggestedNextSteps(string anchorKey, IReadOnlyList<string> missingPayloadFields, bool partial)
+    {
+        if (missingPayloadFields.Count == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var orderedFields = missingPayloadFields
+            .Where(field => !string.IsNullOrWhiteSpace(field))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+
+        if (orderedFields.Length == 0)
+        {
+            return Array.Empty<string>();
+        }
+
+        var status = partial ? "继续补齐" : "先补";
+        return new[]
+        {
+            $"{status}决策锚点 {anchorKey}: {string.Join(", ", orderedFields)}"
+        };
+    }
+
     public static IReadOnlyList<MotorYDecisionAnchorResolution> Build(
         IReadOnlyList<MotorYDecisionAnchorObservationRule> rules)
     {
@@ -46,6 +73,11 @@ internal static class MotorYDecisionAnchorResolutionFactory
                         ? $"decision anchor '{rule.AnchorKey}' partially resolved by observed payload ({observed}/{total}, {percentagePoints}pp); missing: {string.Join(", ", rule.MissingPayloadFields)}"
                         : $"decision anchor '{rule.AnchorKey}' unresolved by observed payload (0/{total}, 0pp); missing: {string.Join(", ", rule.MissingPayloadFields)}";
 
+                var suggestedNextSteps = BuildResolutionSuggestedNextSteps(rule.AnchorKey, rule.MissingPayloadFields, partial);
+                var suggestedNextStepSummary = suggestedNextSteps.Count == 0
+                    ? "decision anchor already resolved"
+                    : string.Join("; ", suggestedNextSteps);
+
                 return new MotorYDecisionAnchorResolution
                 {
                     AnchorKey = rule.AnchorKey,
@@ -57,6 +89,8 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     CoverageRatio = ratio,
                     CoveragePercentagePoints = percentagePoints,
                     ResolutionStage = stage,
+                    SuggestedNextSteps = suggestedNextSteps,
+                    SuggestedNextStepSummary = suggestedNextStepSummary,
                     Summary = summary
                 };
             })

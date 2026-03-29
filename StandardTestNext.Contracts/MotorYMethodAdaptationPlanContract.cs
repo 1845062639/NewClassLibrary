@@ -31,6 +31,8 @@ public sealed class MotorYDecisionAnchorResolutionContract
     public double CoverageRatio { get; init; }
     public int CoveragePercentagePoints { get; init; }
     public string ResolutionStage { get; init; } = string.Empty;
+    public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedNextStepSummary { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
 }
 

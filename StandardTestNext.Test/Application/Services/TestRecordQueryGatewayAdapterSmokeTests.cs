@@ -752,6 +752,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补决策锚点 rconverse-branch: RConverseType" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补决策锚点 rconverse-branch: RConverseType", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'rconverse-branch' unresolved by observed payload (0/1, 0pp); missing: RConverseType", StringComparison.Ordinal))
             || !noLoadPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "pfw-fit-window", StringComparison.Ordinal)
                 && !resolution.ResolvedByObservedPayload
@@ -762,6 +764,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补决策锚点 pfw-fit-window: Pfw" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补决策锚点 pfw-fit-window: Pfw", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'pfw-fit-window' unresolved by observed payload (0/1, 0pp); missing: Pfw", StringComparison.Ordinal))
             || !noLoadPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "rated-regression-ready", StringComparison.Ordinal)
                 && !resolution.ResolvedByObservedPayload
@@ -772,6 +776,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && resolution.CoverageRatio == 0d
                 && resolution.CoveragePercentagePoints == 0
                 && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, P0, Pcu, Pfe, ΔI0" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, P0, Pcu, Pfe, ΔI0", StringComparison.Ordinal)
                 && string.Equals(resolution.Summary, "decision anchor 'rated-regression-ready' unresolved by observed payload (0/6, 0pp); missing: CoefficientOfPfe, I0, ΔI0, P0, Pcu, Pfe", StringComparison.Ordinal))
             || !noLoadPlan.SuggestedNextSteps.SequenceEqual(new[]
             {

@@ -461,6 +461,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     CoverageRatio = resolution.CoverageRatio,
                     CoveragePercentagePoints = resolution.CoveragePercentagePoints,
                     ResolutionStage = resolution.ResolutionStage,
+                    SuggestedNextSteps = resolution.SuggestedNextSteps,
+                    SuggestedNextStepSummary = resolution.SuggestedNextStepSummary,
                     Summary = resolution.Summary
                 })
                 .ToArray(),

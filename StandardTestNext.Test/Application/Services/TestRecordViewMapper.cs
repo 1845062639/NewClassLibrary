@@ -473,6 +473,8 @@ public static class TestRecordViewMapper
                 CoverageRatio = x.CoverageRatio,
                 CoveragePercentagePoints = x.CoveragePercentagePoints,
                 ResolutionStage = x.ResolutionStage,
+                SuggestedNextSteps = x.SuggestedNextSteps,
+                SuggestedNextStepSummary = x.SuggestedNextStepSummary,
                 Summary = x.Summary
             }).ToArray(),
             CoveredLegacyDecisionAnchorObservationRuleCount = contract.CoveredLegacyDecisionAnchorObservationRuleCount,

@@ -439,6 +439,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             CoverageRatio = snapshot.CoverageRatio,
             CoveragePercentagePoints = snapshot.CoveragePercentagePoints,
             ResolutionStage = snapshot.ResolutionStage,
+            SuggestedNextSteps = snapshot.SuggestedNextSteps,
+            SuggestedNextStepSummary = snapshot.SuggestedNextStepSummary,
             Summary = snapshot.Summary
         };
     }
