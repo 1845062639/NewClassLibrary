@@ -445,6 +445,18 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test result-field coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. covered=[{string.Join(", ", noLoadPlan.CoveredRequiredResultFields)}], missing=[{string.Join(", ", noLoadPlan.MissingRequiredResultFields)}], summary='{noLoadPlan.RequiredResultFieldCoverageSummary}'");
         }
 
+        if (!noLoadPlan.RequiredIntermediateResultFields.SequenceEqual(new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" }, StringComparer.Ordinal)
+            || noLoadPlan.CoveredRequiredIntermediateResultFieldCount != 0
+            || noLoadPlan.MissingRequiredIntermediateResultFieldCount != 7
+            || noLoadPlan.CoveredRequiredIntermediateResultFields.Count != 0
+            || !noLoadPlan.MissingRequiredIntermediateResultFields.SequenceEqual(new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" }, StringComparer.Ordinal)
+            || noLoadPlan.RequiredIntermediateResultFieldCoverageRatio != 0d
+            || noLoadPlan.RequiredIntermediateResultFieldCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.RequiredIntermediateResultFieldCoverageSummary, "result required fields covered 0/7 (0pp); missing: R0, θ0, Pcon, P0cu1, Pfw, Pfe, CoefficientOfPfe", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result coverage mismatch for '{MotorYTestMethodCodes.NoLoad}'. required=[{string.Join(", ", noLoadPlan.RequiredIntermediateResultFields)}], covered=[{string.Join(", ", noLoadPlan.CoveredRequiredIntermediateResultFields)}], missing=[{string.Join(", ", noLoadPlan.MissingRequiredIntermediateResultFields)}], summary='{noLoadPlan.RequiredIntermediateResultFieldCoverageSummary}'");
+        }
+
         if (!string.Equals(noLoadPlan.SelectedMethodSummary, "selected 空载试验 method 59 (delivery) covering 3/4 items (75.00%)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
@@ -588,14 +600,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 $"Motor_Y method adaptation plan query smoke test share summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. baselineShare={noLoadPlan.BaselineShare}, dominantShare={noLoadPlan.DominantShare}, selectedShare={noLoadPlan.SelectedShare}, leadCount={noLoadPlan.SelectedLeadCountVsBaseline}, leadPp={noLoadPlan.SelectedLeadPercentagePointsVsBaseline}");
         }
 
-        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code 'Motor_Y No-Load Test' for MotorY.NoLoad (4/4, 100pp)", StringComparison.Ordinal)
+        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code '空载特性完全试验' for MotorY.NoLoad (4/4, 100pp)", StringComparison.Ordinal)
             || noLoadPlan.LegacyCodeDistributions.Count != 1
-            || !string.Equals(noLoadPlan.RecommendedLegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.DominantLegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.RecommendedLegacyCode, "空载特性完全试验", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.DominantLegacyCode, "空载特性完全试验", StringComparison.Ordinal)
             || noLoadPlan.RecommendedLegacyCodeCount != 4
             || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d
             || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "空载特性完全试验", StringComparison.Ordinal)
             || noLoadPlan.LegacyCodeDistributions[0].Count != 4
             || Math.Abs(noLoadPlan.LegacyCodeDistributions[0].Share - 1d) > 0.0001d)
         {
