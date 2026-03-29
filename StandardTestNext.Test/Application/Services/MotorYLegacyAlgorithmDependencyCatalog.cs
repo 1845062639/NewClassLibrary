@@ -25,6 +25,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyDecisionAnchors { get; init; } = Array.Empty<string>();
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> LegacyDecisionAnchorRequiredFields { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
     public string Notes { get; init; } = string.Empty;
 }
 
@@ -49,6 +50,17 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
             .ToDictionary(
                 code => code,
                 code => (IReadOnlyList<string>)MotorYLegacyItemCodeNormalizer.GetLegacyAliases(code),
+                StringComparer.Ordinal);
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<string>> BuildDecisionAnchorRequiredFields(params (string AnchorKey, string[] Fields)[] anchors)
+        => anchors
+            .Where(anchor => !string.IsNullOrWhiteSpace(anchor.AnchorKey))
+            .ToDictionary(
+                anchor => anchor.AnchorKey,
+                anchor => (IReadOnlyList<string>)anchor.Fields
+                    .Where(field => !string.IsNullOrWhiteSpace(field))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray(),
                 StringComparer.Ordinal);
 
     private static readonly IReadOnlyDictionary<string, MotorYLegacyAlgorithmDependencyProfile> Profiles =
@@ -84,6 +96,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "无上游试验依赖，可直接作为 Motor_Y 冷态基线入口",
                     "结果字段 R1/θ1c 是否齐备，决定后续空载/热试验能否进入旧算法口径"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("cold-baseline-ready", new[] { "R1", "θ1c" }),
+                    ("downstream-ready", new[] { "R1", "θ1c" })),
                 Notes = "旧 FrmMotor_Y_Direct_Current_Resistance 页面直接采集/整理后入库，供空载/热试验继续引用 R1/θ1c。"
             },
             [MotorYTestMethodCodes.NoLoad] = new()
@@ -120,6 +135,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "仅 U0/Un<0.51 的样本参与 Pfw 线性拟合，低压段样本覆盖度直接影响旧算法可信度",
                     "最终 I0/ΔI0/P0/Pcu/Pfe 均取 1.0 pu 回归值，而不是简单取原始点"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("rconverse-branch", new[] { "RConverseType" }),
+                    ("pfw-fit-window", new[] { "Pfw" }),
+                    ("rated-regression-ready", new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" })),
                 Notes = "旧 FrmMotor_Y_NoLoad 会先读取直流电阻结果补 R1c/θ1c，再拟合空载曲线得到 Pfe/Pfw/CoefficientOfPfe。"
             },
             [MotorYTestMethodCodes.HeatRun] = new()
@@ -156,6 +175,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "HotStateType=0 优先首个实测 Rn，HotStateType=1 强制按 firstSecondsInterval 外推",
                     "GB2012/TB 与 GB2023 温升公式不同，适配层必须保留标准分支"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("first-seconds-interval", new[] { "Pn" }),
+                    ("hot-state-branch", new[] { "HotStateType" }),
+                    ("gb-temperature-branch", new[] { "GB", "Rn", "θw", "θs", "θb" })),
                 Notes = "旧 FrmMotor_Y_Thermal 先读取直流电阻结果补 Rc/θc；Algorithm_Motor_Y.Thermal 再按额定功率与 GB 版本计算 Rn/Rw/Δθ/θw。"
             },
             [MotorYTestMethodCodes.LoadA] = new()
@@ -192,6 +215,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "A 法结果固定回归到 125/100/75/50/25% 五个额定负载点",
                     "该分支不依赖 ratedParams 对象，但 payload 内额定量缺失时仍无法对齐旧算法"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("upstream-ready", new[] { "CoefficientOfPfe", "Pfw", "θa" }),
+                    ("rated-load-fit-grid", new[] { "ResultDataList" }),
+                    ("payload-rated-quantity-ready", new[] { "Pcu1", "Pcu2", "η" })),
                 Notes = "旧 FrmMotor_Y_Load_A 会先校验空载试验的铁耗系数，且从热试验引用 θa；转矩修正还依赖耦接空载/单空载结果。"
             },
             [MotorYTestMethodCodes.LoadB] = new()
@@ -228,6 +255,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "当相关系数 R<0.95 时需先删坏点再重新拟合 A/B/R",
                     "结果区会从 cuC=1 开始逐步下调，直到所有 Ps 非负，说明旧算法存在迭代收敛决策"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("gb-ratios-branch", new[] { "GB", "θs", "ratios" }),
+                    ("correlation-refit", new[] { "A", "B", "R", "bad-point-refit" }),
+                    ("ps-iteration", new[] { "ResultDataList", "Ps", "cuC" })),
                 Notes = "旧 FrmMotor_Y_Load_B 同时依赖空载试验的 Pfe/Pfw/R1c/θ1c 与热试验的 θw/θb；算法还按 GB 版本切换 ratios/θs 口径。"
             },
             [MotorYTestMethodCodes.LockedRotor] = new()
@@ -264,6 +295,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     "TorqueCalType=1 时才会计算 θ1s/R/Pkcu1/Pfe/ns/Tk 等中间量",
                     "RCalType 决定是冷态电阻换算还是直接使用 R1s，属于旧算法关键分支"
                 },
+                LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
+                    ("voltage-fit-branch", new[] { "Un" }),
+                    ("torquecal-branch", new[] { "TorqueCalType" }),
+                    ("rcal-branch", new[] { "RCalType", "R1s" })),
                 Notes = "旧 FrmMotor_Y_Lock_Rotor 会从空载试验引用 R1c/θ1c/K1；堵转算法再结合铁耗系数与额定量推导 Ikn/Pkn/Tkn。"
             }
         };

@@ -65,6 +65,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             {
                 throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: notes/algorithm entry/formula rules/decision anchors missing for {row.Item1}.");
             }
+
+            if (profile.LegacyDecisionAnchorRequiredFields.Count == 0)
+            {
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor required fields missing for {row.Item1}.");
+            }
         }
 
         var decision = new MotorYMethodDecisionSnapshot

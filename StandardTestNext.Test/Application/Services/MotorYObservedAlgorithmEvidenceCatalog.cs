@@ -67,44 +67,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         };
 
     private static readonly IReadOnlyDictionary<string, IReadOnlyList<MotorYDecisionAnchorObservationRule>> DecisionAnchorObservationRulesByCanonicalCode =
-        new Dictionary<string, IReadOnlyList<MotorYDecisionAnchorObservationRule>>(StringComparer.Ordinal)
-        {
-            [MotorYTestMethodCodes.DcResistance] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "cold-baseline-ready", RequiredPayloadFields = new[] { "R1", "θ1c" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "downstream-ready", RequiredPayloadFields = new[] { "R1", "θ1c" } }
-            },
-            [MotorYTestMethodCodes.NoLoad] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "rconverse-branch", RequiredPayloadFields = new[] { "RConverseType" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "pfw-fit-window", RequiredPayloadFields = new[] { "Pfw" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "rated-regression-ready", RequiredPayloadFields = new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" } }
-            },
-            [MotorYTestMethodCodes.HeatRun] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "first-seconds-interval", RequiredPayloadFields = new[] { "Pn" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "hot-state-branch", RequiredPayloadFields = new[] { "HotStateType" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "gb-temperature-branch", RequiredPayloadFields = new[] { "GB", "Rn", "θw", "θs", "θb" } }
-            },
-            [MotorYTestMethodCodes.LoadA] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "upstream-ready", RequiredPayloadFields = new[] { "CoefficientOfPfe", "Pfw", "θa" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "rated-load-fit-grid", RequiredPayloadFields = new[] { "ResultDataList" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "payload-rated-quantity-ready", RequiredPayloadFields = new[] { "Pcu1", "Pcu2", "η" } }
-            },
-            [MotorYTestMethodCodes.LoadB] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "gb-ratios-branch", RequiredPayloadFields = new[] { "GB", "θs" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "correlation-refit", RequiredPayloadFields = new[] { "A", "B", "R" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "ps-iteration", RequiredPayloadFields = new[] { "Ps", "ResultDataList" } }
-            },
-            [MotorYTestMethodCodes.LockedRotor] = new[]
-            {
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "voltage-fit-branch", RequiredPayloadFields = new[] { "Un" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "torquecal-branch", RequiredPayloadFields = new[] { "TorqueCalType" } },
-                new MotorYDecisionAnchorObservationRule { AnchorKey = "rcal-branch", RequiredPayloadFields = new[] { "RCalType", "R1s" } }
-            }
-        };
+        new Dictionary<string, IReadOnlyList<MotorYDecisionAnchorObservationRule>>(StringComparer.Ordinal);
 
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(
         string canonicalCode,
@@ -129,11 +92,21 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
         IReadOnlyList<string>? observedPayloadFields,
         IReadOnlyList<string>? observedStructuredSignals = null)
     {
-        if (!DecisionAnchorObservationRulesByCanonicalCode.TryGetValue(canonicalCode, out var rules)
-            || rules.Count == 0)
+        var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(canonicalCode);
+        if (dependencyProfile?.LegacyDecisionAnchorRequiredFields is null
+            || dependencyProfile.LegacyDecisionAnchorRequiredFields.Count == 0)
         {
             return Array.Empty<MotorYDecisionAnchorObservationRule>();
         }
+
+        var rules = dependencyProfile.LegacyDecisionAnchorRequiredFields
+            .OrderBy(pair => pair.Key, StringComparer.Ordinal)
+            .Select(pair => new MotorYDecisionAnchorObservationRule
+            {
+                AnchorKey = pair.Key,
+                RequiredPayloadFields = pair.Value
+            })
+            .ToArray();
 
         var observed = (observedPayloadFields ?? Array.Empty<string>())
             .Concat(observedStructuredSignals ?? Array.Empty<string>())
