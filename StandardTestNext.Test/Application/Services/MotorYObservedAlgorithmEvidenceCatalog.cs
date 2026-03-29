@@ -56,18 +56,28 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             [MotorYTestMethodCodes.LockedRotor] = new[] { "TorqueCalType", "RCalType", "R1s", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "Un" }
         };
 
-    public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
-        => Build(canonicalCode, observedPayloadFields, FormulaSignalObservedFieldsByCanonicalCode, "formula signal observed payload", "formula-signal");
+    public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(
+        string canonicalCode,
+        IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals = null)
+        => Build(canonicalCode, observedPayloadFields, observedStructuredSignals, FormulaSignalObservedFieldsByCanonicalCode, "formula signal observed payload", "formula-signal");
 
-    public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyRuleEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
-        => Build(canonicalCode, observedPayloadFields, LegacyRuleObservedFieldsByCanonicalCode, "legacy algorithm rule observed payload", "legacy-rule");
+    public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyRuleEvidence(
+        string canonicalCode,
+        IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals = null)
+        => Build(canonicalCode, observedPayloadFields, observedStructuredSignals, LegacyRuleObservedFieldsByCanonicalCode, "legacy algorithm rule observed payload", "legacy-rule");
 
-    public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyDecisionAnchorEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
-        => Build(canonicalCode, observedPayloadFields, LegacyDecisionAnchorObservedFieldsByCanonicalCode, "legacy decision anchor observed payload", "decision-anchor");
+    public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyDecisionAnchorEvidence(
+        string canonicalCode,
+        IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals = null)
+        => Build(canonicalCode, observedPayloadFields, observedStructuredSignals, LegacyDecisionAnchorObservedFieldsByCanonicalCode, "legacy decision anchor observed payload", "decision-anchor");
 
     private static MotorYObservedAlgorithmEvidenceSnapshot Build(
         string canonicalCode,
         IReadOnlyList<string>? observedPayloadFields,
+        IReadOnlyList<string>? observedStructuredSignals,
         IReadOnlyDictionary<string, string[]> catalog,
         string summaryLabel,
         string gapLabelPrefix)
@@ -76,6 +86,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             ? fields.Where(field => !string.IsNullOrWhiteSpace(field)).Distinct(StringComparer.Ordinal).ToArray()
             : Array.Empty<string>();
         var observed = (observedPayloadFields ?? Array.Empty<string>())
+            .Concat(observedStructuredSignals ?? Array.Empty<string>())
             .Where(field => !string.IsNullOrWhiteSpace(field))
             .Distinct(StringComparer.Ordinal)
             .ToArray();

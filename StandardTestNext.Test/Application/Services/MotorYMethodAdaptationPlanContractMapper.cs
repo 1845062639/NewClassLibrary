@@ -39,13 +39,26 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             null);
+        var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+            dependencyProfile?.RequiredStructuredPayloadSignals,
+            null,
+            "structured payload signals");
+        var structuredResultCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
+            dependencyProfile?.RequiredStructuredResultSignals,
+            null,
+            "structured result signals");
+        var observedStructuredSignals = structuredPayloadCoverage.ObservedSignals
+            .Concat(structuredResultCoverage.ObservedSignals)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
         var formulaEvidenceObservedFields = resultCoverage.CoveredRequiredResultFields
             .Concat(rawDataSignalCoverage.ObservedSignals)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
         var formulaEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildFormulaSignalEvidence(
             selection.CanonicalCode,
-            formulaEvidenceObservedFields);
+            formulaEvidenceObservedFields,
+            observedStructuredSignals);
         var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
             dependencyProfile?.FormulaSignals,
             formulaEvidence.ObservedPayloadFields,
@@ -58,7 +71,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .ToArray();
         var ruleEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyRuleEvidence(
             selection.CanonicalCode,
-            ruleObservedFields);
+            ruleObservedFields,
+            observedStructuredSignals);
         var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
             dependencyProfile?.LegacyAlgorithmRules,
             ruleEvidence.ObservedPayloadFields,
@@ -66,19 +80,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var decisionAnchorObservedFields = ruleObservedFields;
         var decisionAnchorEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyDecisionAnchorEvidence(
             selection.CanonicalCode,
-            decisionAnchorObservedFields);
+            decisionAnchorObservedFields,
+            observedStructuredSignals);
         var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
             dependencyProfile?.LegacyDecisionAnchors,
             decisionAnchorEvidence.ObservedPayloadFields,
             "legacy decision anchors");
-        var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
-            dependencyProfile?.RequiredStructuredPayloadSignals,
-            null,
-            "structured payload signals");
-        var structuredResultCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
-            dependencyProfile?.RequiredStructuredResultSignals,
-            null,
-            "structured result signals");
         var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
             .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
             .Concat(resultCoverage.CoveredRequiredResultFields)
