@@ -141,53 +141,94 @@ public static class TestRecordViewMapper
         IReadOnlyList<TestRecordItemDetail> items,
         string canonicalCode)
     {
-        var relevantCount = items.Count(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal));
-        if (relevantCount <= 0)
+        var relevantItems = items
+            .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
+            .ToArray();
+        if (relevantItems.Length == 0)
         {
             return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
         }
 
-        var preferredLegacyCodes = MotorYLegacyItemCodeNormalizer.GetLegacyAliases(canonicalCode);
-        if (preferredLegacyCodes.Count > 0)
-        {
-            var primaryLegacyCode = preferredLegacyCodes[0];
-            return new[]
-            {
-                new MotorYLegacyCodeDistributionSnapshot
-                {
-                    CanonicalCode = canonicalCode,
-                    LegacyCode = primaryLegacyCode,
-                    Count = relevantCount,
-                    Share = 1d
-                }
-            };
-        }
-
-        var relevant = items
-            .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
-            .Select(item => string.IsNullOrWhiteSpace(item.DisplayName)
-                ? item.ItemCode
-                : item.DisplayName)
+        var candidateLegacyCodes = relevantItems
+            .SelectMany(item => EnumerateLegacyCodeCandidates(item, canonicalCode))
             .Where(code => !string.IsNullOrWhiteSpace(code))
             .ToArray();
 
-        if (relevant.Length == 0)
+        if (candidateLegacyCodes.Length == 0)
         {
             return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
         }
 
-        return relevant
+        return candidateLegacyCodes
             .GroupBy(code => code, StringComparer.Ordinal)
             .Select(group => new MotorYLegacyCodeDistributionSnapshot
             {
                 CanonicalCode = canonicalCode,
                 LegacyCode = group.Key,
                 Count = group.Count(),
-                Share = Math.Round((double)group.Count() / relevant.Length, 4, MidpointRounding.AwayFromZero)
+                Share = Math.Round((double)group.Count() / candidateLegacyCodes.Length, 4, MidpointRounding.AwayFromZero)
             })
             .OrderByDescending(x => x.Count)
             .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static IReadOnlyList<string> EnumerateLegacyCodeCandidates(TestRecordItemDetail item, string canonicalCode)
+    {
+        var candidates = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(item.DisplayName)
+            && !string.Equals(item.DisplayName, canonicalCode, StringComparison.Ordinal))
+        {
+            candidates.Add(item.DisplayName);
+        }
+
+        if (item.BuildProfile is not null)
+        {
+            var aliases = ResolveLegacyCodeAliases(canonicalCode, item.BuildProfile.MethodValue, item.BuildProfile.IsBaselineMethod);
+            foreach (var alias in aliases)
+            {
+                if (!string.IsNullOrWhiteSpace(alias))
+                {
+                    candidates.Add(alias);
+                }
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            candidates.AddRange(MotorYLegacyItemCodeNormalizer.GetLegacyAliases(canonicalCode));
+        }
+
+        return candidates
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> ResolveLegacyCodeAliases(string canonicalCode, int methodValue, bool isBaselineMethod)
+    {
+        if (isBaselineMethod)
+        {
+            return MotorYLegacyItemCodeNormalizer.GetLegacyAliases(canonicalCode);
+        }
+
+        return (canonicalCode, methodValue) switch
+        {
+            var key when key == (MotorYTestMethodCodes.DcResistance, 35) => new[] { "直流电阻测定（出厂）" },
+            var key when key == (MotorYTestMethodCodes.DcResistance, 53) => new[] { "陪试直流电阻测定" },
+            var key when key == (MotorYTestMethodCodes.DcResistance, 54) => new[] { "陪试直流电阻测定（出厂）" },
+            var key when key == (MotorYTestMethodCodes.NoLoad, 59) => new[] { "空载试验（出厂）" },
+            var key when key == (MotorYTestMethodCodes.HeatRun, 47) => new[] { "热试验（陪试）" },
+            var key when key == (MotorYTestMethodCodes.HeatRun, 48) => new[] { "热试验2" },
+            var key when key == (MotorYTestMethodCodes.LoadA, 60) => new[] { "A法负载试验（出厂）" },
+            var key when key == (MotorYTestMethodCodes.LoadA, 61) => new[] { "A法负载试验（扩展）" },
+            var key when key == (MotorYTestMethodCodes.LoadB, 51) => new[] { "B法负载试验（出厂）" },
+            var key when key == (MotorYTestMethodCodes.LoadB, 52) => new[] { "B法负载试验（扩展）" },
+            var key when key == (MotorYTestMethodCodes.LockedRotor, 46) => new[] { "堵转试验（出厂）" },
+            var key when key == (MotorYTestMethodCodes.LockedRotor, 47) => new[] { "堵转试验（历史别名）" },
+            _ => MotorYLegacyItemCodeNormalizer.GetLegacyAliases(canonicalCode)
+        };
     }
 
     private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)

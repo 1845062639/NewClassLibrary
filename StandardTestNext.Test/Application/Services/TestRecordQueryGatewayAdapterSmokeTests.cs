@@ -568,6 +568,22 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
         }
 
+        if (!string.Equals(noLoadPlan.RecommendedLegacyCode, "空载试验（出厂）", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.DominantLegacyCode, "空载试验（出厂）", StringComparison.Ordinal)
+            || noLoadPlan.RecommendedLegacyCodeCount != 3
+            || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare - 0.75d) > 0.0001d
+            || !string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code '空载试验（出厂）' for MotorY.NoLoad (3/4, 75pp)", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions.Count != 2
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "空载试验（出厂）", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions[0].Count != 3
+            || Math.Abs(noLoadPlan.LegacyCodeDistributions[0].Share - 0.75d) > 0.0001d
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[1].LegacyCode, "空载试验", StringComparison.Ordinal)
+            || noLoadPlan.LegacyCodeDistributions[1].Count != 1
+            || Math.Abs(noLoadPlan.LegacyCodeDistributions[1].Share - 0.25d) > 0.0001d)
+        {
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test legacy-code distribution mismatch for '{MotorYTestMethodCodes.NoLoad}'. recommended={noLoadPlan.RecommendedLegacyCode}:{noLoadPlan.RecommendedLegacyCodeCount}:{noLoadPlan.RecommendedLegacyCodeShare:0.####}, distributions={string.Join(" | ", noLoadPlan.LegacyCodeDistributions.Select(x => $"{x.LegacyCode}:{x.Count}:{x.Share:0.####}"))}, summary='{noLoadPlan.LegacyCodeSelectionSummary}'");
+        }
+
         if (noLoadPlan.ObservedAlgorithmInputFields.Count != 0
             || noLoadPlan.ObservedAlgorithmInputFieldCount != 0
             || noLoadPlan.MissingAlgorithmInputFieldCount != 26
