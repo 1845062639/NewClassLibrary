@@ -664,7 +664,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
 
         var noLoadBuckets = noLoadPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
-        if (noLoadBuckets.Count != 12
+        if (noLoadBuckets.Count != 13
             || !noLoadBuckets.TryGetValue("intermediate-result-fields", out var noLoadIntermediateBucket)
             || noLoadIntermediateBucket.RequiredCount != 7
             || noLoadIntermediateBucket.CoveredCount != 0
@@ -676,9 +676,37 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadDecisionResolutionBucket.CoveredCount != 0
             || noLoadDecisionResolutionBucket.MissingCount != 3
             || !noLoadDecisionResolutionBucket.MissingItems.SequenceEqual(new[] { "rconverse-branch:missing", "pfw-fit-window:missing", "rated-regression-ready:missing" }, StringComparer.Ordinal)
-            || !string.Equals(noLoadDecisionResolutionBucket.Summary, "decision anchor resolutions covered 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal))
+            || !string.Equals(noLoadDecisionResolutionBucket.Summary, "decision anchor resolutions covered 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal)
+            || !noLoadBuckets.TryGetValue("legacy-decision-anchor-fields", out var noLoadDecisionFieldBucket)
+            || noLoadDecisionFieldBucket.RequiredCount != 8
+            || noLoadDecisionFieldBucket.CoveredCount != 0
+            || noLoadDecisionFieldBucket.MissingCount != 8
+            || !noLoadDecisionFieldBucket.RequiredItems.SequenceEqual(new[]
+            {
+                "pfw-fit-window:Pfw",
+                "rated-regression-ready:CoefficientOfPfe",
+                "rated-regression-ready:I0",
+                "rated-regression-ready:P0",
+                "rated-regression-ready:Pcu",
+                "rated-regression-ready:Pfe",
+                "rated-regression-ready:ΔI0",
+                "rconverse-branch:RConverseType"
+            }, StringComparer.Ordinal)
+            || noLoadDecisionFieldBucket.CoveredItems.Count != 0
+            || !noLoadDecisionFieldBucket.MissingItems.SequenceEqual(new[]
+            {
+                "pfw-fit-window:Pfw",
+                "rated-regression-ready:CoefficientOfPfe",
+                "rated-regression-ready:I0",
+                "rated-regression-ready:P0",
+                "rated-regression-ready:Pcu",
+                "rated-regression-ready:Pfe",
+                "rated-regression-ready:ΔI0",
+                "rconverse-branch:RConverseType"
+            }, StringComparer.Ordinal)
+            || !string.Equals(noLoadDecisionFieldBucket.Summary, "decision anchor required fields covered 0/8 (0pp); missing: pfw-fit-window:Pfw, rated-regression-ready:CoefficientOfPfe, rated-regression-ready:I0, rated-regression-ready:P0, rated-regression-ready:Pcu, rated-regression-ready:Pfe, rated-regression-ready:ΔI0, rconverse-branch:RConverseType", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result bucket mismatch for '{MotorYTestMethodCodes.NoLoad}'. bucketCount={noLoadBuckets.Count}, summary='{(noLoadBuckets.TryGetValue("intermediate-result-fields", out var bucket) ? bucket.Summary : "<missing>")}'");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result bucket mismatch for '{MotorYTestMethodCodes.NoLoad}'. bucketCount={noLoadBuckets.Count}, summary='{(noLoadBuckets.TryGetValue("intermediate-result-fields", out var bucket) ? bucket.Summary : "<missing>")}', decisionFieldSummary='{(noLoadBuckets.TryGetValue("legacy-decision-anchor-fields", out var fieldBucket) ? fieldBucket.Summary : "<missing>")}'");
         }
 
         if (noLoadPlan.LegacyDecisionAnchors.Count != 3

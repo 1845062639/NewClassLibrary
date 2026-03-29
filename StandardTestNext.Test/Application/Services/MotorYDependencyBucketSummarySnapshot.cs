@@ -32,6 +32,7 @@ internal static class MotorYDependencyBucketSummaryFactory
         IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
     {
         var decisionAnchorResolutionBucket = CreateDecisionAnchorResolutionBucket(decisionAnchorResolutions);
+        var decisionAnchorFieldBucket = CreateDecisionAnchorFieldBucket(decisionAnchorResolutions);
 
         return new MotorYDependencyBucketSummarySnapshot[]
         {
@@ -189,7 +190,8 @@ internal static class MotorYDependencyBucketSummaryFactory
                 MissingItems = decisionAnchorCoverage.MissingItems,
                 Summary = decisionAnchorCoverage.Summary
             },
-            decisionAnchorResolutionBucket
+            decisionAnchorResolutionBucket,
+            decisionAnchorFieldBucket
         };
     }
 
@@ -225,6 +227,45 @@ internal static class MotorYDependencyBucketSummaryFactory
             RequiredItems = decisionAnchorResolutions.Select(x => x.AnchorKey).Distinct(StringComparer.Ordinal).ToArray(),
             CoveredItems = resolved,
             MissingItems = unresolved,
+            Summary = summary
+        };
+    }
+
+    private static MotorYDependencyBucketSummarySnapshot CreateDecisionAnchorFieldBucket(IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
+    {
+        var requiredItems = decisionAnchorResolutions
+            .SelectMany(x => x.RequiredPayloadFields.Select(field => $"{x.AnchorKey}:{field}"))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        var coveredItems = decisionAnchorResolutions
+            .SelectMany(x => x.ObservedPayloadFields.Select(field => $"{x.AnchorKey}:{field}"))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        var missingItems = decisionAnchorResolutions
+            .SelectMany(x => x.MissingPayloadFields.Select(field => $"{x.AnchorKey}:{field}"))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        var total = requiredItems.Length;
+        var coveredCount = coveredItems.Length;
+        var summary = total == 0
+            ? "decision anchor required fields covered 0/0 (100pp); no decision anchor fields defined"
+            : $"decision anchor required fields covered {coveredCount}/{total} ({CalculatePercentagePoints(coveredCount, total)}pp); missing: {(missingItems.Length == 0 ? "none" : string.Join(", ", missingItems))}";
+
+        return new MotorYDependencyBucketSummarySnapshot
+        {
+            BucketKey = "legacy-decision-anchor-fields",
+            DisplayName = "旧算法决策锚点字段",
+            RequiredCount = total,
+            CoveredCount = coveredCount,
+            MissingCount = Math.Max(0, total - coveredCount),
+            CoverageRatio = CalculateRatio(coveredCount, total),
+            CoveragePercentagePoints = CalculatePercentagePoints(coveredCount, total),
+            RequiredItems = requiredItems,
+            CoveredItems = coveredItems,
+            MissingItems = missingItems,
             Summary = summary
         };
     }
