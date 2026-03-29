@@ -297,8 +297,11 @@ public sealed class TestBootstrap
         var missing = resolution.MissingPayloadFields.Count == 0
             ? "none"
             : string.Join("+", resolution.MissingPayloadFields.Take(3));
+        var next = string.IsNullOrWhiteSpace(resolution.SuggestedNextStepSummary)
+            ? "none"
+            : resolution.SuggestedNextStepSummary;
 
-        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}";
+        return $"{resolution.AnchorKey}:{status}:{resolution.CoveragePercentagePoints}pp:obs={observed}:miss={missing}:next={next}";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
