@@ -408,9 +408,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadPlan.ObservedUpstreamCanonicalCodes.Count != 0
             || noLoadPlan.ObservedUpstreamLegacyCodes.Count != 0
             || !noLoadPlan.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
-            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes; no legacy upstream aliases observed", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes; no legacy upstream aliases observed", StringComparison.Ordinal)
+            || noLoadPlan.UpstreamLegacyCodeDistributions.Count != 2
+            || noLoadPlan.UpstreamLegacyCodeDistributions.Any(x => !string.Equals(x.CanonicalCode, MotorYTestMethodCodes.DcResistance, StringComparison.Ordinal))
+            || !noLoadPlan.UpstreamLegacyCodeDistributions.Select(x => x.LegacyCode).SequenceEqual(new[] { "直流电阻测定", "陪试直流电阻测定" }, StringComparer.Ordinal)
+            || noLoadPlan.UpstreamLegacyCodeDistributions.Any(x => x.Count != 0)
+            || noLoadPlan.UpstreamLegacyCodeDistributions.Any(x => Math.Abs(x.Share) > 0.0001d))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], observedLegacy={noLoadPlan.ObservedUpstreamLegacyCodes.Count}, missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], observedLegacy={noLoadPlan.ObservedUpstreamLegacyCodes.Count}, missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], upstreamDistributions={string.Join(" | ", noLoadPlan.UpstreamLegacyCodeDistributions.Select(x => $"{x.CanonicalCode}:{x.LegacyCode}:{x.Count}:{x.Share:0.####}"))}, summary='{noLoadPlan.UpstreamDependencySummary}'");
         }
 
         if (noLoadPlan.CoveredFormulaSignalCount != 0
@@ -445,19 +450,22 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test selected summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual='{noLoadPlan.SelectedMethodSummary}'");
         }
 
-        if (!noLoadPlan.ObservedAlgorithmInputFields.OrderBy(x => x, StringComparer.Ordinal).SequenceEqual(new[] { "R0", "RConverseType", "θ0" }.OrderBy(x => x, StringComparer.Ordinal), StringComparer.Ordinal)
-            || noLoadPlan.ObservedAlgorithmInputFieldCount != 3
-            || noLoadPlan.MissingAlgorithmInputFieldCount != 21
+        if (noLoadPlan.ObservedAlgorithmInputFields.Count != 0
+            || noLoadPlan.ObservedAlgorithmInputFieldCount != 0
+            || noLoadPlan.MissingAlgorithmInputFieldCount != 26
             || !noLoadPlan.MissingAlgorithmInputFields.Contains(MotorYTestMethodCodes.DcResistance, StringComparer.Ordinal)
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("DataList", StringComparer.Ordinal)
             || !noLoadPlan.MissingAlgorithmInputFields.Contains("DataList.I0", StringComparer.Ordinal)
             || !noLoadPlan.MissingAlgorithmInputFields.Contains("Pfw", StringComparer.Ordinal)
-            || !noLoadPlan.MissingAlgorithmInputFields.Contains("R1")
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("R0", StringComparer.Ordinal)
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("R1c", StringComparer.Ordinal)
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("θ0", StringComparer.Ordinal)
             || !noLoadPlan.MissingAlgorithmInputFields.Contains("θ1c", StringComparer.Ordinal)
-            || Math.Abs(noLoadPlan.AlgorithmInputFieldCoverageRatio - 0.125d) > 0.0001d
-            || noLoadPlan.AlgorithmInputFieldCoveragePercentagePoints != 13
-            || !string.Equals(noLoadPlan.AlgorithmInputFieldCoverageSummary, "algorithm input fields covered 3/24 (13pp); missing: CoefficientOfPfe, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.T0, DataList.U0, DataList.n0, I0, MotorY.DcResistance, P0, Pcu, Pfe, Pfw, R1, θ1c, ΔI0; observed: R0, RConverseType, θ0", StringComparison.Ordinal)
+            || Math.Abs(noLoadPlan.AlgorithmInputFieldCoverageRatio) > 0.0001d
+            || noLoadPlan.AlgorithmInputFieldCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.AlgorithmInputFieldCoverageSummary, "algorithm input fields covered 0/26 (0pp); missing: CoefficientOfPfe, DataList, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.T0, DataList.U0, DataList.n0, I0, K1, MotorY.DcResistance, Order, P0, P0cu1, Pcon, Pcu, Pfe, Pfw, R0, R1c, Un, ΔI0, θ0, θ1c; observed: none", StringComparison.Ordinal)
             || noLoadPlan.LegacyAlgorithmInputsReady
-            || !string.Equals(noLoadPlan.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes; payload required fields covered 0/6 (0pp); missing: DataList, Un, R1c, θ1c, K1, Order; rated params required fields covered 0/0 (100pp); missing: none; result required fields covered 0/7 (0pp); missing: I0, ΔI0, P0, Pcu, Pfw, Pfe, CoefficientOfPfe; result required fields covered 3/7 (43pp); missing: P0cu1, Pcon, Pfe, Pfw; raw data signals covered 0/0 (100pp); raw samples=0; missing: none; observed: none; structured payload signals covered 0/8 (0pp); samples=0; missing: DataList.U0, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.n0, DataList.T0; observed: none; structured result signals covered 0/7 (0pp); samples=0; missing: P0, I0, ΔI0, Pcu, Pfw, Pfe, CoefficientOfPfe; observed: none", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.LegacyAlgorithmInputReadinessSummary, "legacy algorithm inputs incomplete; upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes; no legacy upstream aliases observed; payload required fields covered 0/6 (0pp); missing: DataList, Un, R1c, θ1c, K1, Order; no required rated param fields; result required fields covered 0/7 (0pp); missing: I0, ΔI0, P0, Pcu, Pfw, Pfe, CoefficientOfPfe; result required fields covered 0/7 (0pp); missing: R0, θ0, Pcon, P0cu1, Pfw, Pfe, CoefficientOfPfe; raw data signal coverage not required; structured payload signals covered 0/8 (0pp); samples=0; missing: DataList.U0, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.n0, DataList.T0; observed: none; structured result signals covered 0/7 (0pp); samples=0; missing: P0, I0, ΔI0, Pcu, Pfw, Pfe, CoefficientOfPfe; observed: none", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test algorithm-input summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. observed=[{string.Join(", ", noLoadPlan.ObservedAlgorithmInputFields)}], missingCount={noLoadPlan.MissingAlgorithmInputFieldCount}, ready={noLoadPlan.LegacyAlgorithmInputsReady}, readiness='{noLoadPlan.LegacyAlgorithmInputReadinessSummary}', summary='{noLoadPlan.AlgorithmInputFieldCoverageSummary}'");
         }
@@ -515,14 +523,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 $"Motor_Y method adaptation plan query smoke test share summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. baselineShare={noLoadPlan.BaselineShare}, dominantShare={noLoadPlan.DominantShare}, selectedShare={noLoadPlan.SelectedShare}, leadCount={noLoadPlan.SelectedLeadCountVsBaseline}, leadPp={noLoadPlan.SelectedLeadPercentagePointsVsBaseline}");
         }
 
-        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code '空载试验' for MotorY.NoLoad (4/4, 100pp)", StringComparison.Ordinal)
+        if (!string.Equals(noLoadPlan.LegacyCodeSelectionSummary, "recommended legacy code 'Motor_Y No-Load Test' for MotorY.NoLoad (4/4, 100pp)", StringComparison.Ordinal)
             || noLoadPlan.LegacyCodeDistributions.Count != 1
-            || !string.Equals(noLoadPlan.RecommendedLegacyCode, "空载试验", StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.DominantLegacyCode, "空载试验", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.RecommendedLegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.DominantLegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
             || noLoadPlan.RecommendedLegacyCodeCount != 4
             || Math.Abs(noLoadPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d
             || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "空载试验", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyCodeDistributions[0].LegacyCode, "Motor_Y No-Load Test", StringComparison.Ordinal)
             || noLoadPlan.LegacyCodeDistributions[0].Count != 4
             || Math.Abs(noLoadPlan.LegacyCodeDistributions[0].Share - 1d) > 0.0001d)
         {
