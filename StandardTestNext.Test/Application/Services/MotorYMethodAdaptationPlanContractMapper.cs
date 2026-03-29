@@ -121,6 +121,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var decisionAnchorGapPreviewSummary = MotorYDecisionAnchorResolutionFactory.BuildGapPreviewSummary(decisionAnchorResolutions);
         var decisionAnchorPriorityDistributions = MotorYDecisionAnchorResolutionFactory.BuildPriorityDistributions(decisionAnchorResolutions);
         var decisionAnchorPrioritySummary = MotorYDecisionAnchorResolutionFactory.BuildPrioritySummary(decisionAnchorResolutions);
+        var topDecisionAnchorPriority = MotorYDecisionAnchorResolutionFactory.BuildTopPriorityDistribution(decisionAnchorResolutions);
         var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
         var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
             ? "no decision-anchor next-step recommendation"
@@ -266,6 +267,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         return new MotorYMethodAdaptationPlanContract
         {
             CanonicalCode = selection.CanonicalCode,
+            DecisionAnchorTopPriority = topDecisionAnchorPriority?.Priority ?? string.Empty,
+            DecisionAnchorTopPrioritySummary = topDecisionAnchorPriority is null
+                ? "decision anchor top priority unavailable"
+                : $"top decision anchor priority={topDecisionAnchorPriority.Priority}; focus={topDecisionAnchorPriority.DominantSuggestedNextStepFocus}; anchor={topDecisionAnchorPriority.DominantAnchorKey}; fields={(topDecisionAnchorPriority.DominantSuggestedNextStepFields.Count == 0 ? "none" : string.Join(", ", topDecisionAnchorPriority.DominantSuggestedNextStepFields))}",
+            DecisionAnchorTopPriorityDominantAnchorKey = topDecisionAnchorPriority?.DominantAnchorKey ?? string.Empty,
+            DecisionAnchorTopPriorityFocus = topDecisionAnchorPriority?.DominantSuggestedNextStepFocus ?? string.Empty,
+            DecisionAnchorTopPriorityFields = topDecisionAnchorPriority?.DominantSuggestedNextStepFields ?? Array.Empty<string>(),
+            DecisionAnchorTopPriorityNextStepSummary = topDecisionAnchorPriority?.DominantSuggestedNextStepSummary ?? string.Empty,
             TotalCount = selection.TotalCount,
             BaselineProfile = profileMapper(selection.BaselineRoute),
             BaselineCount = selection.BaselineCount,

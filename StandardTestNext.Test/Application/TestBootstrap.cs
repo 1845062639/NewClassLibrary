@@ -278,13 +278,16 @@ public sealed class TestBootstrap
         var anchorPriorities = plan.DecisionAnchorPriorityDistributions.Count == 0
             ? "anchor-priority=<none>"
             : "anchor-priority=" + string.Join("|", plan.DecisionAnchorPriorityDistributions.Select(distribution => $"{distribution.Priority}:{distribution.Count}:{distribution.Share:P1}:{FormatPreview(distribution.AnchorKeys, 2)}:{FormatPreview(distribution.SuggestedNextStepFocuses, 2)}:fields={FormatPreview(distribution.SuggestedNextStepFields, 3)}:top={distribution.DominantAnchorKey}:{distribution.DominantSuggestedNextStepFocus}:top-fields={FormatPreview(distribution.DominantSuggestedNextStepFields, 3)}:next={distribution.SuggestedNextStepSummary}"));
+        var topAnchorPriority = string.IsNullOrWhiteSpace(plan.DecisionAnchorTopPriority)
+            ? "anchor-top-priority=<none>"
+            : $"anchor-top-priority={plan.DecisionAnchorTopPriority}:{plan.DecisionAnchorTopPriorityDominantAnchorKey}:{plan.DecisionAnchorTopPriorityFocus}:fields={FormatPreview(plan.DecisionAnchorTopPriorityFields, 3)}:next={plan.DecisionAnchorTopPriorityNextStepSummary}:summary={plan.DecisionAnchorTopPrioritySummary}";
         var anchorGapPreview = $"anchor-gap={plan.LegacyDecisionAnchorGapPreviewSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorResolutions};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorResolutions};{summaries};{distributions}]";
     }
 
     private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)

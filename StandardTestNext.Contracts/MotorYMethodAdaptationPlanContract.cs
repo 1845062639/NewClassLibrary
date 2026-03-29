@@ -69,6 +69,12 @@ public sealed class MotorYDecisionAnchorPriorityDistributionContract
 public sealed class MotorYMethodAdaptationPlanContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
+    public string DecisionAnchorTopPriority { get; init; } = string.Empty;
+    public string DecisionAnchorTopPrioritySummary { get; init; } = string.Empty;
+    public string DecisionAnchorTopPriorityDominantAnchorKey { get; init; } = string.Empty;
+    public string DecisionAnchorTopPriorityFocus { get; init; } = string.Empty;
+    public IReadOnlyList<string> DecisionAnchorTopPriorityFields { get; init; } = Array.Empty<string>();
+    public string DecisionAnchorTopPriorityNextStepSummary { get; init; } = string.Empty;
     public int TotalCount { get; init; }
     public MotorYBuildProfileContract? BaselineProfile { get; init; }
     public int BaselineCount { get; init; }

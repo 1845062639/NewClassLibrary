@@ -363,6 +363,11 @@ internal static class MotorYDecisionAnchorResolutionFactory
         }));
     }
 
+    public static MotorYDecisionAnchorPriorityDistribution? BuildTopPriorityDistribution(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        return BuildPriorityDistributions(resolutions).FirstOrDefault();
+    }
+
     public static string BuildSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
         if (resolutions.Count == 0)
