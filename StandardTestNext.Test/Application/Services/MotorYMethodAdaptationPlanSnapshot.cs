@@ -57,6 +57,9 @@ public sealed class MotorYDecisionAnchorPriorityDistributionSnapshot
     public double Share { get; init; }
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedNextStepSummary { get; init; } = string.Empty;
 }
 
 public sealed class MotorYMethodAdaptationPlanSnapshot

@@ -29,6 +29,9 @@ internal sealed class MotorYDecisionAnchorPriorityDistribution
     public double Share { get; init; }
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextSteps { get; init; } = Array.Empty<string>();
+    public string SuggestedNextStepSummary { get; init; } = string.Empty;
 }
 
 internal static class MotorYDecisionAnchorResolutionFactory
@@ -292,6 +295,21 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     .OrderBy(x => x.AnchorKey, StringComparer.Ordinal)
                     .ToArray();
                 var share = Math.Round((double)ordered.Length / resolutions.Count, 4, MidpointRounding.AwayFromZero);
+                var suggestedFields = ordered
+                    .SelectMany(x => x.SuggestedNextStepFields)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(x => x, StringComparer.Ordinal)
+                    .ToArray();
+                var suggestedSteps = ordered
+                    .SelectMany(x => x.SuggestedNextSteps)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                var suggestedStepSummary = suggestedSteps.Length == 0
+                    ? "decision anchor priority next steps unavailable"
+                    : $"priority {group.Key} next steps: {string.Join("; ", suggestedSteps.Take(3))}{(suggestedSteps.Length > 3 ? "; ..." : string.Empty)}";
+
                 return new MotorYDecisionAnchorPriorityDistribution
                 {
                     Priority = group.Key,
@@ -302,7 +320,10 @@ internal static class MotorYDecisionAnchorResolutionFactory
                         .Select(x => x.SuggestedNextStepFocus)
                         .Where(x => !string.IsNullOrWhiteSpace(x))
                         .Distinct(StringComparer.Ordinal)
-                        .ToArray()
+                        .ToArray(),
+                    SuggestedNextStepFields = suggestedFields,
+                    SuggestedNextSteps = suggestedSteps,
+                    SuggestedNextStepSummary = suggestedStepSummary
                 };
             })
             .ToArray();
@@ -321,7 +342,10 @@ internal static class MotorYDecisionAnchorResolutionFactory
             var focusPreview = distribution.SuggestedNextStepFocuses.Count == 0
                 ? "none"
                 : string.Join(", ", distribution.SuggestedNextStepFocuses.Take(2)) + (distribution.SuggestedNextStepFocuses.Count > 2 ? ", ..." : string.Empty);
-            return $"{distribution.Priority}={distribution.Count}/{resolutions.Count} ({(int)Math.Round(distribution.Share * 100d, MidpointRounding.AwayFromZero)}pp) anchors [{string.Join(", ", distribution.AnchorKeys)}], focus {focusPreview}";
+            var fieldPreview = distribution.SuggestedNextStepFields.Count == 0
+                ? "none"
+                : string.Join(", ", distribution.SuggestedNextStepFields.Take(3)) + (distribution.SuggestedNextStepFields.Count > 3 ? ", ..." : string.Empty);
+            return $"{distribution.Priority}={distribution.Count}/{resolutions.Count} ({(int)Math.Round(distribution.Share * 100d, MidpointRounding.AwayFromZero)}pp) anchors [{string.Join(", ", distribution.AnchorKeys)}], focus {focusPreview}, fields {fieldPreview}";
         }));
     }
 

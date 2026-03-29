@@ -1087,7 +1087,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                             Count = distribution.Count,
                             Share = distribution.Share,
                             AnchorKeys = distribution.AnchorKeys,
-                            SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses
+                            SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses,
+                            SuggestedNextStepFields = distribution.SuggestedNextStepFields,
+                            SuggestedNextSteps = distribution.SuggestedNextSteps,
+                            SuggestedNextStepSummary = distribution.SuggestedNextStepSummary
                         })
                         .ToArray(),
                     DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,

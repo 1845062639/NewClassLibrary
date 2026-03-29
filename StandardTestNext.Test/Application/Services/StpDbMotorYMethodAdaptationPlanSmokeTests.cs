@@ -236,6 +236,21 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor priority focuses mismatch for {snapshot.CanonicalCode}/{expected.Priority}. expected={string.Join(',', expected.SuggestedNextStepFocuses)}, actual={string.Join(',', actual.SuggestedNextStepFocuses)}");
             }
+
+            if (!actual.SuggestedNextStepFields.SequenceEqual(expected.SuggestedNextStepFields, StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor priority fields mismatch for {snapshot.CanonicalCode}/{expected.Priority}. expected={string.Join(',', expected.SuggestedNextStepFields)}, actual={string.Join(',', actual.SuggestedNextStepFields)}");
+            }
+
+            if (!actual.SuggestedNextSteps.SequenceEqual(expected.SuggestedNextSteps, StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor priority next steps mismatch for {snapshot.CanonicalCode}/{expected.Priority}. expected={string.Join(" | ", expected.SuggestedNextSteps)}, actual={string.Join(" | ", actual.SuggestedNextSteps)}");
+            }
+
+            if (!string.Equals(actual.SuggestedNextStepSummary, expected.SuggestedNextStepSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor priority next-step summary mismatch for {snapshot.CanonicalCode}/{expected.Priority}. expected='{expected.SuggestedNextStepSummary}', actual='{actual.SuggestedNextStepSummary}'");
+            }
         }
 
         if (!string.Equals(snapshot.DecisionAnchorPrioritySummary, expectedSummary, StringComparison.Ordinal))

@@ -86,7 +86,10 @@ public static class TestBootstrapFormattingSmokeTests
                     Count = 1,
                     Share = 1d,
                     AnchorKeys = new[] { "ps-iteration" },
-                    SuggestedNextStepFocuses = new[] { "B法 Ps 非负迭代收敛字段" }
+                    SuggestedNextStepFocuses = new[] { "B法 Ps 非负迭代收敛字段" },
+                    SuggestedNextStepFields = new[] { "Ps", "cuC" },
+                    SuggestedNextSteps = new[] { "继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC" },
+                    SuggestedNextStepSummary = "priority blocking next steps: 继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC"
                 }
             },
             LegacyDecisionAnchorResolutions = new[]
@@ -120,9 +123,9 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-priority=blocking:1:100.0 %:ps-iteration:B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
+        if (!formatted.Contains("anchor-priority=blocking:1:100.0 %:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:next=priority blocking next steps: 继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("anchor-resolutions=ps-iteration:missing:33pp:obs=ResultDataList:miss=Ps+cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
-            || !formatted.Contains("priority-summary=decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal))
+            || !formatted.Contains("priority-summary=decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段, fields Ps, cuC", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap priority formatting smoke test failed. actual='{formatted}'");
         }
