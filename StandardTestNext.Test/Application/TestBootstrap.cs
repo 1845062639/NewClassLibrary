@@ -259,8 +259,10 @@ public sealed class TestBootstrap
         var sampleGates = $"samples=raw {(plan.RawSampleCountReady ? "ok" : "gap")}/{plan.RawDataSampleCount}/{plan.MinimumRawSampleCount}|payload {(plan.StructuredPayloadSampleCountReady ? "ok" : "gap")}/{plan.StructuredPayloadSampleCount}/{plan.MinimumStructuredPayloadSampleCount}|result {(plan.StructuredResultSampleCountReady ? "ok" : "gap")}/{plan.StructuredResultSampleCount}/{plan.MinimumStructuredResultSampleCount}";
         var anchors = $"anchors={(plan.LegacyDecisionAnchorReady ? "ok" : "gap")}:{plan.ResolvedLegacyDecisionAnchorCount}/{plan.LegacyDecisionAnchorResolutions.Count}:{FormatPreview(plan.MissingLegacyDecisionAnchors, 3)}";
         var coverage = $"coverage=payload {plan.RequiredPayloadFieldCoveragePercentagePoints}pp|result {plan.RequiredResultFieldCoveragePercentagePoints}pp|mid {plan.RequiredIntermediateResultFieldCoveragePercentagePoints}pp|raw {plan.RawDataSignalCoveragePercentagePoints}pp|sp {plan.StructuredPayloadSignalCoveragePercentagePoints}pp|sr {plan.StructuredResultSignalCoveragePercentagePoints}pp";
+        var evidence = $"evidence=formula {plan.FormulaSignalCoveragePercentagePoints}pp|rules {plan.LegacyAlgorithmRuleCoveragePercentagePoints}pp|decision {plan.LegacyDecisionAnchorCoveragePercentagePoints}pp|decision-rules {plan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints}pp|decision-resolve {plan.LegacyDecisionAnchorResolutionCoveragePercentagePoints}pp";
+        var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{evidence};{summaries};{distributions}]";
     }
 
     private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
