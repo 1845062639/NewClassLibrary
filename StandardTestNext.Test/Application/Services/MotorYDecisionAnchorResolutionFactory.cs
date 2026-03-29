@@ -45,6 +45,16 @@ internal static class MotorYDecisionAnchorResolutionFactory
             };
         }
 
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.DcResistance, StringComparison.Ordinal))
+        {
+            return anchorKey switch
+            {
+                "cold-baseline-ready" => ("baseline-result", "直流电阻冷态基线结果", orderedFields),
+                "downstream-ready" => ("downstream-readiness", "直流电阻下游承接结果", orderedFields),
+                _ => ("decision-anchor", $"决策锚点 {anchorKey}", orderedFields)
+            };
+        }
+
         if (string.Equals(canonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
         {
             return anchorKey switch
@@ -252,6 +262,8 @@ internal static class MotorYDecisionAnchorResolutionFactory
             .Replace("空载旧算法的 R0/θ0 换算分支标记：", "NoLoad R0/θ0 branch fields ", StringComparison.Ordinal)
             .Replace("空载低压段风摩损耗拟合结果：", "NoLoad Pfw fit fields ", StringComparison.Ordinal)
             .Replace("空载 1.0pu 回归结果字段：", "NoLoad 1.0pu regression fields ", StringComparison.Ordinal)
+            .Replace("直流电阻冷态基线结果：", "DcResistance cold-baseline fields ", StringComparison.Ordinal)
+            .Replace("直流电阻下游承接结果：", "DcResistance downstream-ready fields ", StringComparison.Ordinal)
             .Replace("热试验 firstSecondsInterval 判定依据：", "HeatRun firstSecondsInterval fields ", StringComparison.Ordinal)
             .Replace("热试验 HotStateType 分支字段：", "HeatRun HotStateType fields ", StringComparison.Ordinal)
             .Replace("热试验 GB 温升分支关键字段：", "HeatRun GB temperature branch fields ", StringComparison.Ordinal)

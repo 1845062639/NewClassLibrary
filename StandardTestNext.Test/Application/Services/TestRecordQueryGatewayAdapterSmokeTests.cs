@@ -17,6 +17,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldPreferCanonicalLegacyCodeAliasForAppMethodAdaptationPlan();
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
+        ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
     }
 
@@ -1154,6 +1155,112 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test distribution ordering mismatch for '{canonicalCode}'.");
+        }
+    }
+
+    private static void ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-29T10:00:00+08:00");
+        var noDataRecord = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-DCR-DECISION-EMPTY-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                CreateMotorYDecisionItem(MotorYTestMethodCodes.DcResistance, 1, sampleTime)
+            }
+        };
+
+        var noDataGateway = CreateGateway(noDataRecord);
+        var noDataDetail = noDataGateway.GetDetailAsync(noDataRecord.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y DcResistance decision-anchor smoke test returned null detail for empty payload.");
+        var noDataPlan = noDataDetail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.DcResistance, StringComparison.Ordinal));
+
+        if (!string.Equals(noDataPlan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: cold-baseline-ready[missing]:R1, θ1c; downstream-ready[missing]:R1, θ1c", StringComparison.Ordinal)
+            || !string.Equals(noDataPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: need DcResistance cold-baseline fields R1, θ1c; need DcResistance downstream-ready fields R1, θ1c", StringComparison.Ordinal)
+            || !noDataPlan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+            {
+                "先补直流电阻冷态基线结果：R1, θ1c",
+                "先补直流电阻下游承接结果：R1, θ1c"
+            }, StringComparer.Ordinal)
+            || !string.Equals(noDataPlan.SuggestedDecisionAnchorNextStepSummary, "先补直流电阻冷态基线结果：R1, θ1c; 先补直流电阻下游承接结果：R1, θ1c", StringComparison.Ordinal)
+            || noDataPlan.LegacyDecisionAnchorResolutions.Count != 2
+            || noDataPlan.ResolvedLegacyDecisionAnchorCount != 0
+            || noDataPlan.PartialLegacyDecisionAnchorCount != 0
+            || noDataPlan.MissingLegacyDecisionAnchorResolutionCount != 2
+            || !noDataPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "cold-baseline-ready", StringComparison.Ordinal)
+                && !resolution.ResolvedByObservedPayload
+                && !resolution.PartiallyResolvedByObservedPayload
+                && string.Equals(resolution.SuggestedNextStepCategory, "baseline-result", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "直流电阻冷态基线结果", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "R1", "θ1c" }, StringComparer.Ordinal)
+                && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补直流电阻冷态基线结果：R1, θ1c" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补直流电阻冷态基线结果：R1, θ1c", StringComparison.Ordinal))
+            || !noDataPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "downstream-ready", StringComparison.Ordinal)
+                && !resolution.ResolvedByObservedPayload
+                && !resolution.PartiallyResolvedByObservedPayload
+                && string.Equals(resolution.SuggestedNextStepCategory, "downstream-readiness", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "直流电阻下游承接结果", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "R1", "θ1c" }, StringComparer.Ordinal)
+                && resolution.SuggestedNextSteps.SequenceEqual(new[] { "先补直流电阻下游承接结果：R1, θ1c" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补直流电阻下游承接结果：R1, θ1c", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y DcResistance decision-anchor query smoke test empty-payload mismatch. next='{noDataPlan.LegacyDecisionAnchorNextActionSummary}', gap='{noDataPlan.LegacyDecisionAnchorGapPreviewSummary}', suggested='{noDataPlan.SuggestedDecisionAnchorNextStepSummary}'");
+        }
+
+        var readyRecord = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-DCR-DECISION-READY-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime.AddMinutes(5),
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.DcResistance,
+                    MethodCode = "DirectCurrentResistance:1",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 1,
+                      "Ruv": 1.1,
+                      "Rvw": 1.2,
+                      "Rwu": 1.3,
+                      "R1": 1.2,
+                      "θ1c": 25.0
+                    }
+                    """
+                }
+            }
+        };
+
+        var readyGateway = CreateGateway(readyRecord);
+        var readyDetail = readyGateway.GetDetailAsync(readyRecord.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y DcResistance decision-anchor smoke test returned null detail for ready payload.");
+        var readyPlan = readyDetail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.DcResistance, StringComparison.Ordinal));
+
+        if (!string.Equals(readyPlan.LegacyDecisionAnchorGapPreviewSummary, "decision anchor gaps: none", StringComparison.Ordinal)
+            || !string.Equals(readyPlan.LegacyDecisionAnchorNextActionSummary, "decision anchors ready; no additional branch evidence required", StringComparison.Ordinal)
+            || readyPlan.SuggestedDecisionAnchorNextSteps.Count != 0
+            || !string.Equals(readyPlan.SuggestedDecisionAnchorNextStepSummary, "no decision-anchor next-step recommendation", StringComparison.Ordinal)
+            || readyPlan.LegacyDecisionAnchorResolutions.Count != 2
+            || readyPlan.ResolvedLegacyDecisionAnchorCount != 2
+            || readyPlan.PartialLegacyDecisionAnchorCount != 0
+            || readyPlan.MissingLegacyDecisionAnchorResolutionCount != 0
+            || readyPlan.LegacyDecisionAnchorResolutionCoverageRatio != 1d
+            || readyPlan.LegacyDecisionAnchorResolutionCoveragePercentagePoints != 100
+            || !readyPlan.LegacyDecisionAnchorResolutions.All(resolution => resolution.ResolvedByObservedPayload
+                && !resolution.PartiallyResolvedByObservedPayload
+                && string.Equals(resolution.ResolutionStage, "resolved", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "decision anchor already resolved", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y DcResistance decision-anchor query smoke test ready-payload mismatch. next='{readyPlan.LegacyDecisionAnchorNextActionSummary}', gap='{readyPlan.LegacyDecisionAnchorGapPreviewSummary}', suggested='{readyPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
     }
 
