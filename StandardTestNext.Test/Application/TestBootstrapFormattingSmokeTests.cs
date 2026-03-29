@@ -35,7 +35,7 @@ public static class TestBootstrapFormattingSmokeTests
                     ResolutionStage = "missing",
                     CoveragePercentagePoints = 0,
                     MissingPayloadFields = new[] { "RConverseType" },
-                    SuggestedNextStepSummary = "先补决策锚点 rconverse-branch: RConverseType"
+                    SuggestedNextStepSummary = "先补空载旧算法的 R0/θ0 换算分支标记：RConverseType"
                 }
             },
             SuggestedNextStepSummary = "先补决策锚点观测依据: rconverse-branch",
@@ -52,7 +52,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-resolutions=rconverse-branch:missing:0pp:obs=none:miss=RConverseType:next=先补决策锚点 rconverse-branch: RConverseType", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-resolutions=rconverse-branch:missing:0pp:obs=none:miss=RConverseType:next=先补空载旧算法的 R0/θ0 换算分支标记：RConverseType", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap formatting smoke test failed. actual='{formatted}'");
         }

@@ -680,7 +680,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     dependencyProfile?.LegacyDecisionAnchors,
                     decisionAnchorEvidence.ObservedPayloadFields,
                     "legacy decision anchors");
-                var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(decisionAnchorObservationRules);
+                var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(selectedRoute.CanonicalCode, decisionAnchorObservationRules);
                 var resolvedDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.ResolvedByObservedPayload);
                 var partialDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload);
                 var missingDecisionAnchorResolutionCount = decisionAnchorResolutions.Count - resolvedDecisionAnchorCount - partialDecisionAnchorCount;
