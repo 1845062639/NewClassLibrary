@@ -175,6 +175,14 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
         return new MotorYMethodAdaptationPlanContract
         {
             CanonicalCode = snapshot.CanonicalCode,
+            DecisionAnchorTopPriority = snapshot.DecisionAnchorTopPriority,
+            DecisionAnchorTopPrioritySummary = snapshot.DecisionAnchorTopPrioritySummary,
+            DecisionAnchorTopPriorityDominantAnchorKey = snapshot.DecisionAnchorTopPriorityDominantAnchorKey,
+            DecisionAnchorTopPriorityFocus = snapshot.DecisionAnchorTopPriorityFocus,
+            DecisionAnchorTopPriorityFields = snapshot.DecisionAnchorTopPriorityFields,
+            DecisionAnchorTopPriorityNextStepSummary = snapshot.DecisionAnchorTopPriorityNextStepSummary,
+            DecisionAnchorTopPriorityPrimaryField = snapshot.DecisionAnchorTopPriorityPrimaryField,
+            DecisionAnchorTopPriorityPrimaryFieldSummary = snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary,
             TotalCount = snapshot.TotalCount,
             BaselineProfile = MapBuildProfile(snapshot.BaselineRoute),
             BaselineCount = snapshot.BaselineCount,

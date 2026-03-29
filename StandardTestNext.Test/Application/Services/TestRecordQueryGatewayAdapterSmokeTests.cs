@@ -1319,9 +1319,13 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(psResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）", StringComparison.Ordinal)
             || thermalResolution is null
             || !string.Equals(thermalResolution.SuggestedPrimaryNextField, "θw", StringComparison.Ordinal)
-            || !string.Equals(thermalResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 θw，用于推进 B法热态承接字段（thermal-carryover）", StringComparison.Ordinal))
+            || !string.Equals(thermalResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 θw，用于推进 B法热态承接字段（thermal-carryover）", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriority, "blocking", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey, "correlation-refit", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryField, "R", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
+            throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actualTop={loadBPlan.DecisionAnchorTopPriority}/{loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey}/{loadBPlan.DecisionAnchorTopPriorityPrimaryField}/'{loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary}'; actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
         }
     }
 

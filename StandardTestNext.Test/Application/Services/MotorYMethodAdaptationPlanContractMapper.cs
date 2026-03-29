@@ -264,6 +264,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             decisionAnchorCoverage,
             decisionAnchorResolutions);
 
+        var topDecisionAnchorResolution = decisionAnchorResolutions
+            .FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority?.DominantAnchorKey, StringComparison.Ordinal));
+
         return new MotorYMethodAdaptationPlanContract
         {
             CanonicalCode = selection.CanonicalCode,
@@ -275,6 +278,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             DecisionAnchorTopPriorityFocus = topDecisionAnchorPriority?.DominantSuggestedNextStepFocus ?? string.Empty,
             DecisionAnchorTopPriorityFields = topDecisionAnchorPriority?.DominantSuggestedNextStepFields ?? Array.Empty<string>(),
             DecisionAnchorTopPriorityNextStepSummary = topDecisionAnchorPriority?.DominantSuggestedNextStepSummary ?? string.Empty,
+            DecisionAnchorTopPriorityPrimaryField = topDecisionAnchorResolution?.SuggestedPrimaryNextField ?? string.Empty,
+            DecisionAnchorTopPriorityPrimaryFieldSummary = topDecisionAnchorResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
             TotalCount = selection.TotalCount,
             BaselineProfile = profileMapper(selection.BaselineRoute),
             BaselineCount = selection.BaselineCount,

@@ -77,6 +77,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string DecisionAnchorTopPriorityFocus { get; init; } = string.Empty;
     public IReadOnlyList<string> DecisionAnchorTopPriorityFields { get; init; } = Array.Empty<string>();
     public string DecisionAnchorTopPriorityNextStepSummary { get; init; } = string.Empty;
+    public string DecisionAnchorTopPriorityPrimaryField { get; init; } = string.Empty;
+    public string DecisionAnchorTopPriorityPrimaryFieldSummary { get; init; } = string.Empty;
     public int TotalCount { get; init; }
     public MotorYLegacyAlgorithmRoute? BaselineRoute { get; init; }
     public int BaselineCount { get; init; }

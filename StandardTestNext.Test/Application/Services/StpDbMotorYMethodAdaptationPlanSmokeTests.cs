@@ -285,7 +285,9 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityDominantAnchorKey)
                 || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityFocus)
                 || snapshot.DecisionAnchorTopPriorityFields.Count != 0
-                || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityNextStepSummary))
+                || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityNextStepSummary)
+                || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityPrimaryField)
+                || !string.IsNullOrWhiteSpace(snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor top priority should be empty for {snapshot.CanonicalCode}.");
             }
@@ -294,14 +296,17 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         }
 
         var expectedTopPrioritySummary = $"top decision anchor priority={expectedTopPriority.Priority}; focus={expectedTopPriority.DominantSuggestedNextStepFocus}; anchor={expectedTopPriority.DominantAnchorKey}; fields={(expectedTopPriority.DominantSuggestedNextStepFields.Count == 0 ? "none" : string.Join(", ", expectedTopPriority.DominantSuggestedNextStepFields))}";
+        var expectedTopResolution = expectedResolutions.FirstOrDefault(x => string.Equals(x.AnchorKey, expectedTopPriority.DominantAnchorKey, StringComparison.Ordinal));
         if (!string.Equals(snapshot.DecisionAnchorTopPriority, expectedTopPriority.Priority, StringComparison.Ordinal)
             || !string.Equals(snapshot.DecisionAnchorTopPriorityDominantAnchorKey, expectedTopPriority.DominantAnchorKey, StringComparison.Ordinal)
             || !string.Equals(snapshot.DecisionAnchorTopPriorityFocus, expectedTopPriority.DominantSuggestedNextStepFocus, StringComparison.Ordinal)
             || !snapshot.DecisionAnchorTopPriorityFields.SequenceEqual(expectedTopPriority.DominantSuggestedNextStepFields, StringComparer.Ordinal)
             || !string.Equals(snapshot.DecisionAnchorTopPriorityNextStepSummary, expectedTopPriority.DominantSuggestedNextStepSummary, StringComparison.Ordinal)
-            || !string.Equals(snapshot.DecisionAnchorTopPrioritySummary, expectedTopPrioritySummary, StringComparison.Ordinal))
+            || !string.Equals(snapshot.DecisionAnchorTopPrioritySummary, expectedTopPrioritySummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.DecisionAnchorTopPriorityPrimaryField, expectedTopResolution?.SuggestedPrimaryNextField ?? string.Empty, StringComparison.Ordinal)
+            || !string.Equals(snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary, expectedTopResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: top decision-anchor priority mismatch for {snapshot.CanonicalCode}. expected={expectedTopPriority.Priority}/{expectedTopPriority.DominantAnchorKey}/{expectedTopPriority.DominantSuggestedNextStepFocus}/{string.Join(',', expectedTopPriority.DominantSuggestedNextStepFields)}/'{expectedTopPriority.DominantSuggestedNextStepSummary}'/'{expectedTopPrioritySummary}', actual={snapshot.DecisionAnchorTopPriority}/{snapshot.DecisionAnchorTopPriorityDominantAnchorKey}/{snapshot.DecisionAnchorTopPriorityFocus}/{string.Join(',', snapshot.DecisionAnchorTopPriorityFields)}/'{snapshot.DecisionAnchorTopPriorityNextStepSummary}'/'{snapshot.DecisionAnchorTopPrioritySummary}'");
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: top decision-anchor priority mismatch for {snapshot.CanonicalCode}. expected={expectedTopPriority.Priority}/{expectedTopPriority.DominantAnchorKey}/{expectedTopPriority.DominantSuggestedNextStepFocus}/{string.Join(',', expectedTopPriority.DominantSuggestedNextStepFields)}/'{expectedTopPriority.DominantSuggestedNextStepSummary}'/'{expectedTopPrioritySummary}'/'{expectedTopResolution?.SuggestedPrimaryNextField ?? string.Empty}'/'{expectedTopResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty}', actual={snapshot.DecisionAnchorTopPriority}/{snapshot.DecisionAnchorTopPriorityDominantAnchorKey}/{snapshot.DecisionAnchorTopPriorityFocus}/{string.Join(',', snapshot.DecisionAnchorTopPriorityFields)}/'{snapshot.DecisionAnchorTopPriorityNextStepSummary}'/'{snapshot.DecisionAnchorTopPrioritySummary}'/'{snapshot.DecisionAnchorTopPriorityPrimaryField}'/'{snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary}'");
         }
     }
 

@@ -848,6 +848,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     DecisionAnchorTopPriorityFocus = topDecisionAnchorPriority?.DominantSuggestedNextStepFocus ?? string.Empty,
                     DecisionAnchorTopPriorityFields = topDecisionAnchorPriority?.DominantSuggestedNextStepFields ?? Array.Empty<string>(),
                     DecisionAnchorTopPriorityNextStepSummary = topDecisionAnchorPriority?.DominantSuggestedNextStepSummary ?? string.Empty,
+                    DecisionAnchorTopPriorityPrimaryField = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority?.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextField ?? string.Empty,
+                    DecisionAnchorTopPriorityPrimaryFieldSummary = decisionAnchorResolutions.FirstOrDefault(resolution => string.Equals(resolution.AnchorKey, topDecisionAnchorPriority?.DominantAnchorKey, StringComparison.Ordinal))?.SuggestedPrimaryNextFieldSummary ?? string.Empty,
                     TotalCount = selection.TotalCount,
                     BaselineRoute = selection.BaselineRoute,
                     BaselineCount = selection.BaselineCount,
