@@ -18,6 +18,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
+        ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1264,6 +1265,63 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && string.Equals(resolution.SuggestedNextStepSummary, "decision anchor already resolved", StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y DcResistance decision-anchor query smoke test ready-payload mismatch. next='{readyPlan.LegacyDecisionAnchorNextActionSummary}', gap='{readyPlan.LegacyDecisionAnchorGapPreviewSummary}', suggested='{readyPlan.SuggestedDecisionAnchorNextStepSummary}'");
+        }
+    }
+
+    private static void ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T00:10:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-PRIMARY-NEXT-FIELD-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50, "θ1t": 85 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y decision-anchor primary-next-field smoke test returned null detail.");
+
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        var routeResolution = loadBPlan.LegacyDecisionAnchorResolutions.SingleOrDefault(x => string.Equals(x.AnchorKey, "gb-ratios-branch", StringComparison.Ordinal));
+        var refitResolution = loadBPlan.LegacyDecisionAnchorResolutions.SingleOrDefault(x => string.Equals(x.AnchorKey, "correlation-refit", StringComparison.Ordinal));
+        var psResolution = loadBPlan.LegacyDecisionAnchorResolutions.SingleOrDefault(x => string.Equals(x.AnchorKey, "ps-iteration", StringComparison.Ordinal));
+        var thermalResolution = loadBPlan.LegacyDecisionAnchorResolutions.SingleOrDefault(x => string.Equals(x.AnchorKey, "thermal-carryover", StringComparison.Ordinal));
+
+        if (routeResolution is null
+            || !string.Equals(routeResolution.SuggestedPrimaryNextField, "GB", StringComparison.Ordinal)
+            || !string.Equals(routeResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 GB，用于推进 B法 GB/ratios/θs 分支字段（gb-ratios-branch）", StringComparison.Ordinal)
+            || refitResolution is null
+            || !string.Equals(refitResolution.SuggestedPrimaryNextField, "R", StringComparison.Ordinal)
+            || !string.Equals(refitResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 R，用于推进 B法坏点剔除后二次拟合证据（correlation-refit）", StringComparison.Ordinal)
+            || psResolution is null
+            || !string.Equals(psResolution.SuggestedPrimaryNextField, "Ps", StringComparison.Ordinal)
+            || !string.Equals(psResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）", StringComparison.Ordinal)
+            || thermalResolution is null
+            || !string.Equals(thermalResolution.SuggestedPrimaryNextField, "θw", StringComparison.Ordinal)
+            || !string.Equals(thermalResolution.SuggestedPrimaryNextFieldSummary, "优先补字段 θw，用于推进 B法热态承接字段（thermal-carryover）", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
         }
     }
 

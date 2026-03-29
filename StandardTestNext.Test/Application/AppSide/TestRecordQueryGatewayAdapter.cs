@@ -475,6 +475,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             SuggestedNextStepPriority = snapshot.SuggestedNextStepPriority,
             SuggestedNextStepPrioritySummary = snapshot.SuggestedNextStepPrioritySummary,
             SuggestedNextStepCoverageSummary = snapshot.SuggestedNextStepCoverageSummary,
+            SuggestedPrimaryNextField = snapshot.SuggestedPrimaryNextField,
+            SuggestedPrimaryNextFieldSummary = snapshot.SuggestedPrimaryNextFieldSummary,
             Summary = snapshot.Summary
         };
     }
