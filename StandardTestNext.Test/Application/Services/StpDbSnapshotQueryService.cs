@@ -695,10 +695,12 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var structuredSignalsReady = structuredPayloadCoverage.MissingSignalCount == 0
                     && structuredResultCoverage.MissingSignalCount == 0;
                 var requiredResultFieldsReady = resultCoverage.MissingRequiredResultFieldCount == 0;
+                var requiredIntermediateResultFieldsReady = intermediateResultCoverage.MissingRequiredResultFieldCount == 0;
                 var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
                     && coverage.MissingRequiredPayloadFieldCount == 0
                     && ratedCoverage.MissingRequiredRatedParamFieldCount == 0
                     && requiredResultFieldsReady
+                    && requiredIntermediateResultFieldsReady
                     && rawDataSignalsReady
                     && structuredSignalsReady;
                 var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
@@ -706,6 +708,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     coverage,
                     ratedCoverage,
                     resultCoverage,
+                    intermediateResultCoverage,
                     rawDataSignalCoverage,
                     structuredPayloadCoverage,
                     structuredResultCoverage,
@@ -916,6 +919,7 @@ WHERE COALESCE(curr.Code, '') <> ''
         MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
         MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
         MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot intermediateResultCoverage,
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
@@ -924,14 +928,15 @@ WHERE COALESCE(curr.Code, '') <> ''
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
         var ratedStatus = ratedCoverage.RequiredRatedParamFieldCoverageSummary;
         var resultStatus = resultCoverage.RequiredResultFieldCoverageSummary;
+        var intermediateResultStatus = intermediateResultCoverage.RequiredResultFieldCoverageSummary;
         var upstreamStatus = upstream.UpstreamDependencySummary;
         var rawDataStatus = rawDataCoverage.Summary;
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
     }
 
     private static IReadOnlyList<MotorYMethodRouteSelectionSnapshot> LoadMotorYMethodRouteSelections(SqliteConnection connection)

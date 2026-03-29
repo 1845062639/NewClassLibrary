@@ -121,10 +121,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var structuredSignalsReady = structuredPayloadCoverage.MissingSignalCount == 0
             && structuredResultCoverage.MissingSignalCount == 0;
         var requiredResultFieldsReady = resultCoverage.MissingRequiredResultFieldCount == 0;
+        var requiredIntermediateResultFieldsReady = intermediateResultCoverage.MissingRequiredResultFieldCount == 0;
         var legacyAlgorithmInputsReady = upstream.UpstreamDependenciesSatisfied
             && coverage.MissingRequiredPayloadFieldCount == 0
             && ratedCoverage.MissingRequiredRatedParamFieldCount == 0
             && requiredResultFieldsReady
+            && requiredIntermediateResultFieldsReady
             && rawDataSignalsReady
             && structuredSignalsReady;
         var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
@@ -132,6 +134,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             coverage,
             ratedCoverage,
             resultCoverage,
+            intermediateResultCoverage,
             rawDataSignalCoverage,
             structuredPayloadCoverage,
             structuredResultCoverage,
@@ -316,6 +319,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         MotorYRequiredPayloadFieldCoverageSnapshot payloadCoverage,
         MotorYRequiredRatedParamFieldCoverageSnapshot ratedCoverage,
         MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
+        MotorYRequiredResultFieldCoverageSnapshot intermediateResultCoverage,
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
@@ -324,14 +328,15 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
         var ratedStatus = ratedCoverage.RequiredRatedParamFieldCoverageSummary;
         var resultStatus = resultCoverage.RequiredResultFieldCoverageSummary;
+        var intermediateResultStatus = intermediateResultCoverage.RequiredResultFieldCoverageSummary;
         var upstreamStatus = upstream.UpstreamDependencySummary;
         var rawDataStatus = rawDataCoverage.Summary;
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
     }
 
     private static MotorYLegacyUpstreamCodeDistributionContract MapUpstreamLegacyCodeDistribution(MotorYLegacyUpstreamCodeDistributionSnapshot snapshot)
