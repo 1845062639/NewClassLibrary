@@ -126,6 +126,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             }
 
             AssertLegacyCodeSelection(snapshot, connection, row.CanonicalCode);
+            AssertSampleCountReadiness(snapshot);
 
             foreach (var distribution in row.Distributions)
             {
@@ -223,6 +224,39 @@ GROUP BY COALESCE(Code, '');";
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code distribution mismatch for {canonicalCode}/{row.LegacyCode}. expectedCount={row.Count}, actualCount={actual.Count}, expectedShare={share}, actualShare={actual.Share}");
             }
+        }
+    }
+
+    private static void AssertSampleCountReadiness(MotorYMethodAdaptationPlanSnapshot snapshot)
+    {
+        var expectedRawReady = snapshot.RawDataSampleCount >= snapshot.MinimumRawSampleCount;
+        var expectedStructuredPayloadReady = snapshot.StructuredPayloadSampleCount >= snapshot.MinimumStructuredPayloadSampleCount;
+        var expectedStructuredResultReady = snapshot.StructuredResultSampleCount >= snapshot.MinimumStructuredResultSampleCount;
+
+        var expectedRawSummary = snapshot.MinimumRawSampleCount <= 0
+            ? $"raw sample count requirement not set; observed {snapshot.RawDataSampleCount}"
+            : expectedRawReady
+                ? $"raw sample count ready {snapshot.RawDataSampleCount}/{snapshot.MinimumRawSampleCount}"
+                : $"raw sample count insufficient {snapshot.RawDataSampleCount}/{snapshot.MinimumRawSampleCount}";
+        var expectedStructuredPayloadSummary = snapshot.MinimumStructuredPayloadSampleCount <= 0
+            ? $"structured payload sample count requirement not set; observed {snapshot.StructuredPayloadSampleCount}"
+            : expectedStructuredPayloadReady
+                ? $"structured payload sample count ready {snapshot.StructuredPayloadSampleCount}/{snapshot.MinimumStructuredPayloadSampleCount}"
+                : $"structured payload sample count insufficient {snapshot.StructuredPayloadSampleCount}/{snapshot.MinimumStructuredPayloadSampleCount}";
+        var expectedStructuredResultSummary = snapshot.MinimumStructuredResultSampleCount <= 0
+            ? $"structured result sample count requirement not set; observed {snapshot.StructuredResultSampleCount}"
+            : expectedStructuredResultReady
+                ? $"structured result sample count ready {snapshot.StructuredResultSampleCount}/{snapshot.MinimumStructuredResultSampleCount}"
+                : $"structured result sample count insufficient {snapshot.StructuredResultSampleCount}/{snapshot.MinimumStructuredResultSampleCount}";
+
+        if (snapshot.RawSampleCountReady != expectedRawReady
+            || snapshot.StructuredPayloadSampleCountReady != expectedStructuredPayloadReady
+            || snapshot.StructuredResultSampleCountReady != expectedStructuredResultReady
+            || !string.Equals(snapshot.RawSampleCountReadinessSummary, expectedRawSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.StructuredPayloadSampleCountReadinessSummary, expectedStructuredPayloadSummary, StringComparison.Ordinal)
+            || !string.Equals(snapshot.StructuredResultSampleCountReadinessSummary, expectedStructuredResultSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: sample-count readiness mismatch for {snapshot.CanonicalCode}. raw='{snapshot.RawSampleCountReadinessSummary}', structuredPayload='{snapshot.StructuredPayloadSampleCountReadinessSummary}', structuredResult='{snapshot.StructuredResultSampleCountReadinessSummary}'");
         }
     }
 
