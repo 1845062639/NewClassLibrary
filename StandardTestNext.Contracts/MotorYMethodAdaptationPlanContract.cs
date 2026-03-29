@@ -94,6 +94,13 @@ public sealed class MotorYMethodAdaptationPlanContract
     public bool RatedParamsAvailable { get; init; }
     public string RequiredRatedParamFieldCoverageSummary { get; init; } = string.Empty;
     public bool LegacyAlgorithmInputsReady { get; init; }
+    public IReadOnlyList<string> ObservedAlgorithmInputFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingAlgorithmInputFields { get; init; } = Array.Empty<string>();
+    public int ObservedAlgorithmInputFieldCount { get; init; }
+    public int MissingAlgorithmInputFieldCount { get; init; }
+    public double AlgorithmInputFieldCoverageRatio { get; init; }
+    public int AlgorithmInputFieldCoveragePercentagePoints { get; init; }
+    public string AlgorithmInputFieldCoverageSummary { get; init; } = string.Empty;
     public bool RawDataSignalsReady { get; init; }
     public IReadOnlyList<string> RequiredStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> ObservedStructuredPayloadSignals { get; init; } = Array.Empty<string>();

@@ -79,6 +79,31 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             dependencyProfile?.RequiredStructuredResultSignals,
             null,
             "structured result signals");
+        var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
+            .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
+            .Concat(resultCoverage.CoveredRequiredResultFields)
+            .Concat(rawDataSignalCoverage.ObservedSignals)
+            .Concat(structuredPayloadCoverage.ObservedSignals)
+            .Concat(structuredResultCoverage.ObservedSignals)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+        var missingAlgorithmInputFields = upstream.MissingUpstreamCanonicalCodes
+            .Concat(coverage.MissingRequiredPayloadFields)
+            .Concat(ratedCoverage.MissingRequiredRatedParamFields)
+            .Concat(resultCoverage.MissingRequiredResultFields)
+            .Concat(rawDataSignalCoverage.MissingSignals)
+            .Concat(structuredPayloadCoverage.MissingSignals)
+            .Concat(structuredResultCoverage.MissingSignals)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(field => field, StringComparer.Ordinal)
+            .ToArray();
+        var totalAlgorithmInputFieldCount = observedAlgorithmInputFields.Length + missingAlgorithmInputFields.Length;
+        var algorithmInputFieldCoverageRatio = totalAlgorithmInputFieldCount == 0
+            ? 1d
+            : Math.Round((double)observedAlgorithmInputFields.Length / totalAlgorithmInputFieldCount, 4, MidpointRounding.AwayFromZero);
+        var algorithmInputFieldCoveragePercentagePoints = (int)Math.Round(algorithmInputFieldCoverageRatio * 100d, MidpointRounding.AwayFromZero);
+        var algorithmInputFieldCoverageSummary = $"algorithm input fields covered {observedAlgorithmInputFields.Length}/{totalAlgorithmInputFieldCount} ({algorithmInputFieldCoveragePercentagePoints}pp); missing: {(missingAlgorithmInputFields.Length == 0 ? "none" : string.Join(", ", missingAlgorithmInputFields))}; observed: {(observedAlgorithmInputFields.Length == 0 ? "none" : string.Join(", ", observedAlgorithmInputFields))}";
         var rawDataSignalsReady = rawDataSignalCoverage.MissingSignals.Count == 0;
         var structuredSignalsReady = structuredPayloadCoverage.MissingSignalCount == 0
             && structuredResultCoverage.MissingSignalCount == 0;
@@ -190,6 +215,13 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             RatedParamsAvailable = ratedCoverage.RatedParamsAvailable,
             RequiredRatedParamFieldCoverageSummary = ratedCoverage.RequiredRatedParamFieldCoverageSummary,
             LegacyAlgorithmInputsReady = legacyAlgorithmInputsReady,
+            ObservedAlgorithmInputFields = observedAlgorithmInputFields,
+            MissingAlgorithmInputFields = missingAlgorithmInputFields,
+            ObservedAlgorithmInputFieldCount = observedAlgorithmInputFields.Length,
+            MissingAlgorithmInputFieldCount = missingAlgorithmInputFields.Length,
+            AlgorithmInputFieldCoverageRatio = algorithmInputFieldCoverageRatio,
+            AlgorithmInputFieldCoveragePercentagePoints = algorithmInputFieldCoveragePercentagePoints,
+            AlgorithmInputFieldCoverageSummary = algorithmInputFieldCoverageSummary,
             RawDataSignalsReady = rawDataSignalsReady,
             RequiredStructuredPayloadSignals = dependencyProfile?.RequiredStructuredPayloadSignals ?? Array.Empty<string>(),
             ObservedStructuredPayloadSignals = structuredPayloadCoverage.ObservedSignals,
