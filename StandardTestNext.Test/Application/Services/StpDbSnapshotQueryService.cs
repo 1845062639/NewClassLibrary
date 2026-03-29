@@ -752,6 +752,12 @@ WHERE COALESCE(curr.Code, '') <> ''
                     rawDataSignalCoverage,
                     structuredPayloadCoverage,
                     structuredResultCoverage,
+                    rawSampleCountReady,
+                    rawSampleCountSummary,
+                    structuredPayloadSampleCountReady,
+                    structuredPayloadSampleCountSummary,
+                    structuredResultSampleCountReady,
+                    structuredResultSampleCountSummary,
                     legacyAlgorithmInputsReady);
                 var dependencyBuckets = MotorYDependencyBucketSummaryFactory.Create(
                     upstream,
@@ -1013,6 +1019,12 @@ WHERE COALESCE(curr.Code, '') <> ''
         MotorYRawDataSignalCoverageSnapshot rawDataCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredPayloadCoverage,
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
+        bool rawSampleCountReady,
+        string rawSampleCountSummary,
+        bool structuredPayloadSampleCountReady,
+        string structuredPayloadSampleCountSummary,
+        bool structuredResultSampleCountReady,
+        string structuredResultSampleCountSummary,
         bool legacyAlgorithmInputsReady)
     {
         var payloadStatus = payloadCoverage.RequiredPayloadFieldCoverageSummary;
@@ -1023,10 +1035,19 @@ WHERE COALESCE(curr.Code, '') <> ''
         var rawDataStatus = rawDataCoverage.Summary;
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
+        var rawSampleStatus = rawSampleCountReady
+            ? rawSampleCountSummary
+            : rawSampleCountSummary;
+        var structuredPayloadSampleStatus = structuredPayloadSampleCountReady
+            ? structuredPayloadSampleCountSummary
+            : structuredPayloadSampleCountSummary;
+        var structuredResultSampleStatus = structuredResultSampleCountReady
+            ? structuredResultSampleCountSummary
+            : structuredResultSampleCountSummary;
 
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}";
     }
 
     private static IReadOnlyList<MotorYMethodRouteSelectionSnapshot> LoadMotorYMethodRouteSelections(SqliteConnection connection)
