@@ -693,6 +693,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
                 var decisionAnchorNextActionSummary = MotorYDecisionAnchorResolutionFactory.BuildNextActionSummary(decisionAnchorResolutions);
                 var decisionAnchorGapPreviewSummary = MotorYDecisionAnchorResolutionFactory.BuildGapPreviewSummary(decisionAnchorResolutions);
+                var decisionAnchorPriorityDistributions = MotorYDecisionAnchorResolutionFactory.BuildPriorityDistributions(decisionAnchorResolutions);
+                var decisionAnchorPrioritySummary = MotorYDecisionAnchorResolutionFactory.BuildPrioritySummary(decisionAnchorResolutions);
                 var suggestedDecisionAnchorNextSteps = MotorYDecisionAnchorResolutionFactory.BuildSuggestedNextSteps(decisionAnchorResolutions);
                 var suggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextSteps.Count == 0
                     ? "no decision-anchor next-step recommendation"
@@ -1078,6 +1080,17 @@ WHERE COALESCE(curr.Code, '') <> ''
                     LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
                     LegacyDecisionAnchorNextActionSummary = decisionAnchorNextActionSummary,
                     LegacyDecisionAnchorGapPreviewSummary = decisionAnchorGapPreviewSummary,
+                    DecisionAnchorPriorityDistributions = decisionAnchorPriorityDistributions
+                        .Select(distribution => new MotorYDecisionAnchorPriorityDistributionSnapshot
+                        {
+                            Priority = distribution.Priority,
+                            Count = distribution.Count,
+                            Share = distribution.Share,
+                            AnchorKeys = distribution.AnchorKeys,
+                            SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses
+                        })
+                        .ToArray(),
+                    DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,
                     SuggestedDecisionAnchorNextSteps = suggestedDecisionAnchorNextSteps,
                     SuggestedDecisionAnchorNextStepSummary = suggestedDecisionAnchorNextStepSummary,
                     LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,

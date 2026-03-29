@@ -50,6 +50,15 @@ public sealed class MotorYLegacyUpstreamCodeDistributionSnapshot
     public double Share { get; init; }
 }
 
+public sealed class MotorYDecisionAnchorPriorityDistributionSnapshot
+{
+    public string Priority { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+}
+
 public sealed class MotorYMethodAdaptationPlanSnapshot
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -236,6 +245,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<string> SuggestedDecisionAnchorNextSteps { get; init; } = Array.Empty<string>();
     public string SuggestedDecisionAnchorNextStepSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorGapPreviewSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYDecisionAnchorPriorityDistributionSnapshot> DecisionAnchorPriorityDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPriorityDistributionSnapshot>();
+    public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;

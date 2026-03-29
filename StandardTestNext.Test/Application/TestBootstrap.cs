@@ -275,13 +275,16 @@ public sealed class TestBootstrap
                 .Select(bucket => $"{bucket.BucketKey}:{bucket.CoveragePercentagePoints}pp:missing={FormatPreview(bucket.MissingItems, 3)}"));
         var nextSteps = $"next={FormatPreview(plan.SuggestedNextSteps, 3)}:{plan.SuggestedNextStepSummary}";
         var anchorNextSteps = $"anchor-next={FormatPreview(plan.SuggestedDecisionAnchorNextSteps, 3)}:{plan.SuggestedDecisionAnchorNextStepSummary}";
+        var anchorPriorities = plan.DecisionAnchorPriorityDistributions.Count == 0
+            ? "anchor-priority=<none>"
+            : "anchor-priority=" + string.Join("|", plan.DecisionAnchorPriorityDistributions.Select(distribution => $"{distribution.Priority}:{distribution.Count}:{distribution.Share:P1}:{FormatPreview(distribution.AnchorKeys, 2)}:{FormatPreview(distribution.SuggestedNextStepFocuses, 2)}"));
         var anchorGapPreview = $"anchor-gap={plan.LegacyDecisionAnchorGapPreviewSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorGapPreview};{anchorResolutions};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorResolutions};{summaries};{distributions}]";
     }
 
     private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)

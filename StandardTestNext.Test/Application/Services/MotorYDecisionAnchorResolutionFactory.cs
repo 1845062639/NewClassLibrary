@@ -22,6 +22,15 @@ internal sealed class MotorYDecisionAnchorResolution
     public string Summary { get; init; } = string.Empty;
 }
 
+internal sealed class MotorYDecisionAnchorPriorityDistribution
+{
+    public string Priority { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+}
+
 internal static class MotorYDecisionAnchorResolutionFactory
 {
     private static (string Category, string Focus, IReadOnlyList<string> Fields) BuildResolutionSuggestionParts(string canonicalCode, string anchorKey, IReadOnlyList<string> missingPayloadFields)
@@ -265,6 +274,57 @@ internal static class MotorYDecisionAnchorResolutionFactory
             : $"decision anchor gaps: {string.Join("; ", preview)}";
     }
 
+    public static IReadOnlyList<MotorYDecisionAnchorPriorityDistribution> BuildPriorityDistributions(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        if (resolutions.Count == 0)
+        {
+            return Array.Empty<MotorYDecisionAnchorPriorityDistribution>();
+        }
+
+        return resolutions
+            .GroupBy(x => x.SuggestedNextStepPriority, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => GetPrioritySortOrder(group.Key))
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var ordered = group
+                    .OrderBy(x => x.AnchorKey, StringComparer.Ordinal)
+                    .ToArray();
+                var share = Math.Round((double)ordered.Length / resolutions.Count, 4, MidpointRounding.AwayFromZero);
+                return new MotorYDecisionAnchorPriorityDistribution
+                {
+                    Priority = group.Key,
+                    Count = ordered.Length,
+                    Share = share,
+                    AnchorKeys = ordered.Select(x => x.AnchorKey).ToArray(),
+                    SuggestedNextStepFocuses = ordered
+                        .Select(x => x.SuggestedNextStepFocus)
+                        .Where(x => !string.IsNullOrWhiteSpace(x))
+                        .Distinct(StringComparer.Ordinal)
+                        .ToArray()
+                };
+            })
+            .ToArray();
+    }
+
+    public static string BuildPrioritySummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        var distributions = BuildPriorityDistributions(resolutions);
+        if (distributions.Count == 0)
+        {
+            return "decision anchor priorities unavailable";
+        }
+
+        return "decision anchor priorities: " + string.Join("; ", distributions.Select(distribution =>
+        {
+            var focusPreview = distribution.SuggestedNextStepFocuses.Count == 0
+                ? "none"
+                : string.Join(", ", distribution.SuggestedNextStepFocuses.Take(2)) + (distribution.SuggestedNextStepFocuses.Count > 2 ? ", ..." : string.Empty);
+            return $"{distribution.Priority}={distribution.Count}/{resolutions.Count} ({(int)Math.Round(distribution.Share * 100d, MidpointRounding.AwayFromZero)}pp) anchors [{string.Join(", ", distribution.AnchorKeys)}], focus {focusPreview}";
+        }));
+    }
+
     public static string BuildSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
     {
         if (resolutions.Count == 0)
@@ -284,6 +344,15 @@ internal static class MotorYDecisionAnchorResolutionFactory
 
         return $"decision anchor resolutions resolved {resolved}/{resolutions.Count} ({percentagePoints}pp); partial={partial}; missing={missing}; unresolved: {(unresolvedKeys.Length == 0 ? "none" : string.Join(", ", unresolvedKeys))}";
     }
+
+    private static int GetPrioritySortOrder(string priority)
+        => priority switch
+        {
+            "blocking" => 0,
+            "follow-up" => 1,
+            "resolved" => 2,
+            _ => 9
+        };
 
     private static string ToEnglishActionClause(string step)
     {

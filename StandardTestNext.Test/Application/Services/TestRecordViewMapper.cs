@@ -480,6 +480,9 @@ public static class TestRecordViewMapper
                 SuggestedNextStepFields = x.SuggestedNextStepFields,
                 SuggestedNextSteps = x.SuggestedNextSteps,
                 SuggestedNextStepSummary = x.SuggestedNextStepSummary,
+                SuggestedNextStepPriority = x.SuggestedNextStepPriority,
+                SuggestedNextStepPrioritySummary = x.SuggestedNextStepPrioritySummary,
+                SuggestedNextStepCoverageSummary = x.SuggestedNextStepCoverageSummary,
                 Summary = x.Summary
             }).ToArray(),
             CoveredLegacyDecisionAnchorObservationRuleCount = contract.CoveredLegacyDecisionAnchorObservationRuleCount,
@@ -499,6 +502,15 @@ public static class TestRecordViewMapper
             LegacyDecisionAnchorResolutionSummary = contract.LegacyDecisionAnchorResolutionSummary,
             LegacyDecisionAnchorNextActionSummary = contract.LegacyDecisionAnchorNextActionSummary,
             LegacyDecisionAnchorGapPreviewSummary = contract.LegacyDecisionAnchorGapPreviewSummary,
+            DecisionAnchorPriorityDistributions = contract.DecisionAnchorPriorityDistributions.Select(x => new MotorYDecisionAnchorPriorityDistributionSnapshot
+            {
+                Priority = x.Priority,
+                Count = x.Count,
+                Share = x.Share,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses
+            }).ToArray(),
+            DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = contract.LegacyDecisionAnchorsObservedPayloadSummary,
