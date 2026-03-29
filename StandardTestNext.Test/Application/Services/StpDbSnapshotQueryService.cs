@@ -667,6 +667,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
                     .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
                     .Concat(resultCoverage.CoveredRequiredResultFields)
+                    .Concat(intermediateResultCoverage.CoveredRequiredResultFields)
                     .Concat(rawDataSignalCoverage.ObservedSignals)
                     .Concat(structuredPayloadCoverage.ObservedSignals)
                     .Concat(structuredResultCoverage.ObservedSignals)
@@ -677,6 +678,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     .Concat(coverage.MissingRequiredPayloadFields)
                     .Concat(ratedCoverage.MissingRequiredRatedParamFields)
                     .Concat(resultCoverage.MissingRequiredResultFields)
+                    .Concat(intermediateResultCoverage.MissingRequiredResultFields)
                     .Concat(rawDataSignalCoverage.MissingSignals)
                     .Concat(structuredPayloadCoverage.MissingSignals)
                     .Concat(structuredResultCoverage.MissingSignals)

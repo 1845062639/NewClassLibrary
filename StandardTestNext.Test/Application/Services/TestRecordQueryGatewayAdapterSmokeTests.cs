@@ -450,9 +450,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !noLoadPlan.MissingAlgorithmInputFields.Contains(MotorYTestMethodCodes.DcResistance, StringComparer.Ordinal)
             || !noLoadPlan.MissingAlgorithmInputFields.Contains("DataList.I0", StringComparer.Ordinal)
             || !noLoadPlan.MissingAlgorithmInputFields.Contains("Pfw", StringComparer.Ordinal)
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("R1")
+            || !noLoadPlan.MissingAlgorithmInputFields.Contains("θ1c", StringComparer.Ordinal)
             || Math.Abs(noLoadPlan.AlgorithmInputFieldCoverageRatio - 0.125d) > 0.0001d
             || noLoadPlan.AlgorithmInputFieldCoveragePercentagePoints != 13
-            || !string.Equals(noLoadPlan.AlgorithmInputFieldCoverageSummary, "algorithm input fields covered 3/24 (13pp); missing: CoefficientOfPfe, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.T0, DataList.U0, DataList.n0, I0, MotorY.DcResistance, P0, Pcu, Pfe, Pfw, θ1c, ΔI0; observed: R0, RConverseType, θ0", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.AlgorithmInputFieldCoverageSummary, "algorithm input fields covered 3/24 (13pp); missing: CoefficientOfPfe, DataList.I0, DataList.P0, DataList.P0cu1, DataList.Pcon, DataList.Pfe, DataList.T0, DataList.U0, DataList.n0, I0, MotorY.DcResistance, P0, Pcu, Pfe, Pfw, R1, θ1c, ΔI0; observed: R0, RConverseType, θ0", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test algorithm-input summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. observed=[{string.Join(", ", noLoadPlan.ObservedAlgorithmInputFields)}], missingCount={noLoadPlan.MissingAlgorithmInputFieldCount}, summary='{noLoadPlan.AlgorithmInputFieldCoverageSummary}'");
         }
