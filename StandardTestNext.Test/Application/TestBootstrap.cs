@@ -249,11 +249,32 @@ public sealed class TestBootstrap
         var selected = plan.SelectedRoute is null
             ? $"selected={plan.SelectionStrategy}:<none>"
             : $"selected={plan.SelectionStrategy}:{plan.SelectedRoute.MethodValue}/{plan.SelectedRoute.ProfileKey}:{plan.SelectedCount}";
+        var readiness = plan.LegacyAlgorithmInputsReady
+            ? $"ready=Y:{plan.AlgorithmInputFieldCoveragePercentagePoints}pp"
+            : $"ready=N:{plan.AlgorithmInputFieldCoveragePercentagePoints}pp:missing={FormatPreview(plan.MissingAlgorithmInputFields, 6)}";
+        var upstream = $"upstream={(plan.UpstreamDependenciesSatisfied ? "ok" : "missing")}:{plan.ObservedUpstreamCanonicalCodeCount}/{plan.UpstreamCanonicalCodes.Count}:{FormatPreview(plan.MissingUpstreamCanonicalCodes, 3)}";
         var distributions = plan.Distributions.Count == 0
             ? "dist=<none>"
             : "dist=" + string.Join("|", plan.Distributions.Select(x => $"{x.MethodValue}:{x.Count}:{x.Share:P1}:{x.Route?.VariantKind ?? "unknown"}"));
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{distributions}]";
+    }
+
+    private static string FormatPreview(IReadOnlyList<string> values, int maxCount)
+    {
+        if (values.Count == 0)
+        {
+            return "none";
+        }
+
+        var preview = values
+            .Take(maxCount)
+            .ToArray();
+        var suffix = values.Count > maxCount
+            ? $"+{values.Count - maxCount}"
+            : string.Empty;
+
+        return string.Join("|", preview) + suffix;
     }
 
     private static string FormatMethodDecisions(IReadOnlyList<MotorYMethodDecisionSnapshot> decisions)
