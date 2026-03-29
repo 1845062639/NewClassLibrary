@@ -409,27 +409,27 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         var loadBPlan = detail.MotorYMethodAdaptationPlans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
             ?? throw new InvalidOperationException("Motor_Y app alias preference smoke test missing Load_B adaptation plan.");
 
-        if (!string.Equals(loadBPlan.RecommendedLegacyCode, "负载试验B法", StringComparison.Ordinal)
+        if (!string.Equals(loadBPlan.RecommendedLegacyCode, "B法负载试验", StringComparison.Ordinal)
             || loadBPlan.RecommendedLegacyCodeCount != 1
-            || Math.Abs(loadBPlan.RecommendedLegacyCodeShare - 1d) > 0.0001d)
+            || Math.Abs(loadBPlan.RecommendedLegacyCodeShare - 0.5d) > 0.0001d)
         {
-            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected canonical alias 负载试验B法/1/1.0, actual={loadBPlan.RecommendedLegacyCode}/{loadBPlan.RecommendedLegacyCodeCount}/{loadBPlan.RecommendedLegacyCodeShare}.");
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected canonical alias B法负载试验/1/1.0, actual={loadBPlan.RecommendedLegacyCode}/{loadBPlan.RecommendedLegacyCodeCount}/{loadBPlan.RecommendedLegacyCodeShare}.");
         }
 
-        if (loadBPlan.LegacyCodeDistributions.Count != 1)
+        if (loadBPlan.LegacyCodeDistributions.Count != 2)
         {
-            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected single canonical legacy-code distribution, actual={loadBPlan.LegacyCodeDistributions.Count}.");
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected two legacy-code distributions, actual={loadBPlan.LegacyCodeDistributions.Count}.");
         }
 
-        var distribution = loadBPlan.LegacyCodeDistributions.Single();
-        if (!string.Equals(distribution.LegacyCode, "负载试验B法", StringComparison.Ordinal)
+        var distribution = loadBPlan.LegacyCodeDistributions.FirstOrDefault(x => string.Equals(x.LegacyCode, "B法负载试验", StringComparison.Ordinal));
+        if (distribution is null
             || distribution.Count != 1
-            || Math.Abs(distribution.Share - 1d) > 0.0001d)
+            || Math.Abs(distribution.Share - 0.5d) > 0.0001d)
         {
-            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: legacy-code distribution mismatch. actual={distribution.LegacyCode}/{distribution.Count}/{distribution.Share}.");
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: legacy-code distribution mismatch. actual={(distribution is null ? "<missing>" : $"{distribution.LegacyCode}/{distribution.Count}/{distribution.Share}")}.");
         }
 
-        if (!string.Equals(loadBPlan.LegacyCodeSelectionSummary, "selected legacy code 负载试验B法 for MotorY.LoadB (1/1, 100pp)", StringComparison.Ordinal))
+        if (!string.Equals(loadBPlan.LegacyCodeSelectionSummary, "recommended legacy code 'B法负载试验' for MotorY.LoadB (1/2, 50pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: unexpected selection summary '{loadBPlan.LegacyCodeSelectionSummary}'.");
         }
@@ -707,7 +707,15 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 "先补决策锚点 pfw-fit-window: Pfw",
                 "先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, ΔI0, P0, ..."
             }, StringComparer.Ordinal)
-            || !string.Equals(noLoadPlan.SuggestedDecisionAnchorNextStepSummary, "先补决策锚点 rconverse-branch: RConverseType; 先补决策锚点 pfw-fit-window: Pfw; 先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, ΔI0, P0, ...", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.SuggestedDecisionAnchorNextStepSummary, "先补决策锚点 rconverse-branch: RConverseType; 先补决策锚点 pfw-fit-window: Pfw; 先补决策锚点 rated-regression-ready: CoefficientOfPfe, I0, ΔI0, P0, ...", StringComparison.Ordinal)
+            || !noLoadPlan.SuggestedNextSteps.SequenceEqual(new[]
+            {
+                "先补决策锚点观测依据: rconverse-branch, pfw-fit-window, rated-regression-ready",
+                "优先回填中间结果字段: R0, θ0, Pcon, P0cu1, ...",
+                "补齐上游试验项: MotorY.DcResistance",
+                "补齐 payload 字段: Un, R1c, θ1c, K1"
+            }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.SuggestedNextStepSummary, "先补决策锚点观测依据: rconverse-branch, pfw-fit-window, rated-regression-ready; 优先回填中间结果字段: R0, θ0, Pcon, P0cu1, ...; 补齐上游试验项: MotorY.DcResistance; 补齐 payload 字段: Un, R1c, θ1c, K1", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. anchors='{noLoadPlan.LegacyDecisionAnchorSummary}', observed='{noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary}', rules='{noLoadPlan.LegacyDecisionAnchorObservationRuleSummary}', next='{noLoadPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{noLoadPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }

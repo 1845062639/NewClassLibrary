@@ -624,6 +624,21 @@ internal static class MotorYMethodAdaptationPlanContractMapper
     {
         var steps = new List<string>();
 
+        var unresolvedAnchors = decisionAnchorResolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        if (unresolvedAnchors.Length > 0)
+        {
+            steps.Add($"先补决策锚点观测依据: {FormatPreview(unresolvedAnchors, 3)}");
+        }
+
+        if (intermediateResultCoverage.MissingRequiredResultFields.Count > 0)
+        {
+            steps.Add($"优先回填中间结果字段: {FormatPreview(intermediateResultCoverage.MissingRequiredResultFields, 4)}");
+        }
+
         if (upstream.MissingUpstreamCanonicalCodes.Count > 0)
         {
             steps.Add($"补齐上游试验项: {string.Join(", ", upstream.MissingUpstreamCanonicalCodes)}");
@@ -637,11 +652,6 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         if (ratedCoverage.MissingRequiredRatedParamFields.Count > 0)
         {
             steps.Add($"补齐额定参数字段: {FormatPreview(ratedCoverage.MissingRequiredRatedParamFields, 4)}");
-        }
-
-        if (intermediateResultCoverage.MissingRequiredResultFields.Count > 0)
-        {
-            steps.Add($"优先回填中间结果字段: {FormatPreview(intermediateResultCoverage.MissingRequiredResultFields, 4)}");
         }
 
         if (resultCoverage.MissingRequiredResultFields.Count > 0)
@@ -662,16 +672,6 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         if (structuredResultCoverage.MissingSignals.Count > 0)
         {
             steps.Add($"补齐结构化结果信号: {FormatPreview(structuredResultCoverage.MissingSignals, 4)}");
-        }
-
-        var unresolvedAnchors = decisionAnchorResolutions
-            .Where(x => !x.ResolvedByObservedPayload)
-            .Select(x => x.AnchorKey)
-            .Distinct(StringComparer.Ordinal)
-            .ToArray();
-        if (unresolvedAnchors.Length > 0)
-        {
-            steps.Add($"补齐决策锚点观测依据: {FormatPreview(unresolvedAnchors, 3)}");
         }
 
         if (steps.Count == 0)
