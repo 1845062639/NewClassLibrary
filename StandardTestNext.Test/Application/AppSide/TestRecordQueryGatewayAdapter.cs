@@ -389,6 +389,20 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             LegacyDecisionAnchorGapPreviewSummary = snapshot.LegacyDecisionAnchorGapPreviewSummary,
             SuggestedDecisionAnchorNextSteps = snapshot.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = snapshot.SuggestedDecisionAnchorNextStepSummary,
+            DecisionAnchorPriorityDistributions = snapshot.DecisionAnchorPriorityDistributions.Select(x => new MotorYDecisionAnchorPriorityDistributionContract
+            {
+                Priority = x.Priority,
+                Count = x.Count,
+                Share = x.Share,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses
+            }).ToArray(),
+            DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
+            EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
+            EffectiveLegacyDecisionAnchorGapCount = snapshot.EffectiveLegacyDecisionAnchorGapCount,
+            EffectiveLegacyDecisionAnchorCoverageRatio = snapshot.EffectiveLegacyDecisionAnchorCoverageRatio,
+            EffectiveLegacyDecisionAnchorCoveragePercentagePoints = snapshot.EffectiveLegacyDecisionAnchorCoveragePercentagePoints,
+            LegacyDecisionAnchorReady = snapshot.LegacyDecisionAnchorReady,
             LegacyDecisionAnchorsObservedPayloadSummary = snapshot.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = snapshot.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = snapshot.LegacyAlgorithmRuleSummary,
