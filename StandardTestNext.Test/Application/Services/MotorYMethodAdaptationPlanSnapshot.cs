@@ -54,6 +54,7 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<MotorYLegacyUpstreamCodeDistributionSnapshot> UpstreamLegacyCodeDistributions { get; init; } = Array.Empty<MotorYLegacyUpstreamCodeDistributionSnapshot>();
     public int ObservedUpstreamCanonicalCodeCount { get; init; }
     public IReadOnlyList<string> ObservedUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyDictionary<string, IReadOnlyList<string>> ObservedUpstreamLegacyCodes { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public bool UpstreamDependenciesSatisfied { get; init; }
     public string UpstreamDependencySummary { get; init; } = string.Empty;

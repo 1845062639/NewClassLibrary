@@ -406,10 +406,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         var loadAPlan = plans[MotorYTestMethodCodes.LoadA];
         if (noLoadPlan.ObservedUpstreamCanonicalCodeCount != 0
             || noLoadPlan.ObservedUpstreamCanonicalCodes.Count != 0
+            || noLoadPlan.ObservedUpstreamLegacyCodes.Count != 0
             || !noLoadPlan.MissingUpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
-            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes", StringComparison.Ordinal))
+            || !string.Equals(noLoadPlan.UpstreamDependencySummary, "upstream dependencies missing 1/1: MotorY.DcResistance; observed 0/1 required upstream codes; no legacy upstream aliases observed", StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test upstream observation mismatch for '{MotorYTestMethodCodes.NoLoad}'. observedCount={noLoadPlan.ObservedUpstreamCanonicalCodeCount}, observed=[{string.Join(", ", noLoadPlan.ObservedUpstreamCanonicalCodes)}], observedLegacy={noLoadPlan.ObservedUpstreamLegacyCodes.Count}, missing=[{string.Join(", ", noLoadPlan.MissingUpstreamCanonicalCodes)}], summary='{noLoadPlan.UpstreamDependencySummary}'");
         }
 
         if (noLoadPlan.CoveredFormulaSignalCount != 0

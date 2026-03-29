@@ -220,6 +220,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             }).ToArray(),
             ObservedUpstreamCanonicalCodeCount = snapshot.ObservedUpstreamCanonicalCodeCount,
             ObservedUpstreamCanonicalCodes = snapshot.ObservedUpstreamCanonicalCodes,
+            ObservedUpstreamLegacyCodes = snapshot.ObservedUpstreamLegacyCodes,
             MissingUpstreamCanonicalCodes = snapshot.MissingUpstreamCanonicalCodes,
             UpstreamDependenciesSatisfied = snapshot.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = snapshot.UpstreamDependencySummary,

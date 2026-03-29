@@ -595,7 +595,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                 var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
                     selection.CanonicalCode,
                     dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
-                    samplePayloads.Keys);
+                    samplePayloads.Keys,
+                    upstreamObservedLegacyCodes);
                 samplePayloads.TryGetValue(selection.CanonicalCode, out var sampleDataJson);
                 sampleRatedParams.TryGetValue(selection.CanonicalCode, out var sampleRatedParamsContract);
                 var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
@@ -761,6 +762,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     UpstreamLegacyCodeDistributions = upstreamLegacyCodeDistributions,
                     ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
                     ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
+                    ObservedUpstreamLegacyCodes = upstream.ObservedUpstreamLegacyCodes,
                     MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
                     UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
                     UpstreamDependencySummary = upstream.UpstreamDependencySummary,

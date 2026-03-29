@@ -239,6 +239,7 @@ public static class TestRecordViewMapper
             }).ToArray(),
             ObservedUpstreamCanonicalCodeCount = contract.ObservedUpstreamCanonicalCodeCount,
             ObservedUpstreamCanonicalCodes = contract.ObservedUpstreamCanonicalCodes,
+            ObservedUpstreamLegacyCodes = contract.ObservedUpstreamLegacyCodes,
             MissingUpstreamCanonicalCodes = contract.MissingUpstreamCanonicalCodes,
             UpstreamDependenciesSatisfied = contract.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = contract.UpstreamDependencySummary,

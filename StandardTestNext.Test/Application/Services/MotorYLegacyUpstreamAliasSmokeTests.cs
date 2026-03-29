@@ -46,6 +46,18 @@ public static class MotorYLegacyUpstreamAliasSmokeTests
         AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.NoLoad, "空载特性试验", 233, 0.66d, 5);
         AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.HeatRun, "热试验", 265, 1d, 4);
 
+        if (!loadBPlan.ObservedUpstreamLegacyCodes.TryGetValue(MotorYTestMethodCodes.NoLoad, out var observedNoLoadLegacyCodes)
+            || !observedNoLoadLegacyCodes.SequenceEqual(new[] { "空载特性完全试验", "空载特性测量", "空载特性试验", "空载试验", "空载试验（出厂）" }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: observed NoLoad legacy aliases mismatch. actual=[{string.Join(", ", observedNoLoadLegacyCodes ?? Array.Empty<string>())}]");
+        }
+
+        if (!loadBPlan.ObservedUpstreamLegacyCodes.TryGetValue(MotorYTestMethodCodes.HeatRun, out var observedHeatLegacyCodes)
+            || !observedHeatLegacyCodes.SequenceEqual(new[] { "陪试热试验", "温度计法热试验", "热试验", "热试验2" }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: observed HeatRun legacy aliases mismatch. actual=[{string.Join(", ", observedHeatLegacyCodes ?? Array.Empty<string>())}]");
+        }
+
         var contract = MotorYMethodAdaptationPlanContractMapper.Map(
             new MotorYMethodDecisionSnapshot
             {

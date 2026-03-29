@@ -17,7 +17,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
             selection.CanonicalCode,
             dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
-            Array.Empty<string>());
+            Array.Empty<string>(),
+            null);
         var upstreamLegacyAliases = dependencyProfile?.UpstreamLegacyAliases
             ?? new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
         var upstreamLegacyCodeDistributions = upstreamLegacyAliases
@@ -191,6 +192,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 .ToArray(),
             ObservedUpstreamCanonicalCodeCount = upstream.ObservedUpstreamCanonicalCodeCount,
             ObservedUpstreamCanonicalCodes = upstream.ObservedUpstreamCanonicalCodes,
+            ObservedUpstreamLegacyCodes = upstream.ObservedUpstreamLegacyCodes,
             MissingUpstreamCanonicalCodes = upstream.MissingUpstreamCanonicalCodes,
             UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = upstream.UpstreamDependencySummary,
