@@ -45,11 +45,25 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             [MotorYTestMethodCodes.LockedRotor] = new[] { "TorqueCalType", "RCalType", "R1s", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" }
         };
 
+    private static readonly IReadOnlyDictionary<string, string[]> LegacyDecisionAnchorObservedFieldsByCanonicalCode =
+        new Dictionary<string, string[]>(StringComparer.Ordinal)
+        {
+            [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "θ1c" },
+            [MotorYTestMethodCodes.NoLoad] = new[] { "RConverseType", "Pfw", "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" },
+            [MotorYTestMethodCodes.HeatRun] = new[] { "Pn", "HotStateType", "GB", "Rn", "θw", "θs", "θb" },
+            [MotorYTestMethodCodes.LoadA] = new[] { "CoefficientOfPfe", "Pfw", "θa", "Pcu1", "Pcu2", "η", "ResultDataList" },
+            [MotorYTestMethodCodes.LoadB] = new[] { "GB", "θw", "θb", "θs", "A", "B", "R", "Ps", "ResultDataList" },
+            [MotorYTestMethodCodes.LockedRotor] = new[] { "TorqueCalType", "RCalType", "R1s", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "Un" }
+        };
+
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildFormulaSignalEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
         => Build(canonicalCode, observedPayloadFields, FormulaSignalObservedFieldsByCanonicalCode, "formula signal observed payload", "formula-signal");
 
     public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyRuleEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
         => Build(canonicalCode, observedPayloadFields, LegacyRuleObservedFieldsByCanonicalCode, "legacy algorithm rule observed payload", "legacy-rule");
+
+    public static MotorYObservedAlgorithmEvidenceSnapshot BuildLegacyDecisionAnchorEvidence(string canonicalCode, IReadOnlyList<string>? observedPayloadFields)
+        => Build(canonicalCode, observedPayloadFields, LegacyDecisionAnchorObservedFieldsByCanonicalCode, "legacy decision anchor observed payload", "decision-anchor");
 
     private static MotorYObservedAlgorithmEvidenceSnapshot Build(
         string canonicalCode,

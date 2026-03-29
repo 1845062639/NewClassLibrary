@@ -115,11 +115,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Remark = item.Remark ?? string.Empty
             }).ToArray(),
             MotorYMethodDecisions = view.MotorYMethodDecisions.Select(MapMotorYMethodDecision).ToArray(),
-            MotorYMethodAdaptationPlans = view.MotorYMethodDecisions
-                .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
-                    snapshot,
-                    MapBuildProfile,
-                    BuildLegacyCodeDistributions(view.ItemDetails, snapshot.CanonicalCode)))
+            MotorYMethodAdaptationPlans = view.MotorYMethodAdaptationPlans
+                .Select(MapMotorYMethodAdaptationPlan)
                 .ToArray(),
             ReportSummaries = view.ReportSummaries.Select(summary => new TestReportSummaryContract
             {
@@ -173,35 +170,197 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
         };
     }
 
-    private static IReadOnlyList<MotorYLegacyCodeDistributionSnapshot> BuildLegacyCodeDistributions(
-        IReadOnlyList<TestRecordItemDetail> items,
-        string canonicalCode)
+    private static MotorYMethodAdaptationPlanContract MapMotorYMethodAdaptationPlan(MotorYMethodAdaptationPlanSnapshot snapshot)
     {
-        var relevant = items
-            .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
-            .Select(item => string.IsNullOrWhiteSpace(item.DisplayName)
-                ? item.ItemCode
-                : item.DisplayName)
-            .Where(code => !string.IsNullOrWhiteSpace(code))
-            .ToArray();
-
-        if (relevant.Length == 0)
+        return new MotorYMethodAdaptationPlanContract
         {
-            return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
-        }
-
-        return relevant
-            .GroupBy(code => code, StringComparer.Ordinal)
-            .Select(group => new MotorYLegacyCodeDistributionSnapshot
+            CanonicalCode = snapshot.CanonicalCode,
+            TotalCount = snapshot.TotalCount,
+            BaselineProfile = MapBuildProfile(snapshot.BaselineRoute),
+            BaselineCount = snapshot.BaselineCount,
+            BaselineShare = snapshot.BaselineShare,
+            DominantProfile = MapBuildProfile(snapshot.DominantRoute),
+            DominantCount = snapshot.DominantCount,
+            DominantShare = snapshot.DominantShare,
+            SelectedProfile = MapBuildProfile(snapshot.SelectedRoute),
+            SelectedCount = snapshot.SelectedCount,
+            SelectedShare = snapshot.SelectedShare,
+            SelectionStrategy = snapshot.SelectionStrategy,
+            ShouldUseDominantRoute = snapshot.ShouldUseDominantRoute,
+            DominantOverrideThreshold = snapshot.DominantOverrideThreshold,
+            DominantLeadCount = snapshot.DominantLeadCount,
+            DominantLeadPercentagePoints = snapshot.DominantLeadPercentagePoints,
+            SelectedLeadCountVsBaseline = snapshot.SelectedLeadCountVsBaseline,
+            SelectedLeadPercentagePointsVsBaseline = snapshot.SelectedLeadPercentagePointsVsBaseline,
+            SelectionReason = snapshot.SelectionReason,
+            AlgorithmEntry = snapshot.AlgorithmEntry,
+            SettingsMethodName = snapshot.SettingsMethodName,
+            LegacyMethodName = snapshot.LegacyMethodName,
+            RecommendedLegacyCode = snapshot.RecommendedLegacyCode,
+            DominantLegacyCode = snapshot.DominantLegacyCode,
+            RecommendedLegacyCodeCount = snapshot.RecommendedLegacyCodeCount,
+            RecommendedLegacyCodeShare = snapshot.RecommendedLegacyCodeShare,
+            LegacyCodeSelectionSummary = snapshot.LegacyCodeSelectionSummary,
+            LegacyCodeDistributions = snapshot.LegacyCodeDistributions.Select(x => new MotorYLegacyCodeDistributionContract
             {
-                CanonicalCode = canonicalCode,
-                LegacyCode = group.Key,
-                Count = group.Count(),
-                Share = Math.Round((double)group.Count() / relevant.Length, 4, MidpointRounding.AwayFromZero)
-            })
-            .OrderByDescending(x => x.Count)
-            .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
-            .ToArray();
+                CanonicalCode = x.CanonicalCode,
+                LegacyCode = x.LegacyCode,
+                Count = x.Count,
+                Share = x.Share
+            }).ToArray(),
+            RequiresRatedParams = snapshot.RequiresRatedParams,
+            UpstreamCanonicalCodes = snapshot.UpstreamCanonicalCodes,
+            UpstreamLegacyAliases = snapshot.UpstreamLegacyAliases,
+            UpstreamLegacyCodeDistributions = snapshot.UpstreamLegacyCodeDistributions.Select(x => new MotorYLegacyUpstreamCodeDistributionContract
+            {
+                CanonicalCode = x.CanonicalCode,
+                LegacyCode = x.LegacyCode,
+                Count = x.Count,
+                Share = x.Share
+            }).ToArray(),
+            ObservedUpstreamCanonicalCodeCount = snapshot.ObservedUpstreamCanonicalCodeCount,
+            ObservedUpstreamCanonicalCodes = snapshot.ObservedUpstreamCanonicalCodes,
+            MissingUpstreamCanonicalCodes = snapshot.MissingUpstreamCanonicalCodes,
+            UpstreamDependenciesSatisfied = snapshot.UpstreamDependenciesSatisfied,
+            UpstreamDependencySummary = snapshot.UpstreamDependencySummary,
+            RequiredPayloadFields = snapshot.RequiredPayloadFields,
+            RequiredRatedParamFields = snapshot.RequiredRatedParamFields,
+            RequiredResultFields = snapshot.RequiredResultFields,
+            CoveredRequiredResultFieldCount = snapshot.CoveredRequiredResultFieldCount,
+            MissingRequiredResultFieldCount = snapshot.MissingRequiredResultFieldCount,
+            MissingRequiredResultFields = snapshot.MissingRequiredResultFields,
+            CoveredRequiredResultFields = snapshot.CoveredRequiredResultFields,
+            RequiredResultFieldCoverageRatio = snapshot.RequiredResultFieldCoverageRatio,
+            RequiredResultFieldCoveragePercentagePoints = snapshot.RequiredResultFieldCoveragePercentagePoints,
+            RequiredResultFieldCoverageSummary = snapshot.RequiredResultFieldCoverageSummary,
+            CoveredRequiredPayloadFieldCount = snapshot.CoveredRequiredPayloadFieldCount,
+            MissingRequiredPayloadFieldCount = snapshot.MissingRequiredPayloadFieldCount,
+            MissingRequiredPayloadFields = snapshot.MissingRequiredPayloadFields,
+            CoveredRequiredPayloadFields = snapshot.CoveredRequiredPayloadFields,
+            RequiredPayloadFieldCoverageRatio = snapshot.RequiredPayloadFieldCoverageRatio,
+            RequiredPayloadFieldCoveragePercentagePoints = snapshot.RequiredPayloadFieldCoveragePercentagePoints,
+            SamplePayloadAvailable = snapshot.SamplePayloadAvailable,
+            RequiredPayloadFieldCoverageSummary = snapshot.RequiredPayloadFieldCoverageSummary,
+            RequiredRawDataSignals = snapshot.RequiredRawDataSignals,
+            ObservedRawDataSignals = snapshot.ObservedRawDataSignals,
+            MissingRawDataSignals = snapshot.MissingRawDataSignals,
+            RawDataSignalCoveredCount = snapshot.RawDataSignalCoveredCount,
+            RawDataSignalMissingCount = snapshot.RawDataSignalMissingCount,
+            RawDataSampleCount = snapshot.RawDataSampleCount,
+            RawDataListAvailable = snapshot.RawDataListAvailable,
+            RawDataSignalCoverageRatio = snapshot.RawDataSignalCoverageRatio,
+            RawDataSignalCoveragePercentagePoints = snapshot.RawDataSignalCoveragePercentagePoints,
+            RawDataSignalCoverageSummary = snapshot.RawDataSignalCoverageSummary,
+            CoveredRequiredRatedParamFieldCount = snapshot.CoveredRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFieldCount = snapshot.MissingRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFields = snapshot.MissingRequiredRatedParamFields,
+            CoveredRequiredRatedParamFields = snapshot.CoveredRequiredRatedParamFields,
+            RequiredRatedParamFieldCoverageRatio = snapshot.RequiredRatedParamFieldCoverageRatio,
+            RequiredRatedParamFieldCoveragePercentagePoints = snapshot.RequiredRatedParamFieldCoveragePercentagePoints,
+            RatedParamsAvailable = snapshot.RatedParamsAvailable,
+            RequiredRatedParamFieldCoverageSummary = snapshot.RequiredRatedParamFieldCoverageSummary,
+            LegacyAlgorithmInputsReady = snapshot.LegacyAlgorithmInputsReady,
+            RawDataSignalsReady = snapshot.RawDataSignalsReady,
+            RequiredStructuredPayloadSignals = snapshot.RequiredStructuredPayloadSignals,
+            ObservedStructuredPayloadSignals = snapshot.ObservedStructuredPayloadSignals,
+            MissingStructuredPayloadSignals = snapshot.MissingStructuredPayloadSignals,
+            StructuredPayloadSignalCoveredCount = snapshot.StructuredPayloadSignalCoveredCount,
+            StructuredPayloadSignalMissingCount = snapshot.StructuredPayloadSignalMissingCount,
+            StructuredPayloadSampleCount = snapshot.StructuredPayloadSampleCount,
+            StructuredPayloadAvailable = snapshot.StructuredPayloadAvailable,
+            StructuredPayloadSignalCoverageRatio = snapshot.StructuredPayloadSignalCoverageRatio,
+            StructuredPayloadSignalCoveragePercentagePoints = snapshot.StructuredPayloadSignalCoveragePercentagePoints,
+            StructuredPayloadSignalCoverageSummary = snapshot.StructuredPayloadSignalCoverageSummary,
+            RequiredStructuredResultSignals = snapshot.RequiredStructuredResultSignals,
+            ObservedStructuredResultSignals = snapshot.ObservedStructuredResultSignals,
+            MissingStructuredResultSignals = snapshot.MissingStructuredResultSignals,
+            StructuredResultSignalCoveredCount = snapshot.StructuredResultSignalCoveredCount,
+            StructuredResultSignalMissingCount = snapshot.StructuredResultSignalMissingCount,
+            StructuredResultSampleCount = snapshot.StructuredResultSampleCount,
+            StructuredResultAvailable = snapshot.StructuredResultAvailable,
+            StructuredResultSignalCoverageRatio = snapshot.StructuredResultSignalCoverageRatio,
+            StructuredResultSignalCoveragePercentagePoints = snapshot.StructuredResultSignalCoveragePercentagePoints,
+            StructuredResultSignalCoverageSummary = snapshot.StructuredResultSignalCoverageSummary,
+            LegacyAlgorithmInputReadinessSummary = snapshot.LegacyAlgorithmInputReadinessSummary,
+            DependencyNotes = snapshot.DependencyNotes,
+            FormulaSignals = snapshot.FormulaSignals,
+            CoveredFormulaSignalCount = snapshot.CoveredFormulaSignalCount,
+            MissingFormulaSignalCount = snapshot.MissingFormulaSignalCount,
+            CoveredFormulaSignals = snapshot.CoveredFormulaSignals,
+            MissingFormulaSignals = snapshot.MissingFormulaSignals,
+            FormulaSignalCoverageRatio = snapshot.FormulaSignalCoverageRatio,
+            FormulaSignalCoveragePercentagePoints = snapshot.FormulaSignalCoveragePercentagePoints,
+            FormulaSignalsBackedByObservedPayload = snapshot.FormulaSignalsBackedByObservedPayload,
+            FormulaSignalsObservedPayloadFields = snapshot.FormulaSignalsObservedPayloadFields,
+            FormulaSignalObservedPayloadGaps = snapshot.FormulaSignalObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapContract
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            FormulaSignalsObservedPayloadSummary = snapshot.FormulaSignalsObservedPayloadSummary,
+            LegacyAlgorithmRules = snapshot.LegacyAlgorithmRules,
+            CoveredLegacyAlgorithmRuleCount = snapshot.CoveredLegacyAlgorithmRuleCount,
+            MissingLegacyAlgorithmRuleCount = snapshot.MissingLegacyAlgorithmRuleCount,
+            CoveredLegacyAlgorithmRules = snapshot.CoveredLegacyAlgorithmRules,
+            MissingLegacyAlgorithmRules = snapshot.MissingLegacyAlgorithmRules,
+            LegacyAlgorithmRuleCoverageRatio = snapshot.LegacyAlgorithmRuleCoverageRatio,
+            LegacyAlgorithmRuleCoveragePercentagePoints = snapshot.LegacyAlgorithmRuleCoveragePercentagePoints,
+            LegacyAlgorithmRulesBackedByObservedPayload = snapshot.LegacyAlgorithmRulesBackedByObservedPayload,
+            LegacyAlgorithmRulesObservedPayloadFields = snapshot.LegacyAlgorithmRulesObservedPayloadFields,
+            LegacyAlgorithmRulesObservedPayloadGaps = snapshot.LegacyAlgorithmRulesObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapContract
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            LegacyAlgorithmRulesObservedPayloadSummary = snapshot.LegacyAlgorithmRulesObservedPayloadSummary,
+            LegacyDecisionAnchors = snapshot.LegacyDecisionAnchors,
+            CoveredLegacyDecisionAnchorCount = snapshot.CoveredLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorCount = snapshot.MissingLegacyDecisionAnchorCount,
+            CoveredLegacyDecisionAnchors = snapshot.CoveredLegacyDecisionAnchors,
+            MissingLegacyDecisionAnchors = snapshot.MissingLegacyDecisionAnchors,
+            LegacyDecisionAnchorCoverageRatio = snapshot.LegacyDecisionAnchorCoverageRatio,
+            LegacyDecisionAnchorCoveragePercentagePoints = snapshot.LegacyDecisionAnchorCoveragePercentagePoints,
+            LegacyDecisionAnchorsBackedByObservedPayload = snapshot.LegacyDecisionAnchorsBackedByObservedPayload,
+            LegacyDecisionAnchorsObservedPayloadFields = snapshot.LegacyDecisionAnchorsObservedPayloadFields,
+            LegacyDecisionAnchorsObservedPayloadGaps = snapshot.LegacyDecisionAnchorsObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapContract
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            LegacyDecisionAnchorsObservedPayloadSummary = snapshot.LegacyDecisionAnchorsObservedPayloadSummary,
+            FormulaSignalSummary = snapshot.FormulaSignalSummary,
+            LegacyAlgorithmRuleSummary = snapshot.LegacyAlgorithmRuleSummary,
+            LegacyDecisionAnchorSummary = snapshot.LegacyDecisionAnchorSummary,
+            SelectedMethodSummary = snapshot.SelectedMethodSummary,
+            BaselineDominantComparisonSummary = snapshot.BaselineDominantComparisonSummary,
+            DependencyBuckets = snapshot.DependencyBuckets.Select(x => new MotorYDependencyBucketSummaryContract
+            {
+                BucketKey = x.BucketKey,
+                DisplayName = x.DisplayName,
+                RequiredCount = x.RequiredCount,
+                CoveredCount = x.CoveredCount,
+                MissingCount = x.MissingCount,
+                CoverageRatio = x.CoverageRatio,
+                CoveragePercentagePoints = x.CoveragePercentagePoints,
+                RequiredItems = x.RequiredItems,
+                CoveredItems = x.CoveredItems,
+                MissingItems = x.MissingItems,
+                Summary = x.Summary
+            }).ToArray(),
+            Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
+        };
     }
 
     private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)

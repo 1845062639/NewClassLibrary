@@ -71,6 +71,13 @@ public static class TestRecordViewMapper
             LightweightReportArtifactFileName = detail.LightweightReport?.ArtifactFileName,
             ItemDetails = detail.ItemDetails,
             MotorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails),
+            MotorYMethodAdaptationPlans = BuildMotorYMethodDecisions(detail.ItemDetails)
+                .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
+                    snapshot,
+                    MapBuildProfile,
+                    BuildLegacyCodeDistributions(detail.ItemDetails, snapshot.CanonicalCode)))
+                .Select(MapAdaptationPlanSnapshot)
+                .ToArray(),
             ReportSummaries = detail.ReportSummaries
         };
     }
@@ -128,6 +135,257 @@ public static class TestRecordViewMapper
             })
             .OrderBy(x => x.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYLegacyCodeDistributionSnapshot> BuildLegacyCodeDistributions(
+        IReadOnlyList<TestRecordItemDetail> items,
+        string canonicalCode)
+    {
+        var relevant = items
+            .Where(item => string.Equals(item.ItemCode, canonicalCode, StringComparison.Ordinal))
+            .Select(item => string.IsNullOrWhiteSpace(item.DisplayName)
+                ? item.ItemCode
+                : item.DisplayName)
+            .Where(code => !string.IsNullOrWhiteSpace(code))
+            .ToArray();
+
+        if (relevant.Length == 0)
+        {
+            return Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
+        }
+
+        return relevant
+            .GroupBy(code => code, StringComparer.Ordinal)
+            .Select(group => new MotorYLegacyCodeDistributionSnapshot
+            {
+                CanonicalCode = canonicalCode,
+                LegacyCode = group.Key,
+                Count = group.Count(),
+                Share = Math.Round((double)group.Count() / relevant.Length, 4, MidpointRounding.AwayFromZero)
+            })
+            .OrderByDescending(x => x.Count)
+            .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static MotorYBuildProfileContract? MapBuildProfile(MotorYLegacyAlgorithmRoute? route)
+    {
+        return route is null
+            ? null
+            : new MotorYBuildProfileContract
+            {
+                CanonicalCode = route.CanonicalCode,
+                MethodValue = route.MethodValue,
+                MethodKey = route.MethodKey,
+                ProfileKey = route.ProfileKey,
+                VariantKind = route.VariantKind,
+                AlgorithmFamily = route.AlgorithmFamily,
+                LegacyEnumName = route.LegacyEnumName,
+                LegacyFormName = route.LegacyFormName,
+                LegacyAlgorithmEntry = route.LegacyAlgorithmEntry,
+                LegacyMethodName = route.LegacyMethodName,
+                LegacySettingsMethodName = route.LegacySettingsMethodName,
+                IsBaselineMethod = route.IsBaselineMethod
+            };
+    }
+
+    private static MotorYMethodAdaptationPlanSnapshot MapAdaptationPlanSnapshot(MotorYMethodAdaptationPlanContract contract)
+    {
+        return new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = contract.CanonicalCode,
+            TotalCount = contract.TotalCount,
+            BaselineRoute = contract.BaselineProfile is null ? null : MotorYLegacyAlgorithmRouteResolver.Resolve(contract.BaselineProfile.CanonicalCode, contract.BaselineProfile.MethodValue),
+            BaselineCount = contract.BaselineCount,
+            BaselineShare = contract.BaselineShare,
+            DominantRoute = contract.DominantProfile is null ? null : MotorYLegacyAlgorithmRouteResolver.Resolve(contract.DominantProfile.CanonicalCode, contract.DominantProfile.MethodValue),
+            DominantCount = contract.DominantCount,
+            DominantShare = contract.DominantShare,
+            SelectedRoute = contract.SelectedProfile is null ? null : MotorYLegacyAlgorithmRouteResolver.Resolve(contract.SelectedProfile.CanonicalCode, contract.SelectedProfile.MethodValue),
+            SelectedCount = contract.SelectedCount,
+            SelectedShare = contract.SelectedShare,
+            SelectionStrategy = contract.SelectionStrategy,
+            ShouldUseDominantRoute = contract.ShouldUseDominantRoute,
+            DominantOverrideThreshold = contract.DominantOverrideThreshold,
+            DominantLeadCount = contract.DominantLeadCount,
+            DominantLeadPercentagePoints = contract.DominantLeadPercentagePoints,
+            SelectedLeadCountVsBaseline = contract.SelectedLeadCountVsBaseline,
+            SelectedLeadPercentagePointsVsBaseline = contract.SelectedLeadPercentagePointsVsBaseline,
+            SelectionReason = contract.SelectionReason,
+            AlgorithmEntry = contract.AlgorithmEntry,
+            SettingsMethodName = contract.SettingsMethodName,
+            LegacyMethodName = contract.LegacyMethodName,
+            RecommendedLegacyCode = contract.RecommendedLegacyCode,
+            DominantLegacyCode = contract.DominantLegacyCode,
+            RecommendedLegacyCodeCount = contract.RecommendedLegacyCodeCount,
+            RecommendedLegacyCodeShare = contract.RecommendedLegacyCodeShare,
+            LegacyCodeSelectionSummary = contract.LegacyCodeSelectionSummary,
+            LegacyCodeDistributions = contract.LegacyCodeDistributions.Select(x => new MotorYLegacyCodeDistributionSnapshot
+            {
+                CanonicalCode = x.CanonicalCode,
+                LegacyCode = x.LegacyCode,
+                Count = x.Count,
+                Share = x.Share
+            }).ToArray(),
+            RequiresRatedParams = contract.RequiresRatedParams,
+            UpstreamCanonicalCodes = contract.UpstreamCanonicalCodes,
+            UpstreamLegacyAliases = contract.UpstreamLegacyAliases,
+            UpstreamLegacyCodeDistributions = contract.UpstreamLegacyCodeDistributions.Select(x => new MotorYLegacyUpstreamCodeDistributionSnapshot
+            {
+                CanonicalCode = x.CanonicalCode,
+                LegacyCode = x.LegacyCode,
+                Count = x.Count,
+                Share = x.Share
+            }).ToArray(),
+            ObservedUpstreamCanonicalCodeCount = contract.ObservedUpstreamCanonicalCodeCount,
+            ObservedUpstreamCanonicalCodes = contract.ObservedUpstreamCanonicalCodes,
+            MissingUpstreamCanonicalCodes = contract.MissingUpstreamCanonicalCodes,
+            UpstreamDependenciesSatisfied = contract.UpstreamDependenciesSatisfied,
+            UpstreamDependencySummary = contract.UpstreamDependencySummary,
+            RequiredPayloadFields = contract.RequiredPayloadFields,
+            RequiredRatedParamFields = contract.RequiredRatedParamFields,
+            RequiredResultFields = contract.RequiredResultFields,
+            CoveredRequiredResultFieldCount = contract.CoveredRequiredResultFieldCount,
+            MissingRequiredResultFieldCount = contract.MissingRequiredResultFieldCount,
+            MissingRequiredResultFields = contract.MissingRequiredResultFields,
+            CoveredRequiredResultFields = contract.CoveredRequiredResultFields,
+            RequiredResultFieldCoverageRatio = contract.RequiredResultFieldCoverageRatio,
+            RequiredResultFieldCoveragePercentagePoints = contract.RequiredResultFieldCoveragePercentagePoints,
+            RequiredResultFieldCoverageSummary = contract.RequiredResultFieldCoverageSummary,
+            CoveredRequiredPayloadFieldCount = contract.CoveredRequiredPayloadFieldCount,
+            MissingRequiredPayloadFieldCount = contract.MissingRequiredPayloadFieldCount,
+            MissingRequiredPayloadFields = contract.MissingRequiredPayloadFields,
+            CoveredRequiredPayloadFields = contract.CoveredRequiredPayloadFields,
+            RequiredPayloadFieldCoverageRatio = contract.RequiredPayloadFieldCoverageRatio,
+            RequiredPayloadFieldCoveragePercentagePoints = contract.RequiredPayloadFieldCoveragePercentagePoints,
+            SamplePayloadAvailable = contract.SamplePayloadAvailable,
+            RequiredPayloadFieldCoverageSummary = contract.RequiredPayloadFieldCoverageSummary,
+            RequiredRawDataSignals = contract.RequiredRawDataSignals,
+            ObservedRawDataSignals = contract.ObservedRawDataSignals,
+            MissingRawDataSignals = contract.MissingRawDataSignals,
+            RawDataSignalCoveredCount = contract.RawDataSignalCoveredCount,
+            RawDataSignalMissingCount = contract.RawDataSignalMissingCount,
+            RawDataSampleCount = contract.RawDataSampleCount,
+            RawDataListAvailable = contract.RawDataListAvailable,
+            RawDataSignalCoverageRatio = contract.RawDataSignalCoverageRatio,
+            RawDataSignalCoveragePercentagePoints = contract.RawDataSignalCoveragePercentagePoints,
+            RawDataSignalCoverageSummary = contract.RawDataSignalCoverageSummary,
+            CoveredRequiredRatedParamFieldCount = contract.CoveredRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFieldCount = contract.MissingRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFields = contract.MissingRequiredRatedParamFields,
+            CoveredRequiredRatedParamFields = contract.CoveredRequiredRatedParamFields,
+            RequiredRatedParamFieldCoverageRatio = contract.RequiredRatedParamFieldCoverageRatio,
+            RequiredRatedParamFieldCoveragePercentagePoints = contract.RequiredRatedParamFieldCoveragePercentagePoints,
+            RatedParamsAvailable = contract.RatedParamsAvailable,
+            RequiredRatedParamFieldCoverageSummary = contract.RequiredRatedParamFieldCoverageSummary,
+            LegacyAlgorithmInputsReady = contract.LegacyAlgorithmInputsReady,
+            RawDataSignalsReady = contract.RawDataSignalsReady,
+            RequiredStructuredPayloadSignals = contract.RequiredStructuredPayloadSignals,
+            ObservedStructuredPayloadSignals = contract.ObservedStructuredPayloadSignals,
+            MissingStructuredPayloadSignals = contract.MissingStructuredPayloadSignals,
+            StructuredPayloadSignalCoveredCount = contract.StructuredPayloadSignalCoveredCount,
+            StructuredPayloadSignalMissingCount = contract.StructuredPayloadSignalMissingCount,
+            StructuredPayloadSampleCount = contract.StructuredPayloadSampleCount,
+            StructuredPayloadAvailable = contract.StructuredPayloadAvailable,
+            StructuredPayloadSignalCoverageRatio = contract.StructuredPayloadSignalCoverageRatio,
+            StructuredPayloadSignalCoveragePercentagePoints = contract.StructuredPayloadSignalCoveragePercentagePoints,
+            StructuredPayloadSignalCoverageSummary = contract.StructuredPayloadSignalCoverageSummary,
+            RequiredStructuredResultSignals = contract.RequiredStructuredResultSignals,
+            ObservedStructuredResultSignals = contract.ObservedStructuredResultSignals,
+            MissingStructuredResultSignals = contract.MissingStructuredResultSignals,
+            StructuredResultSignalCoveredCount = contract.StructuredResultSignalCoveredCount,
+            StructuredResultSignalMissingCount = contract.StructuredResultSignalMissingCount,
+            StructuredResultSampleCount = contract.StructuredResultSampleCount,
+            StructuredResultAvailable = contract.StructuredResultAvailable,
+            StructuredResultSignalCoverageRatio = contract.StructuredResultSignalCoverageRatio,
+            StructuredResultSignalCoveragePercentagePoints = contract.StructuredResultSignalCoveragePercentagePoints,
+            StructuredResultSignalCoverageSummary = contract.StructuredResultSignalCoverageSummary,
+            LegacyAlgorithmInputReadinessSummary = contract.LegacyAlgorithmInputReadinessSummary,
+            DependencyNotes = contract.DependencyNotes,
+            FormulaSignals = contract.FormulaSignals,
+            CoveredFormulaSignalCount = contract.CoveredFormulaSignalCount,
+            MissingFormulaSignalCount = contract.MissingFormulaSignalCount,
+            CoveredFormulaSignals = contract.CoveredFormulaSignals,
+            MissingFormulaSignals = contract.MissingFormulaSignals,
+            FormulaSignalCoverageRatio = contract.FormulaSignalCoverageRatio,
+            FormulaSignalCoveragePercentagePoints = contract.FormulaSignalCoveragePercentagePoints,
+            FormulaSignalsBackedByObservedPayload = contract.FormulaSignalsBackedByObservedPayload,
+            FormulaSignalsObservedPayloadFields = contract.FormulaSignalsObservedPayloadFields,
+            FormulaSignalObservedPayloadGaps = contract.FormulaSignalObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapSnapshot
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            FormulaSignalsObservedPayloadSummary = contract.FormulaSignalsObservedPayloadSummary,
+            LegacyAlgorithmRules = contract.LegacyAlgorithmRules,
+            CoveredLegacyAlgorithmRuleCount = contract.CoveredLegacyAlgorithmRuleCount,
+            MissingLegacyAlgorithmRuleCount = contract.MissingLegacyAlgorithmRuleCount,
+            CoveredLegacyAlgorithmRules = contract.CoveredLegacyAlgorithmRules,
+            MissingLegacyAlgorithmRules = contract.MissingLegacyAlgorithmRules,
+            LegacyAlgorithmRuleCoverageRatio = contract.LegacyAlgorithmRuleCoverageRatio,
+            LegacyAlgorithmRuleCoveragePercentagePoints = contract.LegacyAlgorithmRuleCoveragePercentagePoints,
+            LegacyAlgorithmRulesBackedByObservedPayload = contract.LegacyAlgorithmRulesBackedByObservedPayload,
+            LegacyAlgorithmRulesObservedPayloadFields = contract.LegacyAlgorithmRulesObservedPayloadFields,
+            LegacyAlgorithmRulesObservedPayloadGaps = contract.LegacyAlgorithmRulesObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapSnapshot
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            LegacyAlgorithmRulesObservedPayloadSummary = contract.LegacyAlgorithmRulesObservedPayloadSummary,
+            LegacyDecisionAnchors = contract.LegacyDecisionAnchors,
+            CoveredLegacyDecisionAnchorCount = contract.CoveredLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorCount = contract.MissingLegacyDecisionAnchorCount,
+            CoveredLegacyDecisionAnchors = contract.CoveredLegacyDecisionAnchors,
+            MissingLegacyDecisionAnchors = contract.MissingLegacyDecisionAnchors,
+            LegacyDecisionAnchorCoverageRatio = contract.LegacyDecisionAnchorCoverageRatio,
+            LegacyDecisionAnchorCoveragePercentagePoints = contract.LegacyDecisionAnchorCoveragePercentagePoints,
+            LegacyDecisionAnchorsBackedByObservedPayload = contract.LegacyDecisionAnchorsBackedByObservedPayload,
+            LegacyDecisionAnchorsObservedPayloadFields = contract.LegacyDecisionAnchorsObservedPayloadFields,
+            LegacyDecisionAnchorsObservedPayloadGaps = contract.LegacyDecisionAnchorsObservedPayloadGaps.Select(x => new MotorYObservedAlgorithmEvidenceGapSnapshot
+            {
+                SignalOrRule = x.SignalOrRule,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            LegacyDecisionAnchorsObservedPayloadSummary = contract.LegacyDecisionAnchorsObservedPayloadSummary,
+            FormulaSignalSummary = contract.FormulaSignalSummary,
+            LegacyAlgorithmRuleSummary = contract.LegacyAlgorithmRuleSummary,
+            LegacyDecisionAnchorSummary = contract.LegacyDecisionAnchorSummary,
+            SelectedMethodSummary = contract.SelectedMethodSummary,
+            BaselineDominantComparisonSummary = contract.BaselineDominantComparisonSummary,
+            DependencyBuckets = contract.DependencyBuckets.Select(x => new MotorYDependencyBucketSummarySnapshot
+            {
+                BucketKey = x.BucketKey,
+                DisplayName = x.DisplayName,
+                RequiredCount = x.RequiredCount,
+                CoveredCount = x.CoveredCount,
+                MissingCount = x.MissingCount,
+                CoverageRatio = x.CoverageRatio,
+                CoveragePercentagePoints = x.CoveragePercentagePoints,
+                RequiredItems = x.RequiredItems,
+                CoveredItems = x.CoveredItems,
+                MissingItems = x.MissingItems,
+                Summary = x.Summary
+            }).ToArray(),
+            Distributions = contract.Distributions.Select(x => new MotorYMethodDistributionSnapshot
+            {
+                MethodValue = x.MethodValue,
+                Count = x.Count,
+                Share = x.Share,
+                Route = x.Profile is null ? null : MotorYLegacyAlgorithmRouteResolver.Resolve(x.Profile.CanonicalCode, x.Profile.MethodValue)
+            }).ToArray()
+        };
     }
 
     private static string BuildProductDisplayName(string? model, string? code, string productKind)

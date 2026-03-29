@@ -21,5 +21,6 @@ public sealed class TestRecordDetailView
     public string? LightweightReportArtifactFileName { get; init; }
     public IReadOnlyList<TestRecordItemDetail> ItemDetails { get; init; } = Array.Empty<TestRecordItemDetail>();
     public IReadOnlyList<MotorYMethodDecisionSnapshot> MotorYMethodDecisions { get; init; } = Array.Empty<MotorYMethodDecisionSnapshot>();
+    public IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> MotorYMethodAdaptationPlans { get; init; } = Array.Empty<MotorYMethodAdaptationPlanSnapshot>();
     public IReadOnlyList<TestReportPersistenceSummary> ReportSummaries { get; init; } = Array.Empty<TestReportPersistenceSummary>();
 }

@@ -136,8 +136,20 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !string.Equals(loadBPlan.UpstreamDependencySummary, "upstream dependencies satisfied (MotorY.NoLoad + MotorY.HeatRun); observed 2/2 required upstream codes", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.RawDataSignalCoverageSummary, $"raw data signals covered 7/8 (88pp); raw samples={loadBPlan.RawDataSampleCount}; missing: θa; observed: Frequency, I1, Nt, P1t, Tt, U, θ1t", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.LegacyAlgorithmRulesObservedPayloadSummary, "legacy algorithm rule observed payload fields observed 8/9 (89pp); missing: Ps; observed: A, B, GB, R, ResultDataList, θb, θs, θw", StringComparison.Ordinal)
+            || !loadBPlan.LegacyDecisionAnchors.SequenceEqual(new[]
+            {
+                "GB 版本决定 ratios 负载点集与 θs 计算分支，B 法不能脱离 ratedParams.GB 运行",
+                "当相关系数 R<0.95 时需先删坏点再重新拟合 A/B/R",
+                "结果区会从 cuC=1 开始逐步下调，直到所有 Ps 非负，说明旧算法存在迭代收敛决策"
+            }, StringComparer.Ordinal)
+            || loadBPlan.CoveredLegacyDecisionAnchorCount != 0
+            || loadBPlan.MissingLegacyDecisionAnchorCount != 3
+            || Math.Abs(loadBPlan.LegacyDecisionAnchorCoverageRatio) > 0.0001d
+            || loadBPlan.LegacyDecisionAnchorCoveragePercentagePoints != 0
+            || !string.Equals(loadBPlan.LegacyDecisionAnchorsObservedPayloadSummary, "legacy decision anchor observed payload fields observed 8/9 (89pp); missing: Ps; observed: A, B, GB, R, ResultDataList, θb, θs, θw", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.FormulaSignalSummary, "formula signals covered 0/3 (0pp); missing: 先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl，再用 Tx²-Pl 相关关系求附加损耗系数 A/B/R, 当 R<0.95 时执行一次删除坏点，再重新拟合 A/B/R, 依据 GB 版本切换 θs 与 ratios 口径，并生成 ResultDataList", StringComparison.Ordinal)
-            || !string.Equals(loadBPlan.LegacyAlgorithmRuleSummary, "legacy algorithm rules covered 0/3 (0pp); missing: GB1032_2012/TB_朝阳电机 使用 1.5/1.25/1/0.75/0.5/0.25 负载点，GB1032_2023 使用 1.25/1.15/1/0.75/0.5/0.25, 2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs, 结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负", StringComparison.Ordinal))
+            || !string.Equals(loadBPlan.LegacyAlgorithmRuleSummary, "legacy algorithm rules covered 0/3 (0pp); missing: GB1032_2012/TB_朝阳电机 使用 1.5/1.25/1/0.75/0.5/0.25 负载点，GB1032_2023 使用 1.25/1.15/1/0.75/0.5/0.25, 2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs, 结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.LegacyDecisionAnchorSummary, "legacy decision anchors covered 0/3 (0pp); missing: GB 版本决定 ratios 负载点集与 θs 计算分支，B 法不能脱离 ratedParams.GB 运行, 当相关系数 R<0.95 时需先删坏点再重新拟合 A/B/R, 结果区会从 cuC=1 开始逐步下调，直到所有 Ps 非负，说明旧算法存在迭代收敛决策", StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: stp.db adaptation plan dependency projection mismatch for LoadB.");
         }

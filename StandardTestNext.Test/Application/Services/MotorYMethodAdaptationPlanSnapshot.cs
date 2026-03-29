@@ -139,8 +139,20 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<string> LegacyAlgorithmRulesObservedPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapSnapshot> LegacyAlgorithmRulesObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapSnapshot>();
     public string LegacyAlgorithmRulesObservedPayloadSummary { get; init; } = string.Empty;
+    public IReadOnlyList<string> LegacyDecisionAnchors { get; init; } = Array.Empty<string>();
+    public int CoveredLegacyDecisionAnchorCount { get; init; }
+    public int MissingLegacyDecisionAnchorCount { get; init; }
+    public IReadOnlyList<string> CoveredLegacyDecisionAnchors { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingLegacyDecisionAnchors { get; init; } = Array.Empty<string>();
+    public double LegacyDecisionAnchorCoverageRatio { get; init; }
+    public int LegacyDecisionAnchorCoveragePercentagePoints { get; init; }
+    public bool LegacyDecisionAnchorsBackedByObservedPayload { get; init; }
+    public IReadOnlyList<string> LegacyDecisionAnchorsObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapSnapshot> LegacyDecisionAnchorsObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapSnapshot>();
+    public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;
+    public string LegacyDecisionAnchorSummary { get; init; } = string.Empty;
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYDependencyBucketSummarySnapshot> DependencyBuckets { get; init; } = Array.Empty<MotorYDependencyBucketSummarySnapshot>();
