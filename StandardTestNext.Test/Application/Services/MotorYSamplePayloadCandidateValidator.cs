@@ -46,4 +46,82 @@ internal static class MotorYSamplePayloadCandidateValidator
                 return false;
         }
     }
+
+    public static bool IsPreferredMethodCandidate(string canonicalCode, int methodValue, string dataJson)
+    {
+        if (!IsValidBaselineCandidate(canonicalCode, dataJson))
+        {
+            return false;
+        }
+
+        var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue);
+        if (route is null)
+        {
+            return false;
+        }
+
+        return route.AlgorithmFamily switch
+        {
+            "DirectCurrentResistance" => dataJson.Contains("\"R1\"", StringComparison.Ordinal)
+                || dataJson.Contains("\"θ1c\"", StringComparison.Ordinal),
+            "NoLoad" => HasPreferredNoLoadEvidence(dataJson),
+            "Thermal" => HasPreferredHeatRunEvidence(dataJson),
+            "LoadA" => HasPreferredLoadAEvidence(dataJson),
+            "LoadB" => HasPreferredLoadBEvidence(dataJson),
+            "LockedRotor" => HasPreferredLockedRotorEvidence(dataJson),
+            _ => true
+        };
+    }
+
+    private static bool HasPreferredNoLoadEvidence(string dataJson)
+    {
+        var noLoad = MotorYNoLoadLegacyShape.FromJson(dataJson);
+        return noLoad is not null
+            && noLoad.DataList.Count >= 3
+            && noLoad.Pfw > 0
+            && noLoad.Pfe > 0
+            && (noLoad.CoefficientOfPfe?.Length ?? 0) > 0;
+    }
+
+    private static bool HasPreferredHeatRunEvidence(string dataJson)
+    {
+        var heatRun = MotorYThermalLegacyShape.FromJson(dataJson);
+        return heatRun is not null
+            && heatRun.Data1List.Count > 0
+            && heatRun.Data2List.Count > 0
+            && heatRun.Rn > 0
+            && heatRun.Rw > 0
+            && heatRun.θw > 0;
+    }
+
+    private static bool HasPreferredLoadAEvidence(string dataJson)
+    {
+        var loadA = MotorYLoadALegacyShape.FromJson(dataJson);
+        return loadA is not null
+            && loadA.RawDataList.Count >= 3
+            && loadA.ResultDataList.Count >= 5
+            && loadA.ResultDataList.Any(x => x.P2 > 0)
+            && loadA.ResultDataList.Any(x => x.η > 0);
+    }
+
+    private static bool HasPreferredLoadBEvidence(string dataJson)
+    {
+        var loadB = MotorYLoadBLegacyShape.FromJson(dataJson);
+        return loadB is not null
+            && loadB.RawDataList.Count >= 3
+            && loadB.ResultDataList.Count >= 6
+            && loadB.A > 0
+            && loadB.B > 0
+            && loadB.R > 0;
+    }
+
+    private static bool HasPreferredLockedRotorEvidence(string dataJson)
+    {
+        var lockedRotor = MotorYLockRotorLegacyShape.FromJson(dataJson);
+        return lockedRotor is not null
+            && lockedRotor.DataList.Count >= 3
+            && lockedRotor.Ikn > 0
+            && lockedRotor.Pkn > 0
+            && lockedRotor.Tkn > 0;
+    }
 }

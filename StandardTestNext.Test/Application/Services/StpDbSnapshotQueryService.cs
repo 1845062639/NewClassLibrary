@@ -1261,27 +1261,56 @@ WHERE Code IN (
     '堵转特性试验')
 ORDER BY rowid DESC;";
 
-        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        var decisionSelections = LoadMotorYMethodDecisions(connection)
+            .Select(MotorYMethodRouteSelectionSnapshotFactory.Create)
+            .Where(selection => selection.SelectedRoute is not null)
+            .ToDictionary(
+                selection => selection.CanonicalCode,
+                selection => selection.SelectedRoute!.MethodValue,
+                StringComparer.Ordinal);
+        var fallbackCandidates = new Dictionary<string, string>(StringComparer.Ordinal);
+        var preferredCandidates = new Dictionary<string, string>(StringComparer.Ordinal);
+
         using var reader = command.ExecuteReader();
         while (reader.Read())
         {
             var legacyCode = reader.IsDBNull(0) ? string.Empty : reader.GetString(0);
             var canonicalCode = MotorYLegacyItemCodeNormalizer.Normalize(legacyCode);
-            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode) || result.ContainsKey(canonicalCode))
+            if (!MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(canonicalCode))
             {
                 continue;
             }
 
+            var methodValue = reader.IsDBNull(1) ? 0 : reader.GetInt32(1);
             var dataJson = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
             if (!MotorYSamplePayloadCandidateValidator.IsValidBaselineCandidate(canonicalCode, dataJson))
             {
                 continue;
             }
 
-            result[canonicalCode] = dataJson;
+            if (!fallbackCandidates.ContainsKey(canonicalCode))
+            {
+                fallbackCandidates[canonicalCode] = dataJson;
+            }
+
+            if (preferredCandidates.ContainsKey(canonicalCode))
+            {
+                continue;
+            }
+
+            if (decisionSelections.TryGetValue(canonicalCode, out var selectedMethod)
+                && methodValue == selectedMethod
+                && MotorYSamplePayloadCandidateValidator.IsPreferredMethodCandidate(canonicalCode, methodValue, dataJson))
+            {
+                preferredCandidates[canonicalCode] = dataJson;
+            }
         }
 
-        return result;
+        return fallbackCandidates
+            .ToDictionary(
+                pair => pair.Key,
+                pair => preferredCandidates.TryGetValue(pair.Key, out var preferred) ? preferred : pair.Value,
+                StringComparer.Ordinal);
     }
 
     private static Dictionary<string, MotorRatedParamsContract> LoadMotorYSampleRatedParamsByCanonicalCode(SqliteConnection connection)
