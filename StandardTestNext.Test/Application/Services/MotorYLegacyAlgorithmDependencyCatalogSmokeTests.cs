@@ -8,7 +8,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
     {
         var expected = new[]
         {
-            (MotorYTestMethodCodes.DcResistance, false, Array.Empty<string>(), new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" }, Array.Empty<string>(), new[] { "R1", "θ1c" }, new[] { "R1", "θ1c" }),
+            (MotorYTestMethodCodes.DcResistance, false, Array.Empty<string>(), new[] { "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c" }, Array.Empty<string>(), new[] { "R1", "R1c", "θ1c" }, new[] { "R1", "R1c", "θ1c" }),
             (MotorYTestMethodCodes.NoLoad, false, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" }, Array.Empty<string>(), new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" }, new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" }),
             (MotorYTestMethodCodes.HeatRun, true, new[] { MotorYTestMethodCodes.DcResistance }, new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" }, new[] { "GB" }, new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" }, new[] { "firstSecondsInterval", "Rw", "Rn", "Rws", "θw", "θs", "θb" }),
             (MotorYTestMethodCodes.LoadA, false, new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun }, new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" }, Array.Empty<string>(), new[] { "Pcu1", "Pcu2", "ResultDataList", "η" }, new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "P2x", "η" }),
@@ -109,6 +109,23 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 }
             ]
         };
+
+        var dcResistanceDecisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
+            MotorYTestMethodCodes.DcResistance,
+            new[] { "R1c", "θ1c" },
+            null);
+
+        if (dcResistanceDecisionAnchorObservationRules.Count != 2
+            || !dcResistanceDecisionAnchorObservationRules.All(rule => rule.CoveredByObservedPayload)
+            || !dcResistanceDecisionAnchorObservationRules.All(rule => rule.ObservedPayloadFields.SequenceEqual(new[] { "R1", "R1c", "θ1c" }, StringComparer.Ordinal))
+            || !dcResistanceDecisionAnchorObservationRules.All(rule => rule.MissingPayloadFields.Count == 0)
+            || !dcResistanceDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "cold-baseline-ready", StringComparison.Ordinal)
+                && string.Equals(rule.Summary, "decision-anchor-observation:cold-baseline-ready covered by observed payload fields 'R1', 'R1c', 'θ1c'", StringComparison.Ordinal))
+            || !dcResistanceDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "downstream-ready", StringComparison.Ordinal)
+                && string.Equals(rule.Summary, "decision-anchor-observation:downstream-ready covered by observed payload fields 'R1', 'R1c', 'θ1c'", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor observation alias projection mismatch for DcResistance. actual=[{string.Join(" | ", dcResistanceDecisionAnchorObservationRules.Select(rule => $"{rule.AnchorKey}:{rule.CoveredByObservedPayload}:{string.Join(",", rule.ObservedPayloadFields)}:{string.Join(",", rule.MissingPayloadFields)}"))}]");
+        }
 
         var heatRunDecisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
             MotorYTestMethodCodes.HeatRun,

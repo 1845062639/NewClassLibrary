@@ -72,34 +72,34 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 AlgorithmEntry = MotorYLegacyAlgorithmEntrypoints.DcResistance,
                 RequiresRatedParams = false,
                 UpstreamCanonicalCodes = Array.Empty<string>(),
-                RequiredPayloadFields = new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" },
+                RequiredPayloadFields = new[] { "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c" },
                 RequiredRatedParamFields = Array.Empty<string>(),
-                RequiredResultFields = new[] { "R1", "θ1c" },
-                RequiredIntermediateResultFields = new[] { "R1", "θ1c" },
-                RequiredStructuredPayloadSignals = new[] { "Ruv", "Rvw", "Rwu" },
-                RequiredStructuredResultSignals = new[] { "R1", "θ1c" },
+                RequiredResultFields = new[] { "R1", "R1c", "θ1c" },
+                RequiredIntermediateResultFields = new[] { "R1", "R1c", "θ1c" },
+                RequiredStructuredPayloadSignals = new[] { "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c" },
+                RequiredStructuredResultSignals = new[] { "R1", "R1c", "θ1c" },
                 MinimumRawSampleCount = 0,
                 MinimumStructuredPayloadSampleCount = 1,
                 MinimumStructuredResultSampleCount = 1,
                 FormulaSignals = new[]
                 {
-                    "输出 R1/θ1c 作为空载、热试验等后续算法入口的基础状态量",
+                    "输出 R1/R1c/θ1c 作为空载、热试验等后续算法入口的基础状态量",
                     "三相电阻 Ruv/Rvw/Rwu 归并后形成后续引用的冷态电阻口径"
                 },
                 LegacyAlgorithmRules = new[]
                 {
                     "该项本身更偏采集/整理，不依赖上游试验项",
-                    "后续算法默认把这里产出的 R1/θ1c 视为冷态绕组参考量"
+                    "后续算法默认把这里产出的 R1/R1c/θ1c 视为冷态绕组参考量"
                 },
                 LegacyDecisionAnchors = new[]
                 {
                     "无上游试验依赖，可直接作为 Motor_Y 冷态基线入口",
-                    "结果字段 R1/θ1c 是否齐备，决定后续空载/热试验能否进入旧算法口径"
+                    "结果字段 R1/R1c/θ1c 是否齐备，决定后续空载/热试验能否进入旧算法口径"
                 },
                 LegacyDecisionAnchorRequiredFields = BuildDecisionAnchorRequiredFields(
-                    ("cold-baseline-ready", new[] { "R1", "θ1c" }),
-                    ("downstream-ready", new[] { "R1", "θ1c" })),
-                Notes = "旧 FrmMotor_Y_Direct_Current_Resistance 页面直接采集/整理后入库，供空载/热试验继续引用 R1/θ1c。"
+                    ("cold-baseline-ready", new[] { "R1", "R1c", "θ1c" }),
+                    ("downstream-ready", new[] { "R1", "R1c", "θ1c" })),
+                Notes = "旧 FrmMotor_Y_Direct_Current_Resistance 页面直接采集/整理后入库，供空载/热试验继续引用 R1/R1c/θ1c；其中 stp.db 实际主口径常见为 R1c。"
             },
             [MotorYTestMethodCodes.NoLoad] = new()
             {

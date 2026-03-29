@@ -36,7 +36,11 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
     private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string[]>> DecisionAnchorObservedFieldAliasesByCanonicalCode =
         new Dictionary<string, IReadOnlyDictionary<string, string[]>>(StringComparer.Ordinal)
         {
-            [MotorYTestMethodCodes.DcResistance] = new Dictionary<string, string[]>(StringComparer.Ordinal),
+            [MotorYTestMethodCodes.DcResistance] = new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["R1"] = new[] { "R1", "R1c" },
+                ["R1c"] = new[] { "R1c", "R1" }
+            },
             [MotorYTestMethodCodes.NoLoad] = new Dictionary<string, string[]>(StringComparer.Ordinal),
             [MotorYTestMethodCodes.HeatRun] = new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
@@ -66,7 +70,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
     private static readonly IReadOnlyDictionary<string, string[]> FormulaSignalObservedFieldsByCanonicalCode =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            [MotorYTestMethodCodes.DcResistance] = new[] { "Ruv", "Rvw", "Rwu", "R1", "θ1c" },
+            [MotorYTestMethodCodes.DcResistance] = new[] { "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c" },
             [MotorYTestMethodCodes.NoLoad] = new[] { "R0", "θ0", "Pfw", "Pfe", "CoefficientOfPfe" },
             [MotorYTestMethodCodes.HeatRun] = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
             [MotorYTestMethodCodes.LoadA] = new[] { "Pcu1", "Pcu2", "η", "ResultDataList" },
@@ -77,7 +81,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
     private static readonly IReadOnlyDictionary<string, string[]> LegacyRuleObservedFieldsByCanonicalCode =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "θ1c" },
+            [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "R1c", "θ1c" },
             [MotorYTestMethodCodes.NoLoad] = new[] { "RConverseType", "Pfw", "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" },
             [MotorYTestMethodCodes.HeatRun] = new[] { "HotStateType", "GB", "Rn", "θw", "θs", "θb" },
             [MotorYTestMethodCodes.LoadA] = new[] { "CoefficientOfPfe", "θa", "Pcu1", "Pcu2", "η", "ResultDataList" },
@@ -88,7 +92,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
     private static readonly IReadOnlyDictionary<string, string[]> LegacyDecisionAnchorObservedFieldsByCanonicalCode =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
-            [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "θ1c" },
+            [MotorYTestMethodCodes.DcResistance] = new[] { "R1", "R1c", "θ1c" },
             [MotorYTestMethodCodes.NoLoad] = new[] { "RConverseType", "Pfw", "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" },
             [MotorYTestMethodCodes.HeatRun] = new[] { "Pn", "HotStateType", "GB", "Rn", "θw", "θs", "θb", "firstSecondsInterval" },
             [MotorYTestMethodCodes.LoadA] = new[] { "CoefficientOfPfe", "Pfw", "θa", "Pcu1", "Pcu2", "η", "ResultDataList" },
