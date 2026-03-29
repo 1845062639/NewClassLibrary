@@ -701,10 +701,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? $"raw sample count ready {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}"
                         : $"raw sample count insufficient {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}";
                 var rawSampleCountDecisionSummary = minimumRawSampleCount <= 0
-                    ? $"raw sample count gate disabled for {canonicalCode}; observed {rawDataSignalCoverage.RawSampleCount}"
+                    ? $"raw sample count gate disabled for {selection.CanonicalCode}; observed {rawDataSignalCoverage.RawSampleCount}"
                     : rawSampleCountReady
-                        ? $"raw sample count gate passed for {canonicalCode}: observed {rawDataSignalCoverage.RawSampleCount} >= required {minimumRawSampleCount}"
-                        : $"raw sample count gate blocked for {canonicalCode}: observed {rawDataSignalCoverage.RawSampleCount}, still need {rawSampleCountGap} more samples to reach {minimumRawSampleCount}";
+                        ? $"raw sample count gate passed for {selection.CanonicalCode}: observed {rawDataSignalCoverage.RawSampleCount} >= required {minimumRawSampleCount}"
+                        : $"raw sample count gate blocked for {selection.CanonicalCode}: observed {rawDataSignalCoverage.RawSampleCount}, still need {rawSampleCountGap} more samples to reach {minimumRawSampleCount}";
                 var minimumStructuredPayloadSampleCount = dependencyProfile?.MinimumStructuredPayloadSampleCount ?? 0;
                 var structuredPayloadSampleCountReady = structuredPayloadCoverage.SampleCount >= minimumStructuredPayloadSampleCount;
                 var structuredPayloadSampleCountGap = Math.Max(0, minimumStructuredPayloadSampleCount - structuredPayloadCoverage.SampleCount);
@@ -714,10 +714,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? $"structured payload sample count ready {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}"
                         : $"structured payload sample count insufficient {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}";
                 var structuredPayloadSampleCountDecisionSummary = minimumStructuredPayloadSampleCount <= 0
-                    ? $"structured payload sample count gate disabled for {canonicalCode}; observed {structuredPayloadCoverage.SampleCount}"
+                    ? $"structured payload sample count gate disabled for {selection.CanonicalCode}; observed {structuredPayloadCoverage.SampleCount}"
                     : structuredPayloadSampleCountReady
-                        ? $"structured payload sample count gate passed for {canonicalCode}: observed {structuredPayloadCoverage.SampleCount} >= required {minimumStructuredPayloadSampleCount}"
-                        : $"structured payload sample count gate blocked for {canonicalCode}: observed {structuredPayloadCoverage.SampleCount}, still need {structuredPayloadSampleCountGap} more samples to reach {minimumStructuredPayloadSampleCount}";
+                        ? $"structured payload sample count gate passed for {selection.CanonicalCode}: observed {structuredPayloadCoverage.SampleCount} >= required {minimumStructuredPayloadSampleCount}"
+                        : $"structured payload sample count gate blocked for {selection.CanonicalCode}: observed {structuredPayloadCoverage.SampleCount}, still need {structuredPayloadSampleCountGap} more samples to reach {minimumStructuredPayloadSampleCount}";
                 var minimumStructuredResultSampleCount = dependencyProfile?.MinimumStructuredResultSampleCount ?? 0;
                 var structuredResultSampleCountReady = structuredResultCoverage.SampleCount >= minimumStructuredResultSampleCount;
                 var structuredResultSampleCountGap = Math.Max(0, minimumStructuredResultSampleCount - structuredResultCoverage.SampleCount);
@@ -727,10 +727,10 @@ WHERE COALESCE(curr.Code, '') <> ''
                         ? $"structured result sample count ready {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}"
                         : $"structured result sample count insufficient {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}";
                 var structuredResultSampleCountDecisionSummary = minimumStructuredResultSampleCount <= 0
-                    ? $"structured result sample count gate disabled for {canonicalCode}; observed {structuredResultCoverage.SampleCount}"
+                    ? $"structured result sample count gate disabled for {selection.CanonicalCode}; observed {structuredResultCoverage.SampleCount}"
                     : structuredResultSampleCountReady
-                        ? $"structured result sample count gate passed for {canonicalCode}: observed {structuredResultCoverage.SampleCount} >= required {minimumStructuredResultSampleCount}"
-                        : $"structured result sample count gate blocked for {canonicalCode}: observed {structuredResultCoverage.SampleCount}, still need {structuredResultSampleCountGap} more samples to reach {minimumStructuredResultSampleCount}";
+                        ? $"structured result sample count gate passed for {selection.CanonicalCode}: observed {structuredResultCoverage.SampleCount} >= required {minimumStructuredResultSampleCount}"
+                        : $"structured result sample count gate blocked for {selection.CanonicalCode}: observed {structuredResultCoverage.SampleCount}, still need {structuredResultSampleCountGap} more samples to reach {minimumStructuredResultSampleCount}";
                 var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
                     .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
                     .Concat(resultCoverage.CoveredRequiredResultFields)

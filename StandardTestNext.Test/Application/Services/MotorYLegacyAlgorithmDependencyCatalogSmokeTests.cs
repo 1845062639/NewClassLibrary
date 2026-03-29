@@ -226,6 +226,67 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 && gap.ObservedPayloadFields.Count == 0
                 && gap.MissingPayloadFields.SequenceEqual(new[] { "Ps" }, StringComparer.Ordinal)
                 && string.Equals(gap.Summary, "decision-anchor:Ps missing observed payload field 'Ps'", StringComparison.Ordinal))
+            || loadBPlan.LegacyDecisionAnchorObservationRules.Count != 3
+            || loadBPlan.CoveredLegacyDecisionAnchorObservationRuleCount != 2
+            || loadBPlan.MissingLegacyDecisionAnchorObservationRuleCount != 1
+            || Math.Abs(loadBPlan.LegacyDecisionAnchorObservationRuleCoverageRatio - (2d / 3d)) > 0.0001d
+            || loadBPlan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints != 67
+            || !string.Equals(loadBPlan.LegacyDecisionAnchorObservationRuleSummary, "decision anchor observation rules covered 2/3 (67pp); missing: ps-iteration", StringComparison.Ordinal)
+            || !loadBPlan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "gb-ratios-branch", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.RequiredPayloadFields.SequenceEqual(new[] { "GB", "θs" }, StringComparer.Ordinal)
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "GB", "θs" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0
+                && string.Equals(rule.Summary, "decision-anchor-observation:gb-ratios-branch covered by observed payload fields 'GB', 'θs'", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "correlation-refit", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.RequiredPayloadFields.SequenceEqual(new[] { "A", "B", "R" }, StringComparer.Ordinal)
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "A", "B", "R" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0
+                && string.Equals(rule.Summary, "decision-anchor-observation:correlation-refit covered by observed payload fields 'A', 'B', 'R'", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "ps-iteration", StringComparison.Ordinal)
+                && !rule.CoveredByObservedPayload
+                && rule.RequiredPayloadFields.SequenceEqual(new[] { "ResultDataList", "Ps" }, StringComparer.Ordinal)
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.SequenceEqual(new[] { "Ps" }, StringComparer.Ordinal)
+                && string.Equals(rule.Summary, "decision-anchor-observation:ps-iteration missing observed payload fields 'Ps'", StringComparison.Ordinal))
+            || loadBPlan.LegacyDecisionAnchorResolutions.Count != 3
+            || loadBPlan.ResolvedLegacyDecisionAnchorCount != 0
+            || loadBPlan.PartialLegacyDecisionAnchorCount != 2
+            || loadBPlan.MissingLegacyDecisionAnchorResolutionCount != 1
+            || Math.Abs(loadBPlan.LegacyDecisionAnchorResolutionCoverageRatio) > 0.0001d
+            || loadBPlan.LegacyDecisionAnchorResolutionCoveragePercentagePoints != 0
+            || !string.Equals(loadBPlan.LegacyDecisionAnchorResolutionSummary, "decision anchor resolutions resolved 0/3 (0pp); partial=2; missing=1; unresolved: gb-ratios-branch:partial, correlation-refit:partial, ps-iteration:missing", StringComparison.Ordinal)
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "gb-ratios-branch", StringComparison.Ordinal)
+                && !resolution.ResolvedByObservedPayload
+                && resolution.PartiallyResolvedByObservedPayload
+                && resolution.RequiredPayloadFields.SequenceEqual(new[] { "GB", "θs", "ratios" }, StringComparer.Ordinal)
+                && resolution.ObservedPayloadFields.SequenceEqual(new[] { "GB", "θs" }, StringComparer.Ordinal)
+                && resolution.MissingPayloadFields.SequenceEqual(new[] { "ratios" }, StringComparer.Ordinal)
+                && Math.Abs(resolution.CoverageRatio - (2d / 3d)) < 0.0001d
+                && resolution.CoveragePercentagePoints == 67
+                && string.Equals(resolution.ResolutionStage, "partial", StringComparison.Ordinal)
+                && string.Equals(resolution.Summary, "decision-anchor-resolution:gb-ratios-branch partial 2/3; missing 'ratios'", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "correlation-refit", StringComparison.Ordinal)
+                && !resolution.ResolvedByObservedPayload
+                && resolution.PartiallyResolvedByObservedPayload
+                && resolution.RequiredPayloadFields.SequenceEqual(new[] { "A", "B", "R", "bad-point-refit" }, StringComparer.Ordinal)
+                && resolution.ObservedPayloadFields.SequenceEqual(new[] { "A", "B", "R" }, StringComparer.Ordinal)
+                && resolution.MissingPayloadFields.SequenceEqual(new[] { "bad-point-refit" }, StringComparer.Ordinal)
+                && Math.Abs(resolution.CoverageRatio - 0.75d) < 0.0001d
+                && resolution.CoveragePercentagePoints == 75
+                && string.Equals(resolution.ResolutionStage, "partial", StringComparison.Ordinal)
+                && string.Equals(resolution.Summary, "decision-anchor-resolution:correlation-refit partial 3/4; missing 'bad-point-refit'", StringComparison.Ordinal))
+            || !loadBPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "ps-iteration", StringComparison.Ordinal)
+                && !resolution.ResolvedByObservedPayload
+                && !resolution.PartiallyResolvedByObservedPayload
+                && resolution.RequiredPayloadFields.SequenceEqual(new[] { "ResultDataList", "Ps", "cuC" }, StringComparer.Ordinal)
+                && resolution.ObservedPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                && resolution.MissingPayloadFields.SequenceEqual(new[] { "Ps", "cuC" }, StringComparer.Ordinal)
+                && Math.Abs(resolution.CoverageRatio - (1d / 3d)) < 0.0001d
+                && resolution.CoveragePercentagePoints == 33
+                && string.Equals(resolution.ResolutionStage, "missing", StringComparison.Ordinal)
+                && string.Equals(resolution.Summary, "decision-anchor-resolution:ps-iteration missing observed payload fields 'Ps', 'cuC'", StringComparison.Ordinal))
             || !string.Equals(loadBPlan.FormulaSignalSummary, "formula signals covered 0/3 (0pp); missing: 先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl，再用 Tx²-Pl 相关关系求附加损耗系数 A/B/R, 当 R<0.95 时执行一次删除坏点，再重新拟合 A/B/R, 依据 GB 版本切换 θs 与 ratios 口径，并生成 ResultDataList", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.LegacyAlgorithmRuleSummary, "legacy algorithm rules covered 0/3 (0pp); missing: GB1032_2012/TB_朝阳电机 使用 1.5/1.25/1/0.75/0.5/0.25 负载点，GB1032_2023 使用 1.25/1.15/1/0.75/0.5/0.25, 2012/2023 国标分支以 θw+25-θb 推导 θs，朝阳电机分支按每个负载点 θ1t/θa 单点计算 θs, 结果区会循环下调铜耗系数 cuC，直到所有负载点附加损耗 Ps 非负", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.LegacyDecisionAnchorSummary, "legacy decision anchors covered 0/3 (0pp); missing: GB 版本决定 ratios 负载点集与 θs 计算分支，B 法不能脱离 ratedParams.GB 运行, 当相关系数 R<0.95 时需先删坏点再重新拟合 A/B/R, 结果区会从 cuC=1 开始逐步下调，直到所有 Ps 非负，说明旧算法存在迭代收敛决策", StringComparison.Ordinal))
