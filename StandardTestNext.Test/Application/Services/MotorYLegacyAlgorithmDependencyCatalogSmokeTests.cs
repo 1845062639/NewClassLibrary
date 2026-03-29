@@ -300,7 +300,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
         }
 
         var bucketMap = loadBPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
-        if (bucketMap.Count != 11
+        if (bucketMap.Count != 12
             || !bucketMap.TryGetValue("upstream", out var upstreamBucket)
             || upstreamBucket.CoveredCount != 2
             || upstreamBucket.MissingCount != 0
@@ -328,7 +328,13 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !bucketMap.TryGetValue("legacy-decision-anchors", out var decisionAnchorBucket)
             || decisionAnchorBucket.RequiredCount != 3
             || decisionAnchorBucket.CoveredCount != 0
-            || decisionAnchorBucket.MissingCount != 3)
+            || decisionAnchorBucket.MissingCount != 3
+            || !bucketMap.TryGetValue("legacy-decision-anchor-resolutions", out var decisionResolutionBucket)
+            || decisionResolutionBucket.RequiredCount != 3
+            || decisionResolutionBucket.CoveredCount != 0
+            || decisionResolutionBucket.MissingCount != 3
+            || !decisionResolutionBucket.MissingItems.SequenceEqual(new[] { "gb-ratios-branch:partial", "correlation-refit:partial", "ps-iteration:missing" }, StringComparer.Ordinal)
+            || !string.Equals(decisionResolutionBucket.Summary, "decision anchor resolutions covered 0/3 (0pp); partial=2; missing=1; unresolved: gb-ratios-branch:partial, correlation-refit:partial, ps-iteration:missing", StringComparison.Ordinal))
         {
             throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: dependency bucket projection mismatch for LoadB.");
         }

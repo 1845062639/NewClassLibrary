@@ -664,13 +664,19 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
 
         var noLoadBuckets = noLoadPlan.DependencyBuckets.ToDictionary(x => x.BucketKey, StringComparer.Ordinal);
-        if (noLoadBuckets.Count != 11
+        if (noLoadBuckets.Count != 12
             || !noLoadBuckets.TryGetValue("intermediate-result-fields", out var noLoadIntermediateBucket)
             || noLoadIntermediateBucket.RequiredCount != 7
             || noLoadIntermediateBucket.CoveredCount != 0
             || noLoadIntermediateBucket.MissingCount != 7
             || !noLoadIntermediateBucket.MissingItems.SequenceEqual(new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" }, StringComparer.Ordinal)
-            || !string.Equals(noLoadIntermediateBucket.Summary, "result required fields covered 0/7 (0pp); missing: R0, θ0, Pcon, P0cu1, Pfw, Pfe, CoefficientOfPfe", StringComparison.Ordinal))
+            || !string.Equals(noLoadIntermediateBucket.Summary, "result required fields covered 0/7 (0pp); missing: R0, θ0, Pcon, P0cu1, Pfw, Pfe, CoefficientOfPfe", StringComparison.Ordinal)
+            || !noLoadBuckets.TryGetValue("legacy-decision-anchor-resolutions", out var noLoadDecisionResolutionBucket)
+            || noLoadDecisionResolutionBucket.RequiredCount != 3
+            || noLoadDecisionResolutionBucket.CoveredCount != 0
+            || noLoadDecisionResolutionBucket.MissingCount != 3
+            || !noLoadDecisionResolutionBucket.MissingItems.SequenceEqual(new[] { "rconverse-branch:missing", "pfw-fit-window:missing", "rated-regression-ready:missing" }, StringComparer.Ordinal)
+            || !string.Equals(noLoadDecisionResolutionBucket.Summary, "decision anchor resolutions covered 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test intermediate-result bucket mismatch for '{MotorYTestMethodCodes.NoLoad}'. bucketCount={noLoadBuckets.Count}, summary='{(noLoadBuckets.TryGetValue("intermediate-result-fields", out var bucket) ? bucket.Summary : "<missing>")}'");
         }

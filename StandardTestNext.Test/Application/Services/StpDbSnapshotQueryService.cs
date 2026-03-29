@@ -822,7 +822,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     structuredResultCoverage,
                     formulaCoverage,
                     ruleCoverage,
-                    decisionAnchorCoverage);
+                    decisionAnchorCoverage,
+                    decisionAnchorResolutions);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {

@@ -28,8 +28,11 @@ internal static class MotorYDependencyBucketSummaryFactory
         MotorYStructuredSignalCoverageSnapshot structuredResultCoverage,
         MotorYStructuredListCoverageSnapshot formulaCoverage,
         MotorYStructuredListCoverageSnapshot ruleCoverage,
-        MotorYStructuredListCoverageSnapshot decisionAnchorCoverage)
+        MotorYStructuredListCoverageSnapshot decisionAnchorCoverage,
+        IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
     {
+        var decisionAnchorResolutionBucket = CreateDecisionAnchorResolutionBucket(decisionAnchorResolutions);
+
         return new MotorYDependencyBucketSummarySnapshot[]
         {
             new()
@@ -185,7 +188,44 @@ internal static class MotorYDependencyBucketSummaryFactory
                 CoveredItems = decisionAnchorCoverage.CoveredItems,
                 MissingItems = decisionAnchorCoverage.MissingItems,
                 Summary = decisionAnchorCoverage.Summary
-            }
+            },
+            decisionAnchorResolutionBucket
+        };
+    }
+
+    private static MotorYDependencyBucketSummarySnapshot CreateDecisionAnchorResolutionBucket(IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
+    {
+        var resolved = decisionAnchorResolutions
+            .Where(x => x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var unresolved = decisionAnchorResolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => $"{x.AnchorKey}:{x.ResolutionStage}")
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var total = decisionAnchorResolutions.Count;
+        var resolvedCount = resolved.Length;
+        var partialCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload && !x.ResolvedByObservedPayload);
+        var missingCount = decisionAnchorResolutions.Count(x => string.Equals(x.ResolutionStage, "missing", StringComparison.Ordinal));
+        var summary = total == 0
+            ? "decision anchor resolutions covered 0/0 (100pp); no decision anchors defined"
+            : $"decision anchor resolutions covered {resolvedCount}/{total} ({CalculatePercentagePoints(resolvedCount, total)}pp); partial={partialCount}; missing={missingCount}; unresolved: {(unresolved.Length == 0 ? "none" : string.Join(", ", unresolved))}";
+
+        return new MotorYDependencyBucketSummarySnapshot
+        {
+            BucketKey = "legacy-decision-anchor-resolutions",
+            DisplayName = "旧算法决策锚点解析",
+            RequiredCount = total,
+            CoveredCount = resolvedCount,
+            MissingCount = total - resolvedCount,
+            CoverageRatio = CalculateRatio(resolvedCount, total),
+            CoveragePercentagePoints = CalculatePercentagePoints(resolvedCount, total),
+            RequiredItems = decisionAnchorResolutions.Select(x => x.AnchorKey).Distinct(StringComparer.Ordinal).ToArray(),
+            CoveredItems = resolved,
+            MissingItems = unresolved,
+            Summary = summary
         };
     }
 
