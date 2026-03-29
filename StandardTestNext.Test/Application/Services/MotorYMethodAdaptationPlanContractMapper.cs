@@ -106,6 +106,17 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             dependencyProfile?.LegacyDecisionAnchors,
             decisionAnchorEvidence.ObservedPayloadFields,
             "legacy decision anchors");
+        var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(decisionAnchorObservationRules);
+        var resolvedDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.ResolvedByObservedPayload);
+        var partialDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload);
+        var missingDecisionAnchorResolutionCount = decisionAnchorResolutions.Count - resolvedDecisionAnchorCount - partialDecisionAnchorCount;
+        var decisionAnchorResolutionCoverageRatio = decisionAnchorResolutions.Count == 0
+            ? 1d
+            : Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count, 4, MidpointRounding.AwayFromZero);
+        var decisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutions.Count == 0
+            ? 100
+            : (int)Math.Round((double)resolvedDecisionAnchorCount / decisionAnchorResolutions.Count * 100d, MidpointRounding.AwayFromZero);
+        var decisionAnchorResolutionSummary = MotorYDecisionAnchorResolutionFactory.BuildSummary(decisionAnchorResolutions);
         var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
         var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
         var rawSampleCountSummary = minimumRawSampleCount <= 0
@@ -353,15 +364,22 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyDecisionAnchorsObservedPayloadFields = decisionAnchorEvidence.ObservedPayloadFields,
             LegacyDecisionAnchorsObservedPayloadGaps = decisionAnchorObservationGaps.Select(MapEvidenceGap).ToArray(),
             LegacyDecisionAnchorObservationRules = decisionAnchorObservationRules.Select(MapDecisionAnchorObservationRule).ToArray(),
+            LegacyDecisionAnchorResolutions = decisionAnchorResolutions.Select(MapDecisionAnchorResolution).ToArray(),
             CoveredLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload),
             MissingLegacyDecisionAnchorObservationRuleCount = decisionAnchorObservationRules.Count(rule => !rule.CoveredByObservedPayload),
+            ResolvedLegacyDecisionAnchorCount = resolvedDecisionAnchorCount,
+            PartialLegacyDecisionAnchorCount = partialDecisionAnchorCount,
+            MissingLegacyDecisionAnchorResolutionCount = missingDecisionAnchorResolutionCount,
             LegacyDecisionAnchorObservationRuleCoverageRatio = decisionAnchorObservationRules.Count == 0
                 ? 1d
                 : Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count, 4, MidpointRounding.AwayFromZero),
             LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = decisionAnchorObservationRules.Count == 0
                 ? 100
                 : (int)Math.Round((double)decisionAnchorObservationRules.Count(rule => rule.CoveredByObservedPayload) / decisionAnchorObservationRules.Count * 100d, MidpointRounding.AwayFromZero),
+            LegacyDecisionAnchorResolutionCoverageRatio = decisionAnchorResolutionCoverageRatio,
+            LegacyDecisionAnchorResolutionCoveragePercentagePoints = decisionAnchorResolutionCoveragePercentagePoints,
             LegacyDecisionAnchorObservationRuleSummary = BuildDecisionAnchorObservationRuleSummary(decisionAnchorObservationRules),
+            LegacyDecisionAnchorResolutionSummary = decisionAnchorResolutionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = decisionAnchorEvidence.Summary,
             FormulaSignalSummary = formulaCoverage.Summary,
             LegacyAlgorithmRuleSummary = ruleCoverage.Summary,
@@ -464,6 +482,23 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .ToArray();
 
         return $"decision anchor observation rules covered {covered}/{rules.Count} ({percentagePoints}pp); missing: {(missing == 0 ? "none" : string.Join(", ", missingAnchorKeys))}";
+    }
+
+    private static MotorYDecisionAnchorResolutionContract MapDecisionAnchorResolution(MotorYDecisionAnchorResolution resolution)
+    {
+        return new MotorYDecisionAnchorResolutionContract
+        {
+            AnchorKey = resolution.AnchorKey,
+            ResolvedByObservedPayload = resolution.ResolvedByObservedPayload,
+            PartiallyResolvedByObservedPayload = resolution.PartiallyResolvedByObservedPayload,
+            RequiredPayloadFields = resolution.RequiredPayloadFields,
+            ObservedPayloadFields = resolution.ObservedPayloadFields,
+            MissingPayloadFields = resolution.MissingPayloadFields,
+            CoverageRatio = resolution.CoverageRatio,
+            CoveragePercentagePoints = resolution.CoveragePercentagePoints,
+            ResolutionStage = resolution.ResolutionStage,
+            Summary = resolution.Summary
+        };
     }
 
     private static MotorYDependencyBucketSummaryContract MapDependencyBucket(MotorYDependencyBucketSummarySnapshot snapshot)

@@ -356,6 +356,19 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 CoveredByObservedPayload = x.CoveredByObservedPayload,
                 Summary = x.Summary
             }).ToArray(),
+            LegacyDecisionAnchorObservationRules = snapshot.LegacyDecisionAnchorObservationRules.Select(MapDecisionAnchorObservationRule).ToArray(),
+            LegacyDecisionAnchorResolutions = snapshot.LegacyDecisionAnchorResolutions.Select(MapDecisionAnchorResolution).ToArray(),
+            CoveredLegacyDecisionAnchorObservationRuleCount = snapshot.CoveredLegacyDecisionAnchorObservationRuleCount,
+            MissingLegacyDecisionAnchorObservationRuleCount = snapshot.MissingLegacyDecisionAnchorObservationRuleCount,
+            ResolvedLegacyDecisionAnchorCount = snapshot.ResolvedLegacyDecisionAnchorCount,
+            PartialLegacyDecisionAnchorCount = snapshot.PartialLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorResolutionCount = snapshot.MissingLegacyDecisionAnchorResolutionCount,
+            LegacyDecisionAnchorObservationRuleCoverageRatio = snapshot.LegacyDecisionAnchorObservationRuleCoverageRatio,
+            LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = snapshot.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints,
+            LegacyDecisionAnchorResolutionCoverageRatio = snapshot.LegacyDecisionAnchorResolutionCoverageRatio,
+            LegacyDecisionAnchorResolutionCoveragePercentagePoints = snapshot.LegacyDecisionAnchorResolutionCoveragePercentagePoints,
+            LegacyDecisionAnchorObservationRuleSummary = snapshot.LegacyDecisionAnchorObservationRuleSummary,
+            LegacyDecisionAnchorResolutionSummary = snapshot.LegacyDecisionAnchorResolutionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = snapshot.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = snapshot.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = snapshot.LegacyAlgorithmRuleSummary,
@@ -377,6 +390,36 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Summary = x.Summary
             }).ToArray(),
             Distributions = snapshot.Distributions.Select(MapMotorYMethodDistribution).ToArray()
+        };
+    }
+
+    private static MotorYDecisionAnchorObservationRuleContract MapDecisionAnchorObservationRule(MotorYDecisionAnchorObservationRuleSnapshot snapshot)
+    {
+        return new MotorYDecisionAnchorObservationRuleContract
+        {
+            AnchorKey = snapshot.AnchorKey,
+            RequiredPayloadFields = snapshot.RequiredPayloadFields,
+            ObservedPayloadFields = snapshot.ObservedPayloadFields,
+            MissingPayloadFields = snapshot.MissingPayloadFields,
+            CoveredByObservedPayload = snapshot.CoveredByObservedPayload,
+            Summary = snapshot.Summary
+        };
+    }
+
+    private static MotorYDecisionAnchorResolutionContract MapDecisionAnchorResolution(MotorYDecisionAnchorResolutionSnapshot snapshot)
+    {
+        return new MotorYDecisionAnchorResolutionContract
+        {
+            AnchorKey = snapshot.AnchorKey,
+            ResolvedByObservedPayload = snapshot.ResolvedByObservedPayload,
+            PartiallyResolvedByObservedPayload = snapshot.PartiallyResolvedByObservedPayload,
+            RequiredPayloadFields = snapshot.RequiredPayloadFields,
+            ObservedPayloadFields = snapshot.ObservedPayloadFields,
+            MissingPayloadFields = snapshot.MissingPayloadFields,
+            CoverageRatio = snapshot.CoverageRatio,
+            CoveragePercentagePoints = snapshot.CoveragePercentagePoints,
+            ResolutionStage = snapshot.ResolutionStage,
+            Summary = snapshot.Summary
         };
     }
 

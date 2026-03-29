@@ -383,6 +383,39 @@ public static class TestRecordViewMapper
                 CoveredByObservedPayload = x.CoveredByObservedPayload,
                 Summary = x.Summary
             }).ToArray(),
+            LegacyDecisionAnchorObservationRules = contract.LegacyDecisionAnchorObservationRules.Select(x => new MotorYDecisionAnchorObservationRuleSnapshot
+            {
+                AnchorKey = x.AnchorKey,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoveredByObservedPayload = x.CoveredByObservedPayload,
+                Summary = x.Summary
+            }).ToArray(),
+            LegacyDecisionAnchorResolutions = contract.LegacyDecisionAnchorResolutions.Select(x => new MotorYDecisionAnchorResolutionSnapshot
+            {
+                AnchorKey = x.AnchorKey,
+                ResolvedByObservedPayload = x.ResolvedByObservedPayload,
+                PartiallyResolvedByObservedPayload = x.PartiallyResolvedByObservedPayload,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoverageRatio = x.CoverageRatio,
+                CoveragePercentagePoints = x.CoveragePercentagePoints,
+                ResolutionStage = x.ResolutionStage,
+                Summary = x.Summary
+            }).ToArray(),
+            CoveredLegacyDecisionAnchorObservationRuleCount = contract.CoveredLegacyDecisionAnchorObservationRuleCount,
+            MissingLegacyDecisionAnchorObservationRuleCount = contract.MissingLegacyDecisionAnchorObservationRuleCount,
+            ResolvedLegacyDecisionAnchorCount = contract.ResolvedLegacyDecisionAnchorCount,
+            PartialLegacyDecisionAnchorCount = contract.PartialLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorResolutionCount = contract.MissingLegacyDecisionAnchorResolutionCount,
+            LegacyDecisionAnchorObservationRuleCoverageRatio = contract.LegacyDecisionAnchorObservationRuleCoverageRatio,
+            LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = contract.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints,
+            LegacyDecisionAnchorResolutionCoverageRatio = contract.LegacyDecisionAnchorResolutionCoverageRatio,
+            LegacyDecisionAnchorResolutionCoveragePercentagePoints = contract.LegacyDecisionAnchorResolutionCoveragePercentagePoints,
+            LegacyDecisionAnchorObservationRuleSummary = contract.LegacyDecisionAnchorObservationRuleSummary,
+            LegacyDecisionAnchorResolutionSummary = contract.LegacyDecisionAnchorResolutionSummary,
             LegacyDecisionAnchorsObservedPayloadSummary = contract.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = contract.FormulaSignalSummary,
             LegacyAlgorithmRuleSummary = contract.LegacyAlgorithmRuleSummary,

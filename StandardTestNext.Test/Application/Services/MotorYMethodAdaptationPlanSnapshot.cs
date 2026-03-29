@@ -20,6 +20,20 @@ public sealed class MotorYDecisionAnchorObservationRuleSnapshot
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYDecisionAnchorResolutionSnapshot
+{
+    public string AnchorKey { get; init; } = string.Empty;
+    public bool ResolvedByObservedPayload { get; init; }
+    public bool PartiallyResolvedByObservedPayload { get; init; }
+    public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ObservedPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> MissingPayloadFields { get; init; } = Array.Empty<string>();
+    public double CoverageRatio { get; init; }
+    public int CoveragePercentagePoints { get; init; }
+    public string ResolutionStage { get; init; } = string.Empty;
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYLegacyUpstreamCodeDistributionSnapshot
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -185,11 +199,18 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<string> LegacyDecisionAnchorsObservedPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYObservedAlgorithmEvidenceGapSnapshot> LegacyDecisionAnchorsObservedPayloadGaps { get; init; } = Array.Empty<MotorYObservedAlgorithmEvidenceGapSnapshot>();
     public IReadOnlyList<MotorYDecisionAnchorObservationRuleSnapshot> LegacyDecisionAnchorObservationRules { get; init; } = Array.Empty<MotorYDecisionAnchorObservationRuleSnapshot>();
+    public IReadOnlyList<MotorYDecisionAnchorResolutionSnapshot> LegacyDecisionAnchorResolutions { get; init; } = Array.Empty<MotorYDecisionAnchorResolutionSnapshot>();
     public int CoveredLegacyDecisionAnchorObservationRuleCount { get; init; }
     public int MissingLegacyDecisionAnchorObservationRuleCount { get; init; }
+    public int ResolvedLegacyDecisionAnchorCount { get; init; }
+    public int PartialLegacyDecisionAnchorCount { get; init; }
+    public int MissingLegacyDecisionAnchorResolutionCount { get; init; }
     public double LegacyDecisionAnchorObservationRuleCoverageRatio { get; init; }
     public int LegacyDecisionAnchorObservationRuleCoveragePercentagePoints { get; init; }
+    public double LegacyDecisionAnchorResolutionCoverageRatio { get; init; }
+    public int LegacyDecisionAnchorResolutionCoveragePercentagePoints { get; init; }
     public string LegacyDecisionAnchorObservationRuleSummary { get; init; } = string.Empty;
+    public string LegacyDecisionAnchorResolutionSummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
     public string LegacyAlgorithmRuleSummary { get; init; } = string.Empty;

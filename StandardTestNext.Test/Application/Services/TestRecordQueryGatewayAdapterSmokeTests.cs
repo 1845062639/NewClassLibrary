@@ -542,7 +542,14 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || noLoadPlan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints != 0
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorSummary, "legacy decision anchors covered 0/8 (0pp); missing: CoefficientOfPfe, I0, P0, Pcu, Pfe, Pfw, RConverseType, ΔI0; observed: none", StringComparison.Ordinal)
             || !string.Equals(noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary, "legacy decision anchor observed payload fields observed 0/8 (0pp); missing: CoefficientOfPfe, I0, P0, Pcu, Pfe, Pfw, RConverseType, ΔI0; observed: none", StringComparison.Ordinal)
-            || !string.Equals(noLoadPlan.LegacyDecisionAnchorObservationRuleSummary, "decision-anchor observation rules covered 0/3 (0pp); missing: rconverse-branch, pfw-fit-window, rated-regression-ready; observed: none", StringComparison.Ordinal))
+            || noLoadPlan.LegacyDecisionAnchorResolutions.Count != 3
+            || noLoadPlan.ResolvedLegacyDecisionAnchorCount != 0
+            || noLoadPlan.PartialLegacyDecisionAnchorCount != 0
+            || noLoadPlan.MissingLegacyDecisionAnchorResolutionCount != 3
+            || noLoadPlan.LegacyDecisionAnchorResolutionCoverageRatio != 0d
+            || noLoadPlan.LegacyDecisionAnchorResolutionCoveragePercentagePoints != 0
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorObservationRuleSummary, "decision anchor observation rules covered 0/3 (0pp); missing: rconverse-branch, pfw-fit-window, rated-regression-ready", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.LegacyDecisionAnchorResolutionSummary, "decision anchor resolutions resolved 0/3 (0pp); partial=0; missing=3; unresolved: rconverse-branch:missing, pfw-fit-window:missing, rated-regression-ready:missing", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test decision-anchor summary mismatch for '{MotorYTestMethodCodes.NoLoad}'. anchors='{noLoadPlan.LegacyDecisionAnchorSummary}', observed='{noLoadPlan.LegacyDecisionAnchorsObservedPayloadSummary}', rules='{noLoadPlan.LegacyDecisionAnchorObservationRuleSummary}'");
         }
