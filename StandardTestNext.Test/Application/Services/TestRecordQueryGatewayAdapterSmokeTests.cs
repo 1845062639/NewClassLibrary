@@ -20,6 +20,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
+        ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmRoutePerMotorYItemWithoutBuildProfile();
     }
 
@@ -416,7 +417,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || loadBPlan.RecommendedLegacyCodeCount != 1
             || Math.Abs(loadBPlan.RecommendedLegacyCodeShare - 0.5d) > 0.0001d)
         {
-            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected canonical alias B法负载试验/1/1.0, actual={loadBPlan.RecommendedLegacyCode}/{loadBPlan.RecommendedLegacyCodeCount}/{loadBPlan.RecommendedLegacyCodeShare}.");
+            throw new InvalidOperationException($"Motor_Y app alias preference smoke test failed: expected canonical alias B法负载试验/1/0.5, actual={loadBPlan.RecommendedLegacyCode}/{loadBPlan.RecommendedLegacyCodeCount}/{loadBPlan.RecommendedLegacyCodeShare}.");
         }
 
         if (loadBPlan.LegacyCodeDistributions.Count != 2)
@@ -1156,7 +1157,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         var distribution = plan.Distributions.Select(x => x.MethodValue).ToArray();
         if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
         {
-            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test distribution ordering mismatch for '{canonicalCode}'.");
+            throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test distribution ordering mismatch for '{canonicalCode}'. actual=[{string.Join(", ", distribution)}]");
         }
     }
 
@@ -1441,6 +1442,69 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && string.Equals(resolution.SuggestedNextStepSummary, "先补B法热态承接字段：θb, θw", StringComparison.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y LoadB decision-anchor query smoke test mismatch. next='{loadBPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{loadBPlan.SuggestedDecisionAnchorNextStepSummary}'");
+        }
+    }
+
+    private static void ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T00:25:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-LOCKEDROTOR-DECISION-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LockedRotor,
+                    MethodCode = "LockedRotor:11",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 11,
+                      "DataList": [
+                        { "Uk": 120, "Ik": 18, "Pk": 1500, "Tk": 8, "Pkcu1": 400, "Pfe": 50, "ns": 1500 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y LockedRotor decision-anchor smoke test returned null detail.");
+
+        var lockedRotorPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal));
+        if (!lockedRotorPlan.SuggestedDecisionAnchorNextSteps.SequenceEqual(new[]
+            {
+                "先补堵转 RCalType/R1s 电阻分支字段：R1s, RCalType",
+                "先补堵转 TorqueCalType 分支字段：TorqueCalType",
+                "先补堵转电压拟合分支基准：Un"
+            }, StringComparer.Ordinal)
+            || !string.Equals(lockedRotorPlan.SuggestedDecisionAnchorNextStepSummary, "先补堵转 RCalType/R1s 电阻分支字段：R1s, RCalType; 先补堵转 TorqueCalType 分支字段：TorqueCalType; 先补堵转电压拟合分支基准：Un", StringComparison.Ordinal)
+            || !string.Equals(lockedRotorPlan.LegacyDecisionAnchorNextActionSummary, "decision anchor next actions: need LockedRotor RCalType/R1s fields R1s, RCalType; need LockedRotor TorqueCalType fields TorqueCalType; need LockedRotor voltage-fit branch fields Un", StringComparison.Ordinal)
+            || !lockedRotorPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "rcal-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "堵转 RCalType/R1s 电阻分支字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "R1s", "RCalType" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补堵转 RCalType/R1s 电阻分支字段：R1s, RCalType", StringComparison.Ordinal))
+            || !lockedRotorPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "torquecal-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "legacy-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "堵转 TorqueCalType 分支字段", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "TorqueCalType" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补堵转 TorqueCalType 分支字段：TorqueCalType", StringComparison.Ordinal))
+            || !lockedRotorPlan.LegacyDecisionAnchorResolutions.Any(resolution => string.Equals(resolution.AnchorKey, "voltage-fit-branch", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepCategory, "fit-window", StringComparison.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepFocus, "堵转电压拟合分支基准", StringComparison.Ordinal)
+                && resolution.SuggestedNextStepFields.SequenceEqual(new[] { "Un" }, StringComparer.Ordinal)
+                && string.Equals(resolution.SuggestedNextStepSummary, "先补堵转电压拟合分支基准：Un", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y LockedRotor decision-anchor query smoke test mismatch. next='{lockedRotorPlan.LegacyDecisionAnchorNextActionSummary}', suggested='{lockedRotorPlan.SuggestedDecisionAnchorNextStepSummary}'");
         }
     }
 

@@ -285,6 +285,15 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             LegacyCodeDistributions = legacyCodeSelection.Distributions
                 .Select(MapLegacyCodeDistribution)
                 .ToArray(),
+            Distributions = snapshot.Distributions
+                .Select(x => new MotorYMethodDistributionContract
+                {
+                    MethodValue = x.MethodValue,
+                    Count = x.Count,
+                    Share = x.Share,
+                    Profile = profileMapper(x.Route)
+                })
+                .ToArray(),
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
             UpstreamLegacyAliases = upstreamLegacyAliases,

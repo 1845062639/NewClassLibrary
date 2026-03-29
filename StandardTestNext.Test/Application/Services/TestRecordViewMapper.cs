@@ -103,6 +103,7 @@ public static class TestRecordViewMapper
                         Profile = methodGroup.First()
                     })
                     .OrderByDescending(x => x.Count)
+                    .ThenBy(x => x.Profile.IsBaselineMethod ? 1 : 0)
                     .ThenBy(x => x.MethodValue)
                     .ToArray();
                 var dominant = methodGroups[0];
@@ -178,7 +179,8 @@ public static class TestRecordViewMapper
         var candidates = new List<string>();
 
         if (!string.IsNullOrWhiteSpace(item.DisplayName)
-            && !string.Equals(item.DisplayName, canonicalCode, StringComparison.Ordinal))
+            && !string.Equals(item.DisplayName, canonicalCode, StringComparison.Ordinal)
+            && string.Equals(MotorYLegacyItemCodeNormalizer.Normalize(item.DisplayName), canonicalCode, StringComparison.Ordinal))
         {
             candidates.Add(item.DisplayName);
         }

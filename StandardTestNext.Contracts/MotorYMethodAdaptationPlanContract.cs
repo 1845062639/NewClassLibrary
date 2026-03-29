@@ -80,6 +80,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public double RecommendedLegacyCodeShare { get; init; }
     public string LegacyCodeSelectionSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYLegacyCodeDistributionContract> LegacyCodeDistributions { get; init; } = Array.Empty<MotorYLegacyCodeDistributionContract>();
+    public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
     public bool RequiresRatedParams { get; init; }
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyDictionary<string, IReadOnlyList<string>> UpstreamLegacyAliases { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
@@ -243,5 +244,4 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string SelectedMethodSummary { get; init; } = string.Empty;
     public string BaselineDominantComparisonSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYDependencyBucketSummaryContract> DependencyBuckets { get; init; } = Array.Empty<MotorYDependencyBucketSummaryContract>();
-    public IReadOnlyList<MotorYMethodDistributionContract> Distributions { get; init; } = Array.Empty<MotorYMethodDistributionContract>();
 }
