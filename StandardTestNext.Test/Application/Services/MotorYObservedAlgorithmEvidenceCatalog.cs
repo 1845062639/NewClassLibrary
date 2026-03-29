@@ -33,6 +33,29 @@ internal sealed class MotorYDecisionAnchorObservationRule
 
 internal static class MotorYObservedAlgorithmEvidenceCatalog
 {
+    private static readonly IReadOnlyDictionary<string, IReadOnlyDictionary<string, string[]>> DecisionAnchorObservedFieldAliasesByCanonicalCode =
+        new Dictionary<string, IReadOnlyDictionary<string, string[]>>(StringComparer.Ordinal)
+        {
+            [MotorYTestMethodCodes.DcResistance] = new Dictionary<string, string[]>(StringComparer.Ordinal),
+            [MotorYTestMethodCodes.NoLoad] = new Dictionary<string, string[]>(StringComparer.Ordinal),
+            [MotorYTestMethodCodes.HeatRun] = new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["firstSecondsInterval"] = new[] { "firstSecondsInterval", "Pn" }
+            },
+            [MotorYTestMethodCodes.LoadA] = new Dictionary<string, string[]>(StringComparer.Ordinal),
+            [MotorYTestMethodCodes.LoadB] = new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["ratios"] = new[] { "ratios", "GB", "θs", "ResultDataList" },
+                ["bad-point-refit"] = new[] { "bad-point-refit", "A", "B", "R" },
+                ["cuC"] = new[] { "cuC", "Ps", "ResultDataList" }
+            },
+            [MotorYTestMethodCodes.LockedRotor] = new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["TorqueCalType"] = new[] { "TorqueCalType", "Ikn", "Pkn", "Tkn" },
+                ["RCalType"] = new[] { "RCalType", "R1s", "R1c", "θ1c" }
+            }
+        };
+
     private static readonly IReadOnlyDictionary<string, string[]> FormulaSignalObservedFieldsByCanonicalCode =
         new Dictionary<string, string[]>(StringComparer.Ordinal)
         {
@@ -114,11 +137,15 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             .Distinct(StringComparer.Ordinal)
             .ToArray();
 
+        var aliases = DecisionAnchorObservedFieldAliasesByCanonicalCode.TryGetValue(canonicalCode, out var aliasMap)
+            ? aliasMap
+            : new Dictionary<string, string[]>(StringComparer.Ordinal);
+
         return rules
             .Select(rule =>
             {
                 var matched = rule.RequiredPayloadFields
-                    .Where(field => observed.Contains(field, StringComparer.Ordinal))
+                    .Where(field => IsDecisionAnchorFieldObserved(field, observed, aliases))
                     .OrderBy(field => field, StringComparer.Ordinal)
                     .ToArray();
                 var missing = rule.RequiredPayloadFields
@@ -158,6 +185,20 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
                 Summary = rule.Summary
             })
             .ToArray();
+    }
+
+    private static bool IsDecisionAnchorFieldObserved(
+        string requiredField,
+        IReadOnlyList<string> observedFields,
+        IReadOnlyDictionary<string, string[]> aliases)
+    {
+        if (observedFields.Contains(requiredField, StringComparer.Ordinal))
+        {
+            return true;
+        }
+
+        return aliases.TryGetValue(requiredField, out var candidates)
+            && candidates.Any(candidate => observedFields.Contains(candidate, StringComparer.Ordinal));
     }
 
     private static MotorYObservedAlgorithmEvidenceSnapshot Build(
