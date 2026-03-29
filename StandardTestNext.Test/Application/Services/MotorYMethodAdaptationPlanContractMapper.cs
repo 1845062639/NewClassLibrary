@@ -95,6 +95,27 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             dependencyProfile?.LegacyDecisionAnchors,
             decisionAnchorEvidence.ObservedPayloadFields,
             "legacy decision anchors");
+        var minimumRawSampleCount = dependencyProfile?.MinimumRawSampleCount ?? 0;
+        var rawSampleCountReady = rawDataSignalCoverage.RawSampleCount >= minimumRawSampleCount;
+        var rawSampleCountSummary = minimumRawSampleCount <= 0
+            ? $"raw sample count requirement not set; observed {rawDataSignalCoverage.RawSampleCount}"
+            : rawSampleCountReady
+                ? $"raw sample count ready {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}"
+                : $"raw sample count insufficient {rawDataSignalCoverage.RawSampleCount}/{minimumRawSampleCount}";
+        var minimumStructuredPayloadSampleCount = dependencyProfile?.MinimumStructuredPayloadSampleCount ?? 0;
+        var structuredPayloadSampleCountReady = structuredPayloadCoverage.SampleCount >= minimumStructuredPayloadSampleCount;
+        var structuredPayloadSampleCountSummary = minimumStructuredPayloadSampleCount <= 0
+            ? $"structured payload sample count requirement not set; observed {structuredPayloadCoverage.SampleCount}"
+            : structuredPayloadSampleCountReady
+                ? $"structured payload sample count ready {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}"
+                : $"structured payload sample count insufficient {structuredPayloadCoverage.SampleCount}/{minimumStructuredPayloadSampleCount}";
+        var minimumStructuredResultSampleCount = dependencyProfile?.MinimumStructuredResultSampleCount ?? 0;
+        var structuredResultSampleCountReady = structuredResultCoverage.SampleCount >= minimumStructuredResultSampleCount;
+        var structuredResultSampleCountSummary = minimumStructuredResultSampleCount <= 0
+            ? $"structured result sample count requirement not set; observed {structuredResultCoverage.SampleCount}"
+            : structuredResultSampleCountReady
+                ? $"structured result sample count ready {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}"
+                : $"structured result sample count insufficient {structuredResultCoverage.SampleCount}/{minimumStructuredResultSampleCount}";
         var observedAlgorithmInputFields = coverage.CoveredRequiredPayloadFields
             .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
             .Concat(resultCoverage.CoveredRequiredResultFields)
@@ -133,7 +154,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             && requiredResultFieldsReady
             && requiredIntermediateResultFieldsReady
             && rawDataSignalsReady
-            && structuredSignalsReady;
+            && structuredSignalsReady
+            && rawSampleCountReady
+            && structuredPayloadSampleCountReady
+            && structuredResultSampleCountReady;
         var legacyAlgorithmInputReadinessSummary = BuildLegacyAlgorithmInputReadinessSummary(
             upstream,
             coverage,
@@ -254,7 +278,13 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             AlgorithmInputFieldCoveragePercentagePoints = algorithmInputFieldCoveragePercentagePoints,
             AlgorithmInputFieldCoverageSummary = algorithmInputFieldCoverageSummary,
             RawDataSignalsReady = rawDataSignalsReady,
+            MinimumRawSampleCount = minimumRawSampleCount,
+            RawSampleCountReady = rawSampleCountReady,
+            RawSampleCountReadinessSummary = rawSampleCountSummary,
             RequiredStructuredPayloadSignals = dependencyProfile?.RequiredStructuredPayloadSignals ?? Array.Empty<string>(),
+            MinimumStructuredPayloadSampleCount = minimumStructuredPayloadSampleCount,
+            StructuredPayloadSampleCountReady = structuredPayloadSampleCountReady,
+            StructuredPayloadSampleCountReadinessSummary = structuredPayloadSampleCountSummary,
             ObservedStructuredPayloadSignals = structuredPayloadCoverage.ObservedSignals,
             MissingStructuredPayloadSignals = structuredPayloadCoverage.MissingSignals,
             StructuredPayloadSignalCoveredCount = structuredPayloadCoverage.CoveredSignalCount,
@@ -265,6 +295,9 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             StructuredPayloadSignalCoveragePercentagePoints = structuredPayloadCoverage.CoveragePercentagePoints,
             StructuredPayloadSignalCoverageSummary = structuredPayloadCoverage.Summary,
             RequiredStructuredResultSignals = dependencyProfile?.RequiredStructuredResultSignals ?? Array.Empty<string>(),
+            MinimumStructuredResultSampleCount = minimumStructuredResultSampleCount,
+            StructuredResultSampleCountReady = structuredResultSampleCountReady,
+            StructuredResultSampleCountReadinessSummary = structuredResultSampleCountSummary,
             ObservedStructuredResultSignals = structuredResultCoverage.ObservedSignals,
             MissingStructuredResultSignals = structuredResultCoverage.MissingSignals,
             StructuredResultSignalCoveredCount = structuredResultCoverage.CoveredSignalCount,
@@ -341,9 +374,19 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var structuredPayloadStatus = structuredPayloadCoverage.Summary;
         var structuredResultStatus = structuredResultCoverage.Summary;
 
+        var rawSampleStatus = rawDataCoverage.RawSampleCount <= 0
+            ? "raw sample count observed 0"
+            : $"raw sample count observed {rawDataCoverage.RawSampleCount}";
+        var structuredPayloadSampleStatus = structuredPayloadCoverage.SampleCount <= 0
+            ? "structured payload sample count observed 0"
+            : $"structured payload sample count observed {structuredPayloadCoverage.SampleCount}";
+        var structuredResultSampleStatus = structuredResultCoverage.SampleCount <= 0
+            ? "structured result sample count observed 0"
+            : $"structured result sample count observed {structuredResultCoverage.SampleCount}";
+
         return legacyAlgorithmInputsReady
-            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}"
-            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {structuredPayloadStatus}; {structuredResultStatus}";
+            ? $"legacy algorithm inputs ready; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}"
+            : $"legacy algorithm inputs incomplete; {upstreamStatus}; {payloadStatus}; {ratedStatus}; {resultStatus}; {intermediateResultStatus}; {rawDataStatus}; {rawSampleStatus}; {structuredPayloadStatus}; {structuredPayloadSampleStatus}; {structuredResultStatus}; {structuredResultSampleStatus}";
     }
 
     private static MotorYLegacyUpstreamCodeDistributionContract MapUpstreamLegacyCodeDistribution(MotorYLegacyUpstreamCodeDistributionSnapshot snapshot)

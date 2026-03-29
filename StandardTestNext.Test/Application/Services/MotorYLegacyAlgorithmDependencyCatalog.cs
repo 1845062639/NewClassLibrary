@@ -19,6 +19,9 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> MissingUpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredStructuredResultSignals { get; init; } = Array.Empty<string>();
+    public int MinimumRawSampleCount { get; init; }
+    public int MinimumStructuredPayloadSampleCount { get; init; }
+    public int MinimumStructuredResultSampleCount { get; init; }
     public IReadOnlyList<string> FormulaSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmRules { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyDecisionAnchors { get; init; } = Array.Empty<string>();
@@ -63,6 +66,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "R1", "θ1c" },
                 RequiredStructuredPayloadSignals = new[] { "Ruv", "Rvw", "Rwu" },
                 RequiredStructuredResultSignals = new[] { "R1", "θ1c" },
+                MinimumRawSampleCount = 0,
+                MinimumStructuredPayloadSampleCount = 1,
+                MinimumStructuredResultSampleCount = 1,
                 FormulaSignals = new[]
                 {
                     "输出 R1/θ1c 作为空载、热试验等后续算法入口的基础状态量",
@@ -93,6 +99,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" },
                 RequiredStructuredPayloadSignals = new[] { "DataList.U0", "DataList.I0", "DataList.P0", "DataList.P0cu1", "DataList.Pcon", "DataList.Pfe", "DataList.n0", "DataList.T0" },
                 RequiredStructuredResultSignals = new[] { "P0", "I0", "ΔI0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" },
+                MinimumRawSampleCount = 0,
+                MinimumStructuredPayloadSampleCount = 3,
+                MinimumStructuredResultSampleCount = 1,
                 FormulaSignals = new[]
                 {
                     "按 R0/R1c/K1/θ1c 反推 θ0，或反向由 θ0 推算 R0",
@@ -126,6 +135,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "firstSecondsInterval", "Rw", "Rn", "Rws", "θw", "θs", "θb" },
                 RequiredStructuredPayloadSignals = new[] { "Data1List.Time", "Data1List.P1", "Data1List.θ1", "Data1List.AmbientTemperature", "Data2List.Time", "Data2List.R" },
                 RequiredStructuredResultSignals = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
+                MinimumRawSampleCount = 0,
+                MinimumStructuredPayloadSampleCount = 2,
+                MinimumStructuredResultSampleCount = 1,
                 FormulaSignals = new[]
                 {
                     "按额定功率 Pn 决定第一测量时间间隔 firstSecondsInterval（30/90/120s）",
@@ -159,6 +171,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "P2x", "η" },
                 RequiredStructuredPayloadSignals = new[] { "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "ResultDataList.P2", "ResultDataList.η" },
                 RequiredStructuredResultSignals = new[] { "Pcu1", "Pcu2", "η", "ResultDataList" },
+                MinimumRawSampleCount = 3,
+                MinimumStructuredPayloadSampleCount = 3,
+                MinimumStructuredResultSampleCount = 5,
                 FormulaSignals = new[]
                 {
                     "逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx，再折算到 θa 条件下得到 Pcu1x/Pcu2x/Sx/Nx/P2x/η",
@@ -192,6 +207,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl", "A", "B", "R", "Ps", "cuC", "θs" },
                 RequiredStructuredPayloadSignals = new[] { "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "RawDataList.θa", "RawDataList.Pl", "ResultDataList.P2", "ResultDataList.Ps" },
                 RequiredStructuredResultSignals = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
+                MinimumRawSampleCount = 3,
+                MinimumStructuredPayloadSampleCount = 3,
+                MinimumStructuredResultSampleCount = 6,
                 FormulaSignals = new[]
                 {
                     "先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl，再用 Tx²-Pl 相关关系求附加损耗系数 A/B/R",
@@ -225,6 +243,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiredIntermediateResultFields = new[] { "θ1s", "R", "Pkcu1", "Pfe", "ns", "Tk", "Ikn", "Pkn", "Tkn" },
                 RequiredStructuredPayloadSignals = new[] { "DataList.Uk", "DataList.Ik", "DataList.Pk", "DataList.Tk", "DataList.Pkcu1", "DataList.Pfe", "DataList.ns" },
                 RequiredStructuredResultSignals = new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" },
+                MinimumRawSampleCount = 0,
+                MinimumStructuredPayloadSampleCount = 3,
+                MinimumStructuredResultSampleCount = 1,
                 FormulaSignals = new[]
                 {
                     "逐点计算 θ1s/R/Pkcu1/Pfe/ns/Tk，再外推/回归得到 Ikn/Pkn/Tkn",

@@ -112,6 +112,15 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string AlgorithmInputFieldCoverageSummary { get; init; } = string.Empty;
     public bool RawDataSignalsReady { get; init; }
     public IReadOnlyList<string> RequiredStructuredPayloadSignals { get; init; } = Array.Empty<string>();
+    public int MinimumRawSampleCount { get; init; }
+    public bool RawSampleCountReady { get; init; }
+    public string RawSampleCountReadinessSummary { get; init; } = string.Empty;
+    public int MinimumStructuredPayloadSampleCount { get; init; }
+    public bool StructuredPayloadSampleCountReady { get; init; }
+    public string StructuredPayloadSampleCountReadinessSummary { get; init; } = string.Empty;
+    public int MinimumStructuredResultSampleCount { get; init; }
+    public bool StructuredResultSampleCountReady { get; init; }
+    public string StructuredResultSampleCountReadinessSummary { get; init; } = string.Empty;
     public IReadOnlyList<string> ObservedStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> MissingStructuredPayloadSignals { get; init; } = Array.Empty<string>();
     public int StructuredPayloadSignalCoveredCount { get; init; }
