@@ -110,6 +110,52 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             ]
         };
 
+        var heatRunDecisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
+            MotorYTestMethodCodes.HeatRun,
+            new[] { "HotStateType", "GB", "Pn", "Rw", "θb", "θw" },
+            null);
+
+        if (heatRunDecisionAnchorObservationRules.Count != 3
+            || !heatRunDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "first-seconds-interval", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "Pn" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0)
+            || !heatRunDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "hot-state-branch", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "HotStateType" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0)
+            || !heatRunDecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "gb-temperature-branch", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "GB", "Rn", "θb", "θs", "θw" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0
+                && string.Equals(rule.Summary, "decision-anchor-observation:gb-temperature-branch covered by observed payload fields 'GB', 'Rn', 'θb', 'θs', 'θw'", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor observation alias projection mismatch for HeatRun. actual=[{string.Join(" | ", heatRunDecisionAnchorObservationRules.Select(rule => $"{rule.AnchorKey}:{rule.CoveredByObservedPayload}:{string.Join(",", rule.ObservedPayloadFields)}:{string.Join(",", rule.MissingPayloadFields)}"))}]");
+        }
+
+        var loadADecisionAnchorObservationRules = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationRules(
+            MotorYTestMethodCodes.LoadA,
+            new[] { "CoefficientOfPfe", "Pfw", "ResultDataList", "θa" },
+            null);
+
+        if (loadADecisionAnchorObservationRules.Count != 3
+            || !loadADecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "upstream-ready", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "CoefficientOfPfe", "Pfw", "θa" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0)
+            || !loadADecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "rated-load-fit-grid", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "ResultDataList" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0)
+            || !loadADecisionAnchorObservationRules.Any(rule => string.Equals(rule.AnchorKey, "payload-rated-quantity-ready", StringComparison.Ordinal)
+                && rule.CoveredByObservedPayload
+                && rule.ObservedPayloadFields.SequenceEqual(new[] { "Pcu1", "Pcu2", "η" }, StringComparer.Ordinal)
+                && rule.MissingPayloadFields.Count == 0
+                && string.Equals(rule.Summary, "decision-anchor-observation:payload-rated-quantity-ready covered by observed payload fields 'Pcu1', 'Pcu2', 'η'", StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor observation alias projection mismatch for LoadA. actual=[{string.Join(" | ", loadADecisionAnchorObservationRules.Select(rule => $"{rule.AnchorKey}:{rule.CoveredByObservedPayload}:{string.Join(",", rule.ObservedPayloadFields)}:{string.Join(",", rule.MissingPayloadFields)}"))}]");
+        }
+
         var loadBDecisionAnchorObservationGaps = MotorYObservedAlgorithmEvidenceCatalog.BuildDecisionAnchorObservationGaps(
             MotorYTestMethodCodes.LoadB,
             new[] { "A", "B", "GB", "R", "ResultDataList", "θb", "θs", "θw" },

@@ -40,9 +40,16 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             [MotorYTestMethodCodes.NoLoad] = new Dictionary<string, string[]>(StringComparer.Ordinal),
             [MotorYTestMethodCodes.HeatRun] = new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
-                ["firstSecondsInterval"] = new[] { "firstSecondsInterval", "Pn" }
+                ["firstSecondsInterval"] = new[] { "firstSecondsInterval", "Pn" },
+                ["Rn"] = new[] { "Rn", "Rw" },
+                ["θs"] = new[] { "θs", "θw" }
             },
-            [MotorYTestMethodCodes.LoadA] = new Dictionary<string, string[]>(StringComparer.Ordinal),
+            [MotorYTestMethodCodes.LoadA] = new Dictionary<string, string[]>(StringComparer.Ordinal)
+            {
+                ["Pcu1"] = new[] { "Pcu1", "ResultDataList" },
+                ["Pcu2"] = new[] { "Pcu2", "ResultDataList" },
+                ["η"] = new[] { "η", "ResultDataList" }
+            },
             [MotorYTestMethodCodes.LoadB] = new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
                 ["ratios"] = new[] { "ratios", "GB", "θs", "ResultDataList" },
