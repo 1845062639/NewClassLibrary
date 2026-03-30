@@ -475,6 +475,8 @@ public static class TestBootstrapFormattingSmokeTests
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
                     AlgorithmFamilies = new[] { "LoadB" },
                     MethodKeys = new[] { "LoadB:5" },
+                    LegacyEnumNames = new[] { "Method_Motor_Y.B法负载试验" },
+                    LegacyFormNames = new[] { "FrmMotor_Y_Load_B" },
                     AnchorKeys = new[] { "gb-temperature-branch" },
                     SuggestedNextStepPriorities = new[] { "blocking" },
                     SuggestedNextStepFocuses = new[] { "热态分支" },
@@ -483,7 +485,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:algo-entries=none:dominant-algo=none:source-sections=none:source-ranges=none:dominant-source=none:forms=none:form-ranges=none:dominant-form=none:upstream=none:upstream-legacy=none:upstream-hints=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:legacy-enums=Method_Motor_Y.B法负载试验:legacy-forms=FrmMotor_Y_Load_B:algo-entries=none:dominant-algo=none:source-sections=none:source-ranges=none:dominant-source=none:forms=none:form-ranges=none:dominant-form=none:upstream=none:upstream-legacy=none:upstream-hints=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }

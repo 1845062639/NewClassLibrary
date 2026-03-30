@@ -165,6 +165,8 @@ public sealed class MotorYPrimaryFieldFocusContract
     public IReadOnlyList<string> SettingsMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmEntries { get; init; } = Array.Empty<string>();
     public string DominantLegacyAlgorithmEntry { get; init; } = string.Empty;
+    public IReadOnlyList<string> LegacyEnumNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LegacyFormNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SourceSections { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SourceRanges { get; init; } = Array.Empty<string>();
     public string DominantSourceSection { get; init; } = string.Empty;
