@@ -11,6 +11,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
         ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview();
         ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
+        ShouldExposeRouteSharesInCliPrimaryFieldFocusPreview();
         ShouldFormatAlgorithmFamilyPrimaryFieldFocuses();
         ShouldExposeAlgorithmFamilyPrimaryFieldFocusesInCliPlanPreview();
         ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
@@ -223,6 +224,70 @@ public static class TestBootstrapFormattingSmokeTests
         if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:source-sections=pfw-fit-window/pfw-iteration:source-ranges=L300-L320/L120-L150:forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:form-ranges=L410/L263:upstream=MotorY.HeatRun/MotorY.NoLoad:upstream-hints=需要热试验回填 Pfw/空载主链直接产出 Pfw:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldExposeRouteSharesInCliPrimaryFieldFocusPreview()
+    {
+        var plan = new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = MotorYTestMethodCodes.NoLoad,
+            SelectionStrategy = "baseline",
+            AlgorithmEntry = "Calc_NoLoad",
+            SettingsMethodName = "空载试验",
+            SelectionReason = "smoke",
+            RawSampleCountReady = true,
+            RawDataSampleCount = 3,
+            MinimumRawSampleCount = 1,
+            StructuredPayloadSampleCountReady = true,
+            StructuredPayloadSampleCount = 2,
+            MinimumStructuredPayloadSampleCount = 1,
+            StructuredResultSampleCountReady = true,
+            StructuredResultSampleCount = 2,
+            MinimumStructuredResultSampleCount = 1,
+            CrossPlanDecisionAnchorPrimaryFieldSummary = "cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)",
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "GB",
+                    Count = 2,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 0.7d,
+                    BaselineCount = 1,
+                    BaselineShare = 0.5d,
+                    DominantCount = 2,
+                    DominantShare = 1d,
+                    SelectedCount = 2,
+                    SelectedShare = 1d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    AlgorithmFamilies = new[] { "LoadB", "NoLoad" },
+                    MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
+                    LegacyMethodNames = new[] { "B法负载试验", "空载试验" },
+                    SettingsMethodNames = new[] { "B法负载试验", "空载试验" },
+                    LegacyAlgorithmEntries = new[] { "Calc_Load_B", "Calc_NoLoad" },
+                    UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad },
+                    UpstreamSummaryHints = new[] { "需要热试验提供 GB 校核", "空载主链直接参与 GB 比较" },
+                    SuggestedNextStepPriorities = new[] { "blocking", "decision-branch" },
+                    SuggestedNextStepFocuses = new[] { "旧算法GB分支", "旧算法GB比较" },
+                    Summary = "cross-plan primary field GB appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=旧算法GB分支, 旧算法GB比较; priorities=blocking, decision-branch"
+                }
+            },
+            LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
+            LegacyAlgorithmInputReadinessSummary = "legacy algorithm inputs ready",
+            SelectedMethodSummary = "推荐方法沿用 baseline",
+            BaselineDominantComparisonSummary = "baseline 与 dominant 一致"
+        };
+
+        var formatter = typeof(TestBootstrap).GetMethod("FormatMethodAdaptationPlanSnapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap formatter not found.");
+        var formatted = formatter.Invoke(null, new object[] { plan }) as string
+            ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
+
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:baseline=1:50.0 %:dominant=2:100.0 %:selected=2:100.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap route-share focus formatting smoke test failed. actual='{formatted}'");
         }
     }
 
