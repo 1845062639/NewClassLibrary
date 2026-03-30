@@ -2,6 +2,8 @@ namespace StandardTestNext.Test.Application.Services;
 
 internal static class MotorYPrimaryFieldFocusFactory
 {
+    private static readonly string[] EmptyStrings = Array.Empty<string>();
+
     public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
         => BuildCrossPlanPrimaryFieldFocuses(
             plans,
@@ -15,6 +17,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
                 plan.AlgorithmEntry,
+                GetLegacyEnumNames(plan),
+                GetLegacyFormNames(plan),
                 plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
                 plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
                 plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
@@ -49,6 +53,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
                 plan.AlgorithmEntry,
+                GetLegacyEnumNames(plan),
+                GetLegacyFormNames(plan),
                 plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
                 plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
                 plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
@@ -252,6 +258,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                     LegacyMethodNames = focus.LegacyMethodNames,
                     SettingsMethodNames = focus.SettingsMethodNames,
                     LegacyAlgorithmEntries = focus.LegacyAlgorithmEntries,
+                    LegacyEnumNames = focus.LegacyEnumNames,
+                    LegacyFormNames = focus.LegacyFormNames,
                     SourceSections = focus.SourceSections,
                     SourceRanges = focus.SourceRanges,
                     FormNames = focus.FormNames,
@@ -323,6 +331,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                     LegacyMethodNames = focus.LegacyMethodNames,
                     SettingsMethodNames = focus.SettingsMethodNames,
                     LegacyAlgorithmEntries = focus.LegacyAlgorithmEntries,
+                    LegacyEnumNames = focus.LegacyEnumNames,
+                    LegacyFormNames = focus.LegacyFormNames,
                     SourceSections = focus.SourceSections,
                     SourceRanges = focus.SourceRanges,
                     FormNames = focus.FormNames,
@@ -562,8 +572,18 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantMethodKeys = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.MethodKeys).Where(methodKey => !string.IsNullOrWhiteSpace(methodKey)).Distinct(StringComparer.Ordinal).OrderBy(methodKey => methodKey, StringComparer.Ordinal).ToArray();
         var dominantLegacyMethodNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantSettingsMethodNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.SettingsMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantLegacyAlgorithmEntries = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyAlgorithmEntries).Where(entry => !string.IsNullOrWhiteSpace(entry)).Distinct(StringComparer.Ordinal).OrderBy(entry => entry, StringComparer.Ordinal).ToArray();
+        var dominantSourceSections = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.SourceSections).Where(section => !string.IsNullOrWhiteSpace(section)).Distinct(StringComparer.Ordinal).OrderBy(section => section, StringComparer.Ordinal).ToArray();
+        var dominantSourceRanges = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.SourceRanges).Where(range => !string.IsNullOrWhiteSpace(range)).Distinct(StringComparer.Ordinal).OrderBy(range => range, StringComparer.Ordinal).ToArray();
+        var dominantDominantAlgorithmEntry = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantLegacyAlgorithmEntry).Where(entry => !string.IsNullOrWhiteSpace(entry)).GroupBy(entry => entry, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantSourceSection = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantSourceSection).Where(section => !string.IsNullOrWhiteSpace(section)).GroupBy(section => section, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantSourceRange = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantFormNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.FormNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantFormRanges = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.FormSourceRanges).Where(range => !string.IsNullOrWhiteSpace(range)).Distinct(StringComparer.Ordinal).OrderBy(range => range, StringComparer.Ordinal).ToArray();
+        var dominantDominantFormName = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantFormName).Where(name => !string.IsNullOrWhiteSpace(name)).GroupBy(name => name, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantFormRange = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantFormSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
         var dominantUpstreamLegacyCodes = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamLegacyCodes).Where(code => !string.IsNullOrWhiteSpace(code)).Distinct(StringComparer.Ordinal).OrderBy(code => code, StringComparer.Ordinal).ToArray();
-        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}";
+        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}";
     }
 
     public static string BuildVariantKindFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -584,8 +604,18 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantMethodKeys = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.MethodKeys).Where(methodKey => !string.IsNullOrWhiteSpace(methodKey)).Distinct(StringComparer.Ordinal).OrderBy(methodKey => methodKey, StringComparer.Ordinal).ToArray();
         var dominantLegacyMethodNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantSettingsMethodNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.SettingsMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantLegacyAlgorithmEntries = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyAlgorithmEntries).Where(entry => !string.IsNullOrWhiteSpace(entry)).Distinct(StringComparer.Ordinal).OrderBy(entry => entry, StringComparer.Ordinal).ToArray();
+        var dominantSourceSections = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.SourceSections).Where(section => !string.IsNullOrWhiteSpace(section)).Distinct(StringComparer.Ordinal).OrderBy(section => section, StringComparer.Ordinal).ToArray();
+        var dominantSourceRanges = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.SourceRanges).Where(range => !string.IsNullOrWhiteSpace(range)).Distinct(StringComparer.Ordinal).OrderBy(range => range, StringComparer.Ordinal).ToArray();
+        var dominantDominantAlgorithmEntry = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantLegacyAlgorithmEntry).Where(entry => !string.IsNullOrWhiteSpace(entry)).GroupBy(entry => entry, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantSourceSection = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantSourceSection).Where(section => !string.IsNullOrWhiteSpace(section)).GroupBy(section => section, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantSourceRange = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantFormNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.FormNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantFormRanges = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.FormSourceRanges).Where(range => !string.IsNullOrWhiteSpace(range)).Distinct(StringComparer.Ordinal).OrderBy(range => range, StringComparer.Ordinal).ToArray();
+        var dominantDominantFormName = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantFormName).Where(name => !string.IsNullOrWhiteSpace(name)).GroupBy(name => name, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
+        var dominantDominantFormRange = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantFormSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
         var dominantUpstreamLegacyCodes = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamLegacyCodes).Where(code => !string.IsNullOrWhiteSpace(code)).Distinct(StringComparer.Ordinal).OrderBy(code => code, StringComparer.Ordinal).ToArray();
-        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}";
+        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}";
     }
 
     private static string FormatRoutePreview(int? methodValue, string methodKey, string profileKey)
@@ -628,6 +658,8 @@ internal static class MotorYPrimaryFieldFocusFactory
         string LegacyMethodName,
         string SettingsMethodName,
         string AlgorithmEntry,
+        IReadOnlyList<string> LegacyEnumNames,
+        IReadOnlyList<string> LegacyFormNames,
         IReadOnlyList<string> SourceSections,
         IReadOnlyList<string> SourceRanges,
         IReadOnlyList<string> FormNames,
@@ -648,4 +680,32 @@ internal static class MotorYPrimaryFieldFocusFactory
         int? SelectedMethodValue,
         string SelectedMethodKey,
         string SelectedProfileKey);
+
+    private static IReadOnlyList<string> GetLegacyEnumNames(MotorYMethodAdaptationPlanSnapshot plan)
+    {
+        return DistinctNonEmpty(
+            plan.SelectedRoute?.LegacyEnumName,
+            plan.DominantRoute?.LegacyEnumName,
+            plan.BaselineRoute?.LegacyEnumName);
+    }
+
+    private static IReadOnlyList<string> GetLegacyFormNames(MotorYMethodAdaptationPlanSnapshot plan)
+    {
+        return DistinctNonEmpty(
+            plan.SelectedRoute?.LegacyFormName,
+            plan.DominantRoute?.LegacyFormName,
+            plan.BaselineRoute?.LegacyFormName);
+    }
+
+    private static IReadOnlyList<string> DistinctNonEmpty(params string?[] values)
+    {
+        var items = values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return items.Length == 0 ? EmptyStrings : items;
+    }
+
 }
