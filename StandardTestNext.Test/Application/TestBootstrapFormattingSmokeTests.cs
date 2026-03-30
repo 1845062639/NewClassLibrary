@@ -193,9 +193,18 @@ public static class TestBootstrapFormattingSmokeTests
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
                     AlgorithmFamilies = new[] { "LoadB", "NoLoad" },
                     MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
+                    LegacyMethodNames = new[] { "B法负载试验", "空载试验" },
+                    SettingsMethodNames = new[] { "B法负载试验", "空载试验" },
+                    LegacyAlgorithmEntries = new[] { "Calc_Load_B", "Calc_NoLoad" },
+                    SourceSections = new[] { "pfw-fit-window", "pfw-iteration" },
+                    SourceRanges = new[] { "L300-L320", "L120-L150" },
+                    FormNames = new[] { "FrmMotor_Y_LoadB", "FrmMotor_Y_NoLoad" },
+                    FormSourceRanges = new[] { "L410", "L263" },
+                    UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad },
+                    UpstreamSummaryHints = new[] { "需要热试验回填 Pfw", "空载主链直接产出 Pfw" },
                     SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
                     SuggestedNextStepFocuses = new[] { "中间结果锚点", "结果字段" },
-                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; families=LoadB, NoLoad; focuses=中间结果锚点, 结果字段; priorities=intermediate-result-fields, result-fields"
+                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=B法负载试验, 空载试验; settings-methods=B法负载试验, 空载试验; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=LoadB, NoLoad; variants=none; upstream=MotorY.HeatRun, MotorY.NoLoad; upstream-hints=需要热试验回填 Pfw, 空载主链直接产出 Pfw; focuses=中间结果锚点, 结果字段; priorities=intermediate-result-fields, result-fields"
                 }
             },
             LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
@@ -209,7 +218,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=LoadB:5/NoLoad:0:profiles=:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:source-sections=pfw-fit-window/pfw-iteration:source-ranges=L300-L320/L120-L150:forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:form-ranges=L410/L263:upstream=MotorY.HeatRun/MotorY.NoLoad:upstream-hints=需要热试验回填 Pfw/空载主链直接产出 Pfw:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
         }
