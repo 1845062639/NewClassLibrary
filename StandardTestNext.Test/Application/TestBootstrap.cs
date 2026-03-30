@@ -5,6 +5,7 @@ using StandardTestNext.Test.Application.Abstractions;
 using StandardTestNext.Test.Application.AppSide;
 using StandardTestNext.Test.Application.Services;
 using StandardTestNext.Test.Infrastructure.Persistence;
+using System.Globalization;
 using System.Linq;
 
 namespace StandardTestNext.Test.Application;
@@ -365,7 +366,7 @@ public sealed class TestBootstrap
             var weightedBase = totalWeighted > 0
                 ? totalWeighted
                 : focus.WeightedCount;
-            return $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:weighted={focus.WeightedCount}/{weightedBase}:{focus.WeightedShare:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}:summary={focus.Summary}";
+            return $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:weighted={focus.WeightedCount}/{weightedBase}:{focus.WeightedShare:P1}:methods={FormatPreview(focus.MethodValues.Select(x => x.ToString(CultureInfo.InvariantCulture)).ToArray(), 4)}:method-keys={FormatPreview(focus.MethodKeys, 4)}:profiles={FormatPreview(focus.ProfileKeys, 4)}:legacy-methods={FormatPreview(focus.LegacyMethodNames, 4)}:settings-methods={FormatPreview(focus.SettingsMethodNames, 4)}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}:summary={focus.Summary}";
         }));
     }
 

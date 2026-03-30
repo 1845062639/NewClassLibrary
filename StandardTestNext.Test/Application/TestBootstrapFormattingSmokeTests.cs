@@ -93,7 +93,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
@@ -335,7 +335,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }
