@@ -1341,6 +1341,31 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         {
             throw new InvalidOperationException($"Motor_Y legacy algorithm source evidence query smoke test mismatch for '{MotorYTestMethodCodes.LoadB}'. actual=[{string.Join(" | ", loadBPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
         }
+
+        if (noLoadPlan.FormDependencyEvidences.Count != 1
+            || !noLoadPlan.FormDependencyEvidences.Any(x => string.Equals(x.FormName, "FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+                && string.Equals(x.SourceFile, "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_NoLoad.cs", StringComparison.Ordinal)
+                && x.Line == 263
+                && string.Equals(x.SourceAnchor, "FrmMotor_Y_NoLoad:dc-resistance-prefill", StringComparison.Ordinal)
+                && x.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.DcResistance }, StringComparer.Ordinal)
+                && x.ReferencedMethods.SequenceEqual(new[] { "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>" }, StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy form dependency evidence query smoke test mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual=[{string.Join(" | ", noLoadPlan.FormDependencyEvidences.Select(x => $"{x.FormName}:{x.Line}:{string.Join(",", x.UpstreamCanonicalCodes)}:{string.Join(",", x.ReferencedMethods)}"))}]");
+        }
+
+        if (loadBPlan.FormDependencyEvidences.Count != 2
+            || !loadBPlan.FormDependencyEvidences.Any(x => string.Equals(x.FormName, "FrmMotor_Y_Load_B", StringComparison.Ordinal)
+                && string.Equals(x.SourceFile, "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_B.cs", StringComparison.Ordinal)
+                && x.Line == 288
+                && x.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+                && x.ReferencedMethods.SequenceEqual(new[] { "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_NoLoad>" }, StringComparer.Ordinal))
+            || !loadBPlan.FormDependencyEvidences.Any(x => string.Equals(x.FormName, "FrmMotor_Y_Load_B", StringComparison.Ordinal)
+                && x.Line == 297
+                && x.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun }, StringComparer.Ordinal)
+                && x.ReferencedMethods.SequenceEqual(new[] { "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Thermal>" }, StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy form dependency evidence query smoke test mismatch for '{MotorYTestMethodCodes.LoadB}'. actual=[{string.Join(" | ", loadBPlan.FormDependencyEvidences.Select(x => $"{x.FormName}:{x.Line}:{string.Join(",", x.UpstreamCanonicalCodes)}:{string.Join(",", x.ReferencedMethods)}"))}]");
+        }
     }
 
     private static void ShouldExposeAdditionalLegacyAlgorithmSourceEvidenceThroughAppQueryGateway()

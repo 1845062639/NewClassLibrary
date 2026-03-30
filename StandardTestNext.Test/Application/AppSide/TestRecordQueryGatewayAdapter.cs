@@ -259,6 +259,17 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 ReferencedFields = x.ReferencedFields,
                 Summary = x.Summary
             }).ToArray(),
+            FormDependencyEvidences = snapshot.FormDependencyEvidences.Select(x => new MotorYLegacyFormDependencyEvidenceContract
+            {
+                FormName = x.FormName,
+                SourceFile = x.SourceFile,
+                Line = x.Line,
+                SourceRange = x.SourceRange,
+                SourceAnchor = x.SourceAnchor,
+                UpstreamCanonicalCodes = x.UpstreamCanonicalCodes,
+                ReferencedMethods = x.ReferencedMethods,
+                Summary = x.Summary
+            }).ToArray(),
             RequiredRatedParamFields = snapshot.RequiredRatedParamFields,
             RequiredResultFields = snapshot.RequiredResultFields,
             RequiredIntermediateResultFields = snapshot.RequiredIntermediateResultFields,
