@@ -1762,6 +1762,11 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !rConverse.MethodKeys.SequenceEqual(new[] { "NoLoad:0" }, StringComparer.Ordinal)
             || !rConverse.LegacyMethodNames.SequenceEqual(new[] { "空载试验" }, StringComparer.Ordinal)
             || !rConverse.SettingsMethodNames.SequenceEqual(new[] { "空载试验" }, StringComparer.Ordinal)
+            || !rConverse.LegacyAlgorithmEntries.SequenceEqual(new[] { "GetNoLoadData" }, StringComparer.Ordinal)
+            || !rConverse.SourceSections.SequenceEqual(new[] { "rconverse-branch" }, StringComparer.Ordinal)
+            || !rConverse.SourceRanges.SequenceEqual(new[] { "L184-L193" }, StringComparer.Ordinal)
+            || !rConverse.FormNames.SequenceEqual(new[] { "FrmMotor_Y_NoLoad" }, StringComparer.Ordinal)
+            || !rConverse.FormSourceRanges.SequenceEqual(new[] { "L263" }, StringComparer.Ordinal)
             || rConverse.Count != 1
             || Math.Abs(rConverse.Share - 0.5d) > 0.0001d
             || !rConverse.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
@@ -1855,6 +1860,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || gb.WeightedCount != 2
             || Math.Abs(gb.WeightedShare - 0.5d) > 0.0001d
             || !gb.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !gb.LegacyAlgorithmEntries.SequenceEqual(new[] { "GetLoadBData" }, StringComparer.Ordinal)
+            || !gb.SourceSections.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal)
+            || !gb.FormNames.SequenceEqual(new[] { "FrmMotor_Y_LoadB" }, StringComparer.Ordinal)
             || pfw is null
             || pfw.WeightedCount != 1
             || Math.Abs(pfw.WeightedShare - 0.25d) > 0.0001d
