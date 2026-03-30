@@ -905,52 +905,13 @@ public static class TestRecordViewMapper
     }
 
     private static string BuildCrossPlanDecisionAnchorPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return "cross-plan decision-anchor primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(focus => $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp)");
-
-        return $"cross-plan decision-anchor primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary("decision-anchor", focuses);
 
     private static string BuildCrossPlanRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return "cross-plan required-result primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(focus => $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp)");
-
-        return $"cross-plan required-result primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary("required-result", focuses);
 
     private static string BuildAlgorithmFamilyPrimaryFieldSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return $"algorithm-family {scope} primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(focus =>
-            {
-                var familyLabel = focus.AlgorithmFamilies.Count == 0
-                    ? "no-family"
-                    : string.Join("/", focus.AlgorithmFamilies);
-                return $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp, families {familyLabel})";
-            });
-
-        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyFocusSummary(scope, focuses);
 
     private static string BuildProductDisplayName(string? model, string? code, string productKind)
     {

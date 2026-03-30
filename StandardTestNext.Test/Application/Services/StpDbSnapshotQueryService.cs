@@ -1457,19 +1457,7 @@ WHERE COALESCE(curr.Code, '') <> ''
     }
 
     private static string BuildCrossPlanDecisionAnchorPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return "cross-plan decision-anchor primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(x => $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)")
-            .ToArray();
-
-        return $"cross-plan decision-anchor primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary("decision-anchor", focuses);
 
     private static IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> BuildRequiredResultPrimaryFieldDistributions(
         MotorYRequiredResultFieldCoverageSnapshot resultCoverage,
@@ -1544,40 +1532,10 @@ WHERE COALESCE(curr.Code, '') <> ''
     }
 
     private static string BuildCrossPlanRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return "cross-plan required-result primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(x => $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)")
-            .ToArray();
-
-        return $"cross-plan required-result primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary("required-result", focuses);
 
     private static string BuildAlgorithmFamilyPrimaryFieldSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
-    {
-        if (focuses.Count == 0)
-        {
-            return $"algorithm-family {scope} primary fields: none";
-        }
-
-        var preview = focuses
-            .Take(3)
-            .Select(x =>
-            {
-                var familyLabel = x.AlgorithmFamilies.Count == 0
-                    ? "no-family"
-                    : string.Join("/", x.AlgorithmFamilies);
-                return $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp, families {familyLabel})";
-            })
-            .ToArray();
-
-        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
-    }
+        => MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyFocusSummary(scope, focuses);
 
     private static IReadOnlyList<string> BuildSuggestedNextSteps(
         string canonicalCode,

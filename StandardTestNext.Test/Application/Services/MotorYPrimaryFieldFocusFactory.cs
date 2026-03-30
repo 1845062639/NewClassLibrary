@@ -118,6 +118,58 @@ internal static class MotorYPrimaryFieldFocusFactory
             .ToArray();
     }
 
+    public static string BuildCrossPlanFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return $"cross-plan {scope} primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(x => $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)")
+            .ToArray();
+
+        var top = focuses[0];
+        var topFamilies = top.AlgorithmFamilies.Count == 0
+            ? "none"
+            : string.Join("/", top.AlgorithmFamilies);
+        var topCodes = top.CanonicalCodes.Count == 0
+            ? "none"
+            : string.Join("/", top.CanonicalCodes.Take(3));
+
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}";
+    }
+
+    public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return $"algorithm-family {scope} primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(x =>
+            {
+                var familyLabel = x.AlgorithmFamilies.Count == 0
+                    ? "no-family"
+                    : string.Join("/", x.AlgorithmFamilies);
+                return $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp, families {familyLabel})";
+            })
+            .ToArray();
+
+        var dominantFamily = focuses
+            .SelectMany(focus => focus.AlgorithmFamilies)
+            .Where(family => !string.IsNullOrWhiteSpace(family))
+            .GroupBy(family => family, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? "none";
+
+        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}";
+    }
+
     private static int GetPrioritySortOrder(string priority)
         => priority switch
         {
