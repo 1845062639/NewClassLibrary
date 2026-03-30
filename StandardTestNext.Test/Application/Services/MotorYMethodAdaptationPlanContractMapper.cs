@@ -14,6 +14,17 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var dependencyProfile = MotorYLegacyAlgorithmDependencyCatalog.TryGet(selection.CanonicalCode);
         var legacyCodeSelection = BuildLegacyCodeSelection(selection.CanonicalCode, legacyCodeDistributions);
         var requiredPayloadFields = dependencyProfile?.RequiredPayloadFields ?? Array.Empty<string>();
+        var formDependencyEvidences = dependencyProfile?.FormDependencyEvidences.Select(x => new MotorYLegacyFormDependencyEvidenceContract
+        {
+            FormName = x.FormName,
+            SourceFile = x.SourceFile,
+            Line = x.Line,
+            SourceRange = x.SourceRange,
+            SourceAnchor = x.SourceAnchor,
+            UpstreamCanonicalCodes = x.UpstreamCanonicalCodes,
+            ReferencedMethods = x.ReferencedMethods,
+            Summary = x.Summary
+        }).ToArray() ?? Array.Empty<MotorYLegacyFormDependencyEvidenceContract>();
         var upstream = MotorYUpstreamDependencySnapshotFactory.Create(
             selection.CanonicalCode,
             dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
@@ -388,6 +399,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     Summary = evidence.Summary
                 })
                 .ToArray(),
+            FormDependencyEvidences = formDependencyEvidences,
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             RequiredIntermediateResultFields = dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),

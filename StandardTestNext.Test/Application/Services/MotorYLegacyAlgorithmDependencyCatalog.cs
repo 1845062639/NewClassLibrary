@@ -24,6 +24,18 @@ public sealed class MotorYLegacyAlgorithmSourceEvidence
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYLegacyFormDependencyEvidence
+{
+    public string FormName { get; init; } = string.Empty;
+    public string SourceFile { get; init; } = string.Empty;
+    public int Line { get; init; }
+    public string SourceRange => Line <= 0 ? string.Empty : $"L{Line}";
+    public string SourceAnchor { get; init; } = string.Empty;
+    public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ReferencedMethods { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYLegacyAlgorithmDependencyProfile
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -33,6 +45,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyDictionary<string, IReadOnlyList<string>> UpstreamLegacyAliases { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYLegacyAlgorithmSourceEvidence> SourceEvidences { get; init; } = Array.Empty<MotorYLegacyAlgorithmSourceEvidence>();
+    public IReadOnlyList<MotorYLegacyFormDependencyEvidence> FormDependencyEvidences { get; init; } = Array.Empty<MotorYLegacyFormDependencyEvidence>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();
@@ -98,6 +111,24 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 .Distinct(StringComparer.Ordinal)
                 .ToArray(),
             Summary = summary
+        };
+
+    private static MotorYLegacyFormDependencyEvidence FormEvidence(string formName, string sourceFile, int line, string sourceAnchor, string summary, IReadOnlyList<string> upstreamCanonicalCodes, params string[] referencedMethods)
+        => new()
+        {
+            FormName = formName,
+            SourceFile = sourceFile,
+            Line = line,
+            SourceAnchor = sourceAnchor,
+            Summary = summary,
+            UpstreamCanonicalCodes = upstreamCanonicalCodes
+                .Where(code => !string.IsNullOrWhiteSpace(code))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray(),
+            ReferencedMethods = referencedMethods
+                .Where(method => !string.IsNullOrWhiteSpace(method))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray()
         };
 
     private static readonly IReadOnlyDictionary<string, MotorYLegacyAlgorithmDependencyProfile> Profiles =
@@ -186,6 +217,17 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     ("rconverse-branch", new[] { "RConverseType" }),
                     ("pfw-fit-window", new[] { "Pfw" }),
                     ("rated-regression-ready", new[] { "CoefficientOfPfe", "I0", "ΔI0", "P0", "Pcu", "Pfe" })),
+                FormDependencyEvidences = new[]
+                {
+                    FormEvidence(
+                        "FrmMotor_Y_NoLoad",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_NoLoad.cs",
+                        263,
+                        "FrmMotor_Y_NoLoad:dc-resistance-prefill",
+                        "旧 FrmMotor_Y_NoLoad 在进入空载算法前，会先通过 TestRecordHelper 读取直流电阻试验项，用于回填 R1c/θ1c 冷态基线。",
+                        new[] { MotorYTestMethodCodes.DcResistance },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>")
+                },
                 Notes = "旧 FrmMotor_Y_NoLoad 会先读取直流电阻结果补 R1c/θ1c，再拟合空载曲线得到 Pfe/Pfw/CoefficientOfPfe。"
             },
             [MotorYTestMethodCodes.HeatRun] = new()
@@ -233,6 +275,25 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     ("first-seconds-interval", new[] { "Pn" }),
                     ("hot-state-branch", new[] { "HotStateType" }),
                     ("gb-temperature-branch", new[] { "GB", "Rn", "θw", "θs", "θb" })),
+                FormDependencyEvidences = new[]
+                {
+                    FormEvidence(
+                        "FrmMotor_Y_Thermal",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Thermal.cs",
+                        192,
+                        "FrmMotor_Y_Thermal:dc-resistance-prefill",
+                        "旧 FrmMotor_Y_Thermal 会先读取直流电阻试验项，为热试验算法补 Rc/θc 冷态基线。",
+                        new[] { MotorYTestMethodCodes.DcResistance },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>"),
+                    FormEvidence(
+                        "FrmMotor_Y_Thermal",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Thermal.cs",
+                        201,
+                        "FrmMotor_Y_Thermal:self-load",
+                        "旧 FrmMotor_Y_Thermal 随后回读本试验项自身记录，再调用 Thermal 算法计算 Rn/Rw/Δθ/θw。",
+                        new[] { MotorYTestMethodCodes.HeatRun },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Thermal>")
+                },
                 Notes = "旧 FrmMotor_Y_Thermal 先读取直流电阻结果补 Rc/θc；Algorithm_Motor_Y.Thermal 再按额定功率与 GB 版本计算 Rn/Rw/Δθ/θw。"
             },
             [MotorYTestMethodCodes.LoadA] = new()
@@ -279,6 +340,33 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     ("upstream-ready", new[] { "CoefficientOfPfe", "Pfw", "θa" }),
                     ("rated-load-fit-grid", new[] { "ResultDataList" }),
                     ("payload-rated-quantity-ready", new[] { "Pcu1", "Pcu2", "η" })),
+                FormDependencyEvidences = new[]
+                {
+                    FormEvidence(
+                        "FrmMotor_Y_Load_A",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_A.cs",
+                        246,
+                        "FrmMotor_Y_Load_A:noload-prefill",
+                        "旧 FrmMotor_Y_Load_A 会先读取空载试验，用于补 CoefficientOfPfe/Pfw 等上游输入。",
+                        new[] { MotorYTestMethodCodes.NoLoad },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_NoLoad>"),
+                    FormEvidence(
+                        "FrmMotor_Y_Load_A",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_A.cs",
+                        254,
+                        "FrmMotor_Y_Load_A:thermal-prefill",
+                        "旧 FrmMotor_Y_Load_A 还会读取热试验记录，向 A 法算法提供 θa 等热态量。",
+                        new[] { MotorYTestMethodCodes.HeatRun },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Thermal>"),
+                    FormEvidence(
+                        "FrmMotor_Y_Load_A",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_A.cs",
+                        152,
+                        "FrmMotor_Y_Load_A:couple-noload-check",
+                        "旧 FrmMotor_Y_Load_A 在某些分支会再次读取空载试验记录，校验耦接空载/风摩耗相关输入是否到位。",
+                        new[] { MotorYTestMethodCodes.NoLoad },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_NoLoad>")
+                },
                 Notes = "旧 FrmMotor_Y_Load_A 会先校验空载试验的铁耗系数，且从热试验引用 θa；转矩修正还依赖耦接空载/单空载结果。"
             },
             [MotorYTestMethodCodes.LoadB] = new()
@@ -327,6 +415,25 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     ("correlation-refit", new[] { "A", "B", "R", "bad-point-refit" }),
                     ("ps-iteration", new[] { "ResultDataList", "Ps", "cuC" }),
                     ("thermal-carryover", new[] { "θw", "θb" })),
+                FormDependencyEvidences = new[]
+                {
+                    FormEvidence(
+                        "FrmMotor_Y_Load_B",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_B.cs",
+                        266,
+                        "FrmMotor_Y_Load_B:thermal-prefill",
+                        "旧 FrmMotor_Y_Load_B 会先读取热试验记录，向 B 法算法补 θw/θb 等热态输入。",
+                        new[] { MotorYTestMethodCodes.HeatRun },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Thermal>"),
+                    FormEvidence(
+                        "FrmMotor_Y_Load_B",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Load_B.cs",
+                        272,
+                        "FrmMotor_Y_Load_B:noload-prefill",
+                        "旧 FrmMotor_Y_Load_B 随后读取空载试验记录，用于提供 Pfw/CoefficientOfPfe/R1c/θ1c 等输入。",
+                        new[] { MotorYTestMethodCodes.NoLoad },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_NoLoad>")
+                },
                 Notes = "旧 FrmMotor_Y_Load_B 同时依赖空载试验的 Pfe/Pfw/R1c/θ1c 与热试验的 θw/θb；算法还按 GB 版本切换 ratios/θs 口径。"
             },
             [MotorYTestMethodCodes.LockedRotor] = new()
@@ -373,6 +480,25 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     ("voltage-fit-branch", new[] { "Un" }),
                     ("torquecal-branch", new[] { "TorqueCalType" }),
                     ("rcal-branch", new[] { "RCalType", "R1s" })),
+                FormDependencyEvidences = new[]
+                {
+                    FormEvidence(
+                        "FrmMotor_Y_Lock_Rotor",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Lock_Rotor.cs",
+                        180,
+                        "FrmMotor_Y_Lock_Rotor:noload-prefill",
+                        "旧 FrmMotor_Y_Lock_Rotor 会先读取空载试验记录，用于补 R1c/θ1c/K1 与铁耗系数等堵转前置输入。",
+                        new[] { MotorYTestMethodCodes.NoLoad },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_NoLoad>"),
+                    FormEvidence(
+                        "FrmMotor_Y_Lock_Rotor",
+                        "ClassLibary/StandardTest/View/Motor/Y/FrmMotor_Y_Lock_Rotor.cs",
+                        189,
+                        "FrmMotor_Y_Lock_Rotor:self-load",
+                        "旧 FrmMotor_Y_Lock_Rotor 随后回读本试验项自身记录，再调用 Lock_Rotor 算法输出 Ikn/Pkn/Tkn。",
+                        new[] { MotorYTestMethodCodes.LockedRotor },
+                        "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Lock_Rotor>")
+                },
                 Notes = "旧 FrmMotor_Y_Lock_Rotor 会从空载试验引用 R1c/θ1c/K1；堵转算法再结合铁耗系数与额定量推导 Ikn/Pkn/Tkn。"
             }
         };

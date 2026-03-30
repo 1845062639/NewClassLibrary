@@ -115,6 +115,18 @@ public sealed class MotorYLegacyAlgorithmSourceEvidenceContract
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYLegacyFormDependencyEvidenceContract
+{
+    public string FormName { get; init; } = string.Empty;
+    public string SourceFile { get; init; } = string.Empty;
+    public int Line { get; init; }
+    public string SourceRange { get; init; } = string.Empty;
+    public string SourceAnchor { get; init; } = string.Empty;
+    public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> ReferencedMethods { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYPrimaryFieldFocusContract
 {
     public string PrimaryField { get; init; } = string.Empty;
@@ -187,6 +199,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string UpstreamDependencySummary { get; init; } = string.Empty;
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<MotorYLegacyAlgorithmSourceEvidenceContract> SourceEvidences { get; init; } = Array.Empty<MotorYLegacyAlgorithmSourceEvidenceContract>();
+    public IReadOnlyList<MotorYLegacyFormDependencyEvidenceContract> FormDependencyEvidences { get; init; } = Array.Empty<MotorYLegacyFormDependencyEvidenceContract>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();

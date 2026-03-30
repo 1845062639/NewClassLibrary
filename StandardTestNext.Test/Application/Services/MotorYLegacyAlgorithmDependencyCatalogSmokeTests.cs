@@ -70,6 +70,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             {
                 throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: decision anchor required fields missing for {row.Item1}.");
             }
+
+            if (row.Item1 != MotorYTestMethodCodes.DcResistance && profile.FormDependencyEvidences.Count == 0)
+            {
+                throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: form dependency evidence missing for {row.Item1}.");
+            }
         }
 
         var decision = new MotorYMethodDecisionSnapshot
@@ -226,6 +231,11 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
             || !string.Equals(contract.AlgorithmFamilyRequiredResultPrimaryFieldSummary, "algorithm-family required-result primary fields: none", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: single-plan contract aggregation defaults mismatch. anchorCrossPlanCount={contract.CrossPlanDecisionAnchorPrimaryFieldFocuses.Count}, anchorFamilyCount={contract.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count}, resultCrossPlanCount={contract.CrossPlanRequiredResultPrimaryFieldFocuses.Count}, resultFamilyCount={contract.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count}");
+        }
+
+        if (contract.FormDependencyEvidences.Count != 0)
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: single-plan contract should not carry form dependency evidences for synthetic snapshot. actual={contract.FormDependencyEvidences.Count}");
         }
 
         var snapshotService = new StpDbSnapshotQueryService();
