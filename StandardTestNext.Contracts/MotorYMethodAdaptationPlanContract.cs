@@ -164,10 +164,15 @@ public sealed class MotorYPrimaryFieldFocusContract
     public IReadOnlyList<string> LegacyMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SettingsMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmEntries { get; init; } = Array.Empty<string>();
+    public string DominantLegacyAlgorithmEntry { get; init; } = string.Empty;
     public IReadOnlyList<string> SourceSections { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SourceRanges { get; init; } = Array.Empty<string>();
+    public string DominantSourceSection { get; init; } = string.Empty;
+    public string DominantSourceRange { get; init; } = string.Empty;
     public IReadOnlyList<string> FormNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> FormSourceRanges { get; init; } = Array.Empty<string>();
+    public string DominantFormName { get; init; } = string.Empty;
+    public string DominantFormSourceRange { get; init; } = string.Empty;
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> UpstreamSummaryHints { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> UpstreamLegacyCodes { get; init; } = Array.Empty<string>();

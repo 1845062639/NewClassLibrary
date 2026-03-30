@@ -390,10 +390,40 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var legacyMethodNames = rows.Select(x => x.Candidate.LegacyMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var settingsMethodNames = rows.Select(x => x.Candidate.SettingsMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyAlgorithmEntries = rows.Select(x => x.Candidate.AlgorithmEntry).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var dominantLegacyAlgorithmEntry = rows.Select(x => x.Candidate.AlgorithmEntry)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .GroupBy(x => x, StringComparer.Ordinal)
+                    .OrderByDescending(x => x.Count())
+                    .ThenBy(x => x.Key, StringComparer.Ordinal)
+                    .FirstOrDefault()?.Key ?? string.Empty;
                 var sourceSections = rows.SelectMany(x => x.Candidate.SourceSections).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var sourceRanges = rows.SelectMany(x => x.Candidate.SourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var dominantSourceSection = rows.SelectMany(x => x.Candidate.SourceSections)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .GroupBy(x => x, StringComparer.Ordinal)
+                    .OrderByDescending(x => x.Count())
+                    .ThenBy(x => x.Key, StringComparer.Ordinal)
+                    .FirstOrDefault()?.Key ?? string.Empty;
+                var dominantSourceRange = rows.SelectMany(x => x.Candidate.SourceRanges)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .GroupBy(x => x, StringComparer.Ordinal)
+                    .OrderByDescending(x => x.Count())
+                    .ThenBy(x => x.Key, StringComparer.Ordinal)
+                    .FirstOrDefault()?.Key ?? string.Empty;
                 var formNames = rows.SelectMany(x => x.Candidate.FormNames).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var formSourceRanges = rows.SelectMany(x => x.Candidate.FormSourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var dominantFormName = rows.SelectMany(x => x.Candidate.FormNames)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .GroupBy(x => x, StringComparer.Ordinal)
+                    .OrderByDescending(x => x.Count())
+                    .ThenBy(x => x.Key, StringComparer.Ordinal)
+                    .FirstOrDefault()?.Key ?? string.Empty;
+                var dominantFormSourceRange = rows.SelectMany(x => x.Candidate.FormSourceRanges)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .GroupBy(x => x, StringComparer.Ordinal)
+                    .OrderByDescending(x => x.Count())
+                    .ThenBy(x => x.Key, StringComparer.Ordinal)
+                    .FirstOrDefault()?.Key ?? string.Empty;
                 var formEvidenceSummary = formNames.Length == 0 ? "none" : string.Join(", ", formNames.Select((name, index) =>
                 {
                     var range = index < formSourceRanges.Length ? formSourceRanges[index] : string.Empty;
@@ -468,10 +498,15 @@ internal static class MotorYPrimaryFieldFocusFactory
                     LegacyMethodNames = legacyMethodNames,
                     SettingsMethodNames = settingsMethodNames,
                     LegacyAlgorithmEntries = legacyAlgorithmEntries,
+                    DominantLegacyAlgorithmEntry = dominantLegacyAlgorithmEntry,
                     SourceSections = sourceSections,
                     SourceRanges = sourceRanges,
+                    DominantSourceSection = dominantSourceSection,
+                    DominantSourceRange = dominantSourceRange,
                     FormNames = formNames,
                     FormSourceRanges = formSourceRanges,
+                    DominantFormName = dominantFormName,
+                    DominantFormSourceRange = dominantFormSourceRange,
                     UpstreamCanonicalCodes = upstreamCanonicalCodes,
                     UpstreamSummaryHints = upstreamSummaryHints,
                     UpstreamLegacyCodes = upstreamLegacyCodes,
