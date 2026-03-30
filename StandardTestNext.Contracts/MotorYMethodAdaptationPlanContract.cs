@@ -140,6 +140,15 @@ public sealed class MotorYPrimaryFieldFocusContract
     public double DominantShare { get; init; }
     public int SelectedCount { get; init; }
     public double SelectedShare { get; init; }
+    public int? BaselineMethodValue { get; init; }
+    public string BaselineMethodKey { get; init; } = string.Empty;
+    public string BaselineProfileKey { get; init; } = string.Empty;
+    public int? DominantMethodValue { get; init; }
+    public string DominantMethodKey { get; init; } = string.Empty;
+    public string DominantProfileKey { get; init; } = string.Empty;
+    public int? SelectedMethodValue { get; init; }
+    public string SelectedMethodKey { get; init; } = string.Empty;
+    public string SelectedProfileKey { get; init; } = string.Empty;
     public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AlgorithmFamilies { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> VariantKinds { get; init; } = Array.Empty<string>();

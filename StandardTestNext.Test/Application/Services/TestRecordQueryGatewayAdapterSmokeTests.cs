@@ -1769,6 +1769,15 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !rConverse.FormSourceRanges.SequenceEqual(new[] { "L263" }, StringComparer.Ordinal)
             || rConverse.Count != 1
             || Math.Abs(rConverse.Share - 0.5d) > 0.0001d
+            || rConverse.BaselineMethodValue != 0
+            || !string.Equals(rConverse.BaselineMethodKey, "NoLoad:0", StringComparison.Ordinal)
+            || !string.Equals(rConverse.BaselineProfileKey, "NoLoad:baseline", StringComparison.Ordinal)
+            || rConverse.DominantMethodValue != 0
+            || !string.Equals(rConverse.DominantMethodKey, "NoLoad:0", StringComparison.Ordinal)
+            || !string.Equals(rConverse.DominantProfileKey, "NoLoad:baseline", StringComparison.Ordinal)
+            || rConverse.SelectedMethodValue != 0
+            || !string.Equals(rConverse.SelectedMethodKey, "NoLoad:0", StringComparison.Ordinal)
+            || !string.Equals(rConverse.SelectedProfileKey, "NoLoad:baseline", StringComparison.Ordinal)
             || !rConverse.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
             || !rConverse.AnchorKeys.SequenceEqual(new[] { "rconverse-branch" }, StringComparer.Ordinal)
             || !rConverse.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
