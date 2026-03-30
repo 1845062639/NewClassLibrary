@@ -135,6 +135,7 @@ public sealed class TestBootstrap
         var lightweightReport = recordReports.FirstOrDefault(x => x.IsLightweightEntry);
         var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
         var stpMethodAdaptationPlans = LoadStpMethodAdaptationPlans(stpDbSnapshotQueryService);
+        var stpCrossPlanPrimaryFieldFocuses = BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
         var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
@@ -191,6 +192,10 @@ public sealed class TestBootstrap
         {
             Console.WriteLine($"[Test] stp.db Motor_Y adaptation plans: {FormatMethodAdaptationPlans(stpMethodAdaptationPlans)}");
         }
+        if (stpCrossPlanPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y cross-plan anchor primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpCrossPlanPrimaryFieldFocuses)}");
+        }
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)
@@ -233,9 +238,34 @@ public sealed class TestBootstrap
         }
     }
 
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYDecisionAnchorPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y cross-plan anchor primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
     private static string FormatMethodAdaptationPlans(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
     {
         return string.Join(", ", plans.Select(FormatMethodAdaptationPlanSnapshot));
+    }
+
+    private static string FormatCrossPlanPrimaryFieldFocuses(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        return string.Join(", ", focuses.Select(focus => $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}"));
     }
 
     private static string FormatMethodAdaptationPlanSnapshot(MotorYMethodAdaptationPlanSnapshot plan)
