@@ -292,18 +292,105 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .ToArray();
         var requiredResultPrimaryFieldDistributions = BuildRequiredResultPrimaryFieldDistributions(resultCoverage, intermediateResultCoverage);
         var requiredResultPrimaryFieldSummary = BuildRequiredResultPrimaryFieldSummary(requiredResultPrimaryFieldDistributions);
-        var crossPlanDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string crossPlanDecisionAnchorPrimaryFieldSummary = "cross-plan decision-anchor primary fields: pending cross-plan aggregation";
-        var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string algorithmFamilyDecisionAnchorPrimaryFieldSummary = "algorithm-family decision-anchor primary fields: pending family aggregation";
-        var variantKindDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string variantKindDecisionAnchorPrimaryFieldSummary = "variant-kind decision-anchor primary fields: pending variant aggregation";
-        var crossPlanRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string crossPlanRequiredResultPrimaryFieldSummary = "cross-plan required-result primary fields: pending cross-plan aggregation";
-        var algorithmFamilyRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string algorithmFamilyRequiredResultPrimaryFieldSummary = "algorithm-family required-result primary fields: pending family aggregation";
-        var variantKindRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
-        const string variantKindRequiredResultPrimaryFieldSummary = "variant-kind required-result primary fields: pending variant aggregation";
+        var crossPlanDecisionAnchorPrimaryFieldFocuses = decisionAnchorPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.AnchorKeys,
+                distribution.SuggestedNextStepFocuses,
+                distribution.SuggestedNextStepPriorities,
+                Array.Empty<string>(),
+                distribution.Summary))
+            .ToArray();
+        var crossPlanDecisionAnchorPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary(
+            "decision-anchor",
+            crossPlanDecisionAnchorPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
+        var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = decisionAnchorPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.AnchorKeys,
+                distribution.SuggestedNextStepFocuses,
+                distribution.SuggestedNextStepPriorities,
+                new[] { selectedProfile?.AlgorithmFamily ?? string.Empty },
+                distribution.Summary))
+            .ToArray();
+        var algorithmFamilyDecisionAnchorPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyFocusSummary(
+            "decision-anchor",
+            algorithmFamilyDecisionAnchorPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
+        var variantKindDecisionAnchorPrimaryFieldFocuses = decisionAnchorPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.AnchorKeys,
+                distribution.SuggestedNextStepFocuses,
+                distribution.SuggestedNextStepPriorities,
+                Array.Empty<string>(),
+                distribution.Summary,
+                new[] { selectedProfile?.VariantKind ?? string.Empty }))
+            .ToArray();
+        var variantKindDecisionAnchorPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary(
+            "decision-anchor",
+            variantKindDecisionAnchorPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
+        var crossPlanRequiredResultPrimaryFieldFocuses = requiredResultPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.BucketKeys,
+                distribution.DisplayNames,
+                Array.Empty<string>(),
+                dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                distribution.Summary))
+            .ToArray();
+        var crossPlanRequiredResultPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildCrossPlanFocusSummary(
+            "required-result",
+            crossPlanRequiredResultPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
+        var algorithmFamilyRequiredResultPrimaryFieldFocuses = requiredResultPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.BucketKeys,
+                distribution.DisplayNames,
+                Array.Empty<string>(),
+                dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                distribution.Summary,
+                new[] { selectedProfile?.AlgorithmFamily ?? string.Empty }))
+            .ToArray();
+        var algorithmFamilyRequiredResultPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyFocusSummary(
+            "required-result",
+            algorithmFamilyRequiredResultPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
+        var variantKindRequiredResultPrimaryFieldFocuses = requiredResultPrimaryFieldDistributions
+            .Select(distribution => BuildFallbackPrimaryFieldFocusContract(
+                selection,
+                dependencyProfile,
+                distribution.PrimaryField,
+                distribution.Count,
+                distribution.Share,
+                distribution.BucketKeys,
+                distribution.DisplayNames,
+                Array.Empty<string>(),
+                dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
+                distribution.Summary,
+                new[] { selectedProfile?.VariantKind ?? string.Empty }))
+            .ToArray();
+        var variantKindRequiredResultPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary(
+            "required-result",
+            variantKindRequiredResultPrimaryFieldFocuses.Select(MapFallbackPrimaryFieldFocusSnapshot).ToArray());
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -899,6 +986,152 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 };
             })
             .ToArray();
+    }
+
+    private static MotorYPrimaryFieldFocusContract BuildFallbackPrimaryFieldFocusContract(
+        MotorYMethodRouteSelectionSnapshot selection,
+        MotorYLegacyAlgorithmDependencyProfile? dependencyProfile,
+        string primaryField,
+        int count,
+        double share,
+        IReadOnlyList<string> anchorKeys,
+        IReadOnlyList<string> focuses,
+        IReadOnlyList<string> priorities,
+        IReadOnlyList<string> upstreamCanonicalCodes,
+        string summary,
+        IReadOnlyList<string>? algorithmFamilies = null,
+        IReadOnlyList<string>? variantKinds = null)
+    {
+        var selectedRoute = selection.SelectedRoute;
+        var selectedMethodValue = selectedRoute?.MethodValue;
+        var selectedMethodKey = selectedRoute?.MethodKey ?? string.Empty;
+        var selectedProfileKey = selectedRoute?.ProfileKey ?? string.Empty;
+        var selectedVariantKind = selectedRoute?.VariantKind ?? string.Empty;
+        var selectedAlgorithmFamily = selectedRoute?.AlgorithmFamily ?? string.Empty;
+        var selectedLegacyMethodName = selectedRoute?.LegacyMethodName ?? string.Empty;
+        var selectedSettingsMethodName = selectedRoute?.LegacySettingsMethodName ?? string.Empty;
+        var selectedLegacyAlgorithmEntry = selectedRoute?.LegacyAlgorithmEntry ?? string.Empty;
+        var sourceSections = dependencyProfile?.SourceEvidences
+            .Select(x => x.SectionKey)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        var sourceRanges = dependencyProfile?.SourceEvidences
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        var formNames = dependencyProfile?.FormDependencyEvidences
+            .Select(x => x.FormName)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        var formSourceRanges = dependencyProfile?.FormDependencyEvidences
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray() ?? Array.Empty<string>();
+        var focusAlgorithmFamilies = (algorithmFamilies ?? Array.Empty<string>())
+            .Concat(string.IsNullOrWhiteSpace(selectedAlgorithmFamily) ? Array.Empty<string>() : new[] { selectedAlgorithmFamily })
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+        var focusVariantKinds = (variantKinds ?? Array.Empty<string>())
+            .Concat(string.IsNullOrWhiteSpace(selectedVariantKind) ? Array.Empty<string>() : new[] { selectedVariantKind })
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+        return new MotorYPrimaryFieldFocusContract
+        {
+            PrimaryField = primaryField,
+            Count = count,
+            Share = share,
+            WeightedCount = selection.SelectedCount,
+            WeightedShare = selection.TotalCount <= 0
+                ? 0d
+                : Math.Round((double)selection.SelectedCount / selection.TotalCount, 4, MidpointRounding.AwayFromZero),
+            CanonicalCodes = new[] { selection.CanonicalCode },
+            AlgorithmFamilies = focusAlgorithmFamilies,
+            VariantKinds = focusVariantKinds,
+            MethodValues = selectedMethodValue.HasValue ? new[] { selectedMethodValue.Value } : Array.Empty<int>(),
+            MethodKeys = string.IsNullOrWhiteSpace(selectedMethodKey) ? Array.Empty<string>() : new[] { selectedMethodKey },
+            ProfileKeys = string.IsNullOrWhiteSpace(selectedProfileKey) ? Array.Empty<string>() : new[] { selectedProfileKey },
+            LegacyMethodNames = string.IsNullOrWhiteSpace(selectedLegacyMethodName) ? Array.Empty<string>() : new[] { selectedLegacyMethodName },
+            SettingsMethodNames = string.IsNullOrWhiteSpace(selectedSettingsMethodName) ? Array.Empty<string>() : new[] { selectedSettingsMethodName },
+            LegacyAlgorithmEntries = string.IsNullOrWhiteSpace(selectedLegacyAlgorithmEntry) ? Array.Empty<string>() : new[] { selectedLegacyAlgorithmEntry },
+            SourceSections = sourceSections,
+            SourceRanges = sourceRanges,
+            FormNames = formNames,
+            FormSourceRanges = formSourceRanges,
+            UpstreamCanonicalCodes = upstreamCanonicalCodes
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(x => x, StringComparer.Ordinal)
+                .ToArray(),
+            UpstreamSummaryHints = string.IsNullOrWhiteSpace(dependencyProfile?.Notes)
+                ? Array.Empty<string>()
+                : new[] { dependencyProfile!.Notes },
+            AnchorKeys = anchorKeys,
+            SuggestedNextStepFocuses = focuses,
+            SuggestedNextStepPriorities = priorities,
+            UpstreamLegacyCodes = Array.Empty<string>(),
+            BaselineCount = selection.BaselineRoute?.MethodKey == selectedMethodKey && !string.IsNullOrWhiteSpace(selectedMethodKey) ? 1 : 0,
+            BaselineShare = string.IsNullOrWhiteSpace(selectedMethodKey)
+                ? 0d
+                : (selection.BaselineRoute?.MethodKey == selectedMethodKey ? 1d : 0d),
+            DominantCount = selection.DominantRoute?.MethodKey == selectedMethodKey && !string.IsNullOrWhiteSpace(selectedMethodKey) ? 1 : 0,
+            DominantShare = string.IsNullOrWhiteSpace(selectedMethodKey)
+                ? 0d
+                : (selection.DominantRoute?.MethodKey == selectedMethodKey ? 1d : 0d),
+            SelectedCount = string.IsNullOrWhiteSpace(selectedMethodKey) ? 0 : 1,
+            SelectedShare = string.IsNullOrWhiteSpace(selectedMethodKey) ? 0d : 1d,
+            Summary = summary
+        };
+    }
+
+    private static MotorYPrimaryFieldFocusSnapshot MapFallbackPrimaryFieldFocusSnapshot(MotorYPrimaryFieldFocusContract contract)
+    {
+        return new MotorYPrimaryFieldFocusSnapshot
+        {
+            PrimaryField = contract.PrimaryField,
+            Count = contract.Count,
+            Share = contract.Share,
+            WeightedCount = contract.WeightedCount,
+            WeightedShare = contract.WeightedShare,
+            CanonicalCodes = contract.CanonicalCodes,
+            AlgorithmFamilies = contract.AlgorithmFamilies,
+            VariantKinds = contract.VariantKinds,
+            MethodValues = contract.MethodValues,
+            MethodKeys = contract.MethodKeys,
+            ProfileKeys = contract.ProfileKeys,
+            LegacyMethodNames = contract.LegacyMethodNames,
+            SettingsMethodNames = contract.SettingsMethodNames,
+            LegacyAlgorithmEntries = contract.LegacyAlgorithmEntries,
+            SourceSections = contract.SourceSections,
+            SourceRanges = contract.SourceRanges,
+            FormNames = contract.FormNames,
+            FormSourceRanges = contract.FormSourceRanges,
+            UpstreamCanonicalCodes = contract.UpstreamCanonicalCodes,
+            UpstreamSummaryHints = contract.UpstreamSummaryHints,
+            AnchorKeys = contract.AnchorKeys,
+            SuggestedNextStepFocuses = contract.SuggestedNextStepFocuses,
+            SuggestedNextStepPriorities = contract.SuggestedNextStepPriorities,
+            UpstreamLegacyCodes = contract.UpstreamLegacyCodes,
+            BaselineCount = contract.BaselineCount,
+            BaselineShare = contract.BaselineShare,
+            DominantCount = contract.DominantCount,
+            DominantShare = contract.DominantShare,
+            SelectedCount = contract.SelectedCount,
+            SelectedShare = contract.SelectedShare,
+            Summary = contract.Summary
+        };
     }
 
     private static string BuildRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionContract> distributions)

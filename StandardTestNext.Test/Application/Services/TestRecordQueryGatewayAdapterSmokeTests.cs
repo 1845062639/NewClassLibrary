@@ -1769,6 +1769,12 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !rConverse.FormSourceRanges.SequenceEqual(new[] { "L263" }, StringComparer.Ordinal)
             || rConverse.Count != 1
             || Math.Abs(rConverse.Share - 0.5d) > 0.0001d
+            || rConverse.BaselineCount != 1
+            || Math.Abs(rConverse.BaselineShare - 1d) > 0.0001d
+            || rConverse.DominantCount != 1
+            || Math.Abs(rConverse.DominantShare - 1d) > 0.0001d
+            || rConverse.SelectedCount != 1
+            || Math.Abs(rConverse.SelectedShare - 1d) > 0.0001d
             || rConverse.BaselineMethodValue != 0
             || !string.Equals(rConverse.BaselineMethodKey, "NoLoad:0", StringComparison.Ordinal)
             || !string.Equals(rConverse.BaselineProfileKey, "NoLoad:baseline", StringComparison.Ordinal)

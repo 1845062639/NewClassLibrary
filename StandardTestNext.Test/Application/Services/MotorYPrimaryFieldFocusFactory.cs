@@ -623,7 +623,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
                 plan.SelectedRoute?.MethodValue,
                 plan.SelectedRoute?.MethodKey ?? string.Empty,
-                plan.SelectedRoute?.ProfileKey ?? string.Empty,
+                plan.SelectedProfileKey,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
                 plan.AlgorithmEntry,
@@ -643,8 +643,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.DominantProfile?.MethodKey ?? string.Empty,
                 plan.DominantProfile?.ProfileKey ?? string.Empty,
                 plan.SelectedRoute?.MethodValue,
-                plan.SelectedProfile?.MethodKey ?? string.Empty,
-                plan.SelectedProfile?.ProfileKey ?? string.Empty)));
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedProfileKey)));
 
     private sealed record CrossPlanPrimaryFieldCandidate(
         string PrimaryField,
