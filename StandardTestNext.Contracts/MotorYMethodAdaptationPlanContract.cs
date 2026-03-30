@@ -140,6 +140,8 @@ public sealed class MotorYPrimaryFieldFocusContract
     public IReadOnlyList<int> MethodValues { get; init; } = Array.Empty<int>();
     public IReadOnlyList<string> MethodKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> ProfileKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> LegacyMethodNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SettingsMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
