@@ -52,6 +52,18 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no algorithm-family required-result primary-field focuses returned.");
         }
 
+        var variantKindDecisionAnchorPrimaryFieldFocuses = service.ListMotorYVariantKindDecisionAnchorPrimaryFieldFocuses();
+        if (variantKindDecisionAnchorPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no variant-kind decision-anchor primary-field focuses returned.");
+        }
+
+        var variantKindRequiredResultPrimaryFieldFocuses = service.ListMotorYVariantKindRequiredResultPrimaryFieldFocuses();
+        if (variantKindRequiredResultPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no variant-kind required-result primary-field focuses returned.");
+        }
+
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
 
@@ -73,6 +85,10 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocusSummaries(actual, algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
         AssertAlgorithmFamilyRequiredResultPrimaryFieldFocuses(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
         AssertAlgorithmFamilyRequiredResultPrimaryFieldFocusSummaries(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
+        AssertVariantKindDecisionAnchorPrimaryFieldFocuses(actual, variantKindDecisionAnchorPrimaryFieldFocuses);
+        AssertVariantKindDecisionAnchorPrimaryFieldFocusSummaries(actual, variantKindDecisionAnchorPrimaryFieldFocuses);
+        AssertVariantKindRequiredResultPrimaryFieldFocuses(actual, variantKindRequiredResultPrimaryFieldFocuses);
+        AssertVariantKindRequiredResultPrimaryFieldFocusSummaries(actual, variantKindRequiredResultPrimaryFieldFocuses);
 
         var familyResultCoefficient = algorithmFamilyRequiredResultPrimaryFieldFocuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
         var familyResultPfw = algorithmFamilyRequiredResultPrimaryFieldFocuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
@@ -512,6 +528,50 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             || !string.Equals(loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit algorithm-family decision-anchor primary-field summary mismatch. expectedSummary='{expectedSummary}', noLoadSummary='{noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}', loadBSummary='{loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
+        }
+    }
+
+    private static void AssertVariantKindDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> actual)
+    {
+        var expected = MotorYPrimaryFieldFocusFactory.BuildVariantKindDecisionAnchorPrimaryFieldFocuses(plans);
+        AssertPrimaryFieldFocusesEquivalent(expected, actual, "variant-kind decision-anchor primary-field focuses");
+    }
+
+    private static void AssertVariantKindDecisionAnchorPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> actual)
+    {
+        var expectedSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary("decision-anchor", actual);
+        foreach (var plan in plans)
+        {
+            if (!string.Equals(plan.VariantKindDecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: variant-kind decision-anchor summary mismatch for {plan.CanonicalCode}. expected='{expectedSummary}', actual='{plan.VariantKindDecisionAnchorPrimaryFieldSummary}'.");
+            }
+        }
+    }
+
+    private static void AssertVariantKindRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> actual)
+    {
+        var expected = MotorYPrimaryFieldFocusFactory.BuildVariantKindRequiredResultPrimaryFieldFocuses(plans);
+        AssertPrimaryFieldFocusesEquivalent(expected, actual, "variant-kind required-result primary-field focuses");
+    }
+
+    private static void AssertVariantKindRequiredResultPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> actual)
+    {
+        var expectedSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary("required-result", actual);
+        foreach (var plan in plans)
+        {
+            if (!string.Equals(plan.VariantKindRequiredResultPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: variant-kind required-result summary mismatch for {plan.CanonicalCode}. expected='{expectedSummary}', actual='{plan.VariantKindRequiredResultPrimaryFieldSummary}'.");
+            }
         }
     }
 

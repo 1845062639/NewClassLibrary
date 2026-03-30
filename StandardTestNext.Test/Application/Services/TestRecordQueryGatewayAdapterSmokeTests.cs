@@ -27,6 +27,8 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeCrossPlanRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeAlgorithmFamilyRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
+        ShouldExposeVariantKindDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway();
+        ShouldExposeVariantKindRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -2079,6 +2081,78 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !coefficient.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y algorithm-family required-result primary-field focus query smoke test mismatch. summary='{noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}"))}]");
+        }
+    }
+
+    private static void ShouldExposeVariantKindDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var detail = CreateMotorYMethodAdaptationPlanDetail();
+
+        var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        var loadBPlan = plans[MotorYTestMethodCodes.LoadB];
+
+        var focuses = noLoadPlan.VariantKindDecisionAnchorPrimaryFieldFocuses;
+        var baselineFocus = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var deliveryFocus = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal));
+
+        if (focuses.Count != 2
+            || baselineFocus is null
+            || deliveryFocus is null
+            || loadBPlan.VariantKindDecisionAnchorPrimaryFieldFocuses.Count != focuses.Count
+            || !string.Equals(noLoadPlan.VariantKindDecisionAnchorPrimaryFieldSummary, loadBPlan.VariantKindDecisionAnchorPrimaryFieldSummary, StringComparison.Ordinal)
+            || !baselineFocus.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Baseline }, StringComparer.Ordinal)
+            || baselineFocus.WeightedCount != 3
+            || Math.Abs(baselineFocus.WeightedShare - 1d) > 0.0001d
+            || !baselineFocus.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !baselineFocus.AnchorKeys.SequenceEqual(new[] { "pfw-fit-window" }, StringComparer.Ordinal)
+            || !baselineFocus.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || !baselineFocus.Summary.StartsWith("variant=baseline; cross-plan primary field Pfw appears in 1/1 plans (100pp), weighted 3/3 selected samples (100pp)", StringComparison.Ordinal)
+            || !deliveryFocus.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Delivery }, StringComparer.Ordinal)
+            || deliveryFocus.WeightedCount != 7
+            || Math.Abs(deliveryFocus.WeightedShare - 1d) > 0.0001d
+            || !deliveryFocus.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !deliveryFocus.AnchorKeys.SequenceEqual(new[] { "gb-temperature-branch" }, StringComparer.Ordinal)
+            || !deliveryFocus.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || !deliveryFocus.Summary.StartsWith("variant=delivery; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp)", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.VariantKindDecisionAnchorPrimaryFieldSummary, "variant-kind decision-anchor primary fields top 2/2: GB=1 (100pp, weighted 100pp, variants delivery); Pfw=1 (100pp, weighted 100pp, variants baseline); dominant-variant=baseline", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestRecordQueryGatewayAdapter variant-kind decision-anchor focus smoke test failed. summary='{noLoadPlan.VariantKindDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.VariantKinds)}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{x.Summary}"))}]");
+        }
+    }
+
+    private static void ShouldExposeVariantKindRequiredResultPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var detail = CreateMotorYMethodAdaptationPlanDetail();
+
+        var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        var loadBPlan = plans[MotorYTestMethodCodes.LoadB];
+
+        var focuses = noLoadPlan.VariantKindRequiredResultPrimaryFieldFocuses;
+        var baselineFocus = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var deliveryFocus = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+
+        if (focuses.Count != 2
+            || baselineFocus is null
+            || deliveryFocus is null
+            || loadBPlan.VariantKindRequiredResultPrimaryFieldFocuses.Count != focuses.Count
+            || !string.Equals(noLoadPlan.VariantKindRequiredResultPrimaryFieldSummary, loadBPlan.VariantKindRequiredResultPrimaryFieldSummary, StringComparison.Ordinal)
+            || !baselineFocus.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Baseline }, StringComparer.Ordinal)
+            || baselineFocus.WeightedCount != 3
+            || Math.Abs(baselineFocus.WeightedShare - 1d) > 0.0001d
+            || !baselineFocus.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !baselineFocus.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || !baselineFocus.Summary.StartsWith("variant=baseline; cross-plan primary field CoefficientOfPfe appears in 1/1 plans (100pp), weighted 3/3 selected samples (100pp)", StringComparison.Ordinal)
+            || !deliveryFocus.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Delivery }, StringComparer.Ordinal)
+            || deliveryFocus.WeightedCount != 7
+            || Math.Abs(deliveryFocus.WeightedShare - 1d) > 0.0001d
+            || !deliveryFocus.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !deliveryFocus.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || !deliveryFocus.Summary.StartsWith("variant=delivery; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp)", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.VariantKindRequiredResultPrimaryFieldSummary, "variant-kind required-result primary fields top 2/2: CoefficientOfPfe=1 (100pp, weighted 100pp, variants baseline); Pcu2=1 (100pp, weighted 100pp, variants delivery); dominant-variant=baseline", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestRecordQueryGatewayAdapter variant-kind required-result focus smoke test failed. summary='{noLoadPlan.VariantKindRequiredResultPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.VariantKinds)}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{x.Summary}"))}]");
         }
     }
 
