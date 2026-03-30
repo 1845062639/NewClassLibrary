@@ -1774,7 +1774,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !rConverse.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
             || rConverse.WeightedCount != 1
             || Math.Abs(rConverse.WeightedShare - 0.25d) > 0.0001d
-            || !string.Equals(rConverse.Summary, "cross-plan decision-anchor primary field RConverseType appears in 1/2 plans (50pp), weighted 1/4 selected samples (25pp); codes=NoLoad; anchors=rconverse-branch; priorities=blocking", StringComparison.Ordinal)
+            || !string.Equals(rConverse.Summary, "cross-plan primary field RConverseType appears in 1/2 plans (50pp), weighted 1/4 selected samples (25pp); codes=NoLoad; methods=0; method-keys=NoLoad:0; profiles=NoLoad:baseline; legacy-methods=空载试验; settings-methods=空载试验; algo-entries=GetNoLoadData; source-sections=rconverse-branch; source-ranges=L184-L193; forms=FrmMotor_Y_NoLoad; form-ranges=L263; form-evidence=FrmMotor_Y_NoLoad(L263); upstream-codes=none; upstream-hints=none; families=NoLoad; variants=baseline; focuses=冷态电阻换算; priorities=blocking", StringComparison.Ordinal)
             || pfw is null
             || pfw.WeightedCount != 1
             || Math.Abs(pfw.WeightedShare - 0.25d) > 0.0001d
