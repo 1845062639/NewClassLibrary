@@ -51,7 +51,7 @@ public static class TestRecordViewMapper
     public static TestRecordDetailView ToDetailView(this TestRecordDetail detail)
     {
         var motorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails);
-        var motorYMethodAdaptationPlans = motorYMethodDecisions
+        var basePlans = motorYMethodDecisions
             .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
                 snapshot,
                 MapBuildProfile,
@@ -59,19 +59,26 @@ public static class TestRecordViewMapper
             .Select(MapAdaptationPlanSnapshot)
             .ToArray();
 
-        var crossPlanDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(motorYMethodAdaptationPlans);
+        var crossPlanDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(basePlans);
         var crossPlanDecisionAnchorPrimaryFieldSummary = BuildCrossPlanDecisionAnchorPrimaryFieldSummary(crossPlanDecisionAnchorPrimaryFieldFocuses);
-        var crossPlanRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(motorYMethodAdaptationPlans);
+        var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(basePlans);
+        var algorithmFamilyDecisionAnchorPrimaryFieldSummary = BuildAlgorithmFamilyPrimaryFieldSummary("decision-anchor", algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
+        var crossPlanRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(basePlans);
         var crossPlanRequiredResultPrimaryFieldSummary = BuildCrossPlanRequiredResultPrimaryFieldSummary(crossPlanRequiredResultPrimaryFieldFocuses);
+        var algorithmFamilyRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(basePlans);
+        var algorithmFamilyRequiredResultPrimaryFieldSummary = BuildAlgorithmFamilyPrimaryFieldSummary("required-result", algorithmFamilyRequiredResultPrimaryFieldFocuses);
 
-        motorYMethodAdaptationPlans = motorYMethodAdaptationPlans
-            .Select(plan => plan with
-            {
-                CrossPlanDecisionAnchorPrimaryFieldFocuses = crossPlanDecisionAnchorPrimaryFieldFocuses,
-                CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
-                CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,
-                CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultPrimaryFieldSummary
-            })
+        var motorYMethodAdaptationPlans = basePlans
+            .Select(plan => CloneWithCrossPlanFocuses(
+                plan,
+                crossPlanDecisionAnchorPrimaryFieldFocuses,
+                crossPlanDecisionAnchorPrimaryFieldSummary,
+                algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
+                algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+                crossPlanRequiredResultPrimaryFieldFocuses,
+                crossPlanRequiredResultPrimaryFieldSummary,
+                algorithmFamilyRequiredResultPrimaryFieldFocuses,
+                algorithmFamilyRequiredResultPrimaryFieldSummary))
             .ToArray();
 
         return new TestRecordDetailView
@@ -97,6 +104,240 @@ public static class TestRecordViewMapper
             MotorYMethodDecisions = motorYMethodDecisions,
             MotorYMethodAdaptationPlans = motorYMethodAdaptationPlans,
             ReportSummaries = detail.ReportSummaries
+        };
+    }
+
+    private static MotorYMethodAdaptationPlanSnapshot CloneWithCrossPlanFocuses(
+        MotorYMethodAdaptationPlanSnapshot plan,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> crossPlanDecisionAnchorPrimaryFieldFocuses,
+        string crossPlanDecisionAnchorPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
+        string algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> crossPlanRequiredResultPrimaryFieldFocuses,
+        string crossPlanRequiredResultPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyRequiredResultPrimaryFieldFocuses,
+        string algorithmFamilyRequiredResultPrimaryFieldSummary)
+    {
+        return new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = plan.CanonicalCode,
+            DecisionAnchorTopPriority = plan.DecisionAnchorTopPriority,
+            DecisionAnchorTopPrioritySummary = plan.DecisionAnchorTopPrioritySummary,
+            DecisionAnchorTopPriorityDominantAnchorKey = plan.DecisionAnchorTopPriorityDominantAnchorKey,
+            DecisionAnchorTopPriorityFocus = plan.DecisionAnchorTopPriorityFocus,
+            DecisionAnchorTopPriorityFields = plan.DecisionAnchorTopPriorityFields,
+            DecisionAnchorTopPriorityNextStepSummary = plan.DecisionAnchorTopPriorityNextStepSummary,
+            DecisionAnchorTopPriorityPrimaryField = plan.DecisionAnchorTopPriorityPrimaryField,
+            DecisionAnchorTopPriorityPrimaryFieldSummary = plan.DecisionAnchorTopPriorityPrimaryFieldSummary,
+            DecisionAnchorTopPriorityDetail = plan.DecisionAnchorTopPriorityDetail,
+            TotalCount = plan.TotalCount,
+            BaselineRoute = plan.BaselineRoute,
+            BaselineCount = plan.BaselineCount,
+            BaselineShare = plan.BaselineShare,
+            DominantRoute = plan.DominantRoute,
+            DominantCount = plan.DominantCount,
+            DominantShare = plan.DominantShare,
+            SelectedRoute = plan.SelectedRoute,
+            SelectedCount = plan.SelectedCount,
+            SelectedShare = plan.SelectedShare,
+            SelectionStrategy = plan.SelectionStrategy,
+            ShouldUseDominantRoute = plan.ShouldUseDominantRoute,
+            DominantOverrideThreshold = plan.DominantOverrideThreshold,
+            DominantLeadCount = plan.DominantLeadCount,
+            DominantLeadPercentagePoints = plan.DominantLeadPercentagePoints,
+            SelectedLeadCountVsBaseline = plan.SelectedLeadCountVsBaseline,
+            SelectedLeadPercentagePointsVsBaseline = plan.SelectedLeadPercentagePointsVsBaseline,
+            SelectionReason = plan.SelectionReason,
+            AlgorithmFamily = plan.AlgorithmFamily,
+            AlgorithmEntry = plan.AlgorithmEntry,
+            SettingsMethodName = plan.SettingsMethodName,
+            LegacyMethodName = plan.LegacyMethodName,
+            RecommendedLegacyCode = plan.RecommendedLegacyCode,
+            DominantLegacyCode = plan.DominantLegacyCode,
+            RecommendedLegacyCodeCount = plan.RecommendedLegacyCodeCount,
+            RecommendedLegacyCodeShare = plan.RecommendedLegacyCodeShare,
+            LegacyCodeSelectionSummary = plan.LegacyCodeSelectionSummary,
+            LegacyCodeDistributions = plan.LegacyCodeDistributions,
+            RequiresRatedParams = plan.RequiresRatedParams,
+            UpstreamCanonicalCodes = plan.UpstreamCanonicalCodes,
+            UpstreamLegacyAliases = plan.UpstreamLegacyAliases,
+            UpstreamLegacyCodeDistributions = plan.UpstreamLegacyCodeDistributions,
+            ObservedUpstreamCanonicalCodeCount = plan.ObservedUpstreamCanonicalCodeCount,
+            ObservedUpstreamCanonicalCodes = plan.ObservedUpstreamCanonicalCodes,
+            ObservedUpstreamLegacyCodes = plan.ObservedUpstreamLegacyCodes,
+            MissingUpstreamCanonicalCodes = plan.MissingUpstreamCanonicalCodes,
+            UpstreamDependenciesSatisfied = plan.UpstreamDependenciesSatisfied,
+            UpstreamDependencySummary = plan.UpstreamDependencySummary,
+            RequiredPayloadFields = plan.RequiredPayloadFields,
+            SourceEvidences = plan.SourceEvidences,
+            RequiredRatedParamFields = plan.RequiredRatedParamFields,
+            RequiredResultFields = plan.RequiredResultFields,
+            RequiredIntermediateResultFields = plan.RequiredIntermediateResultFields,
+            CoveredRequiredIntermediateResultFieldCount = plan.CoveredRequiredIntermediateResultFieldCount,
+            MissingRequiredIntermediateResultFieldCount = plan.MissingRequiredIntermediateResultFieldCount,
+            MissingRequiredIntermediateResultFields = plan.MissingRequiredIntermediateResultFields,
+            CoveredRequiredIntermediateResultFields = plan.CoveredRequiredIntermediateResultFields,
+            RequiredIntermediateResultFieldCoverageRatio = plan.RequiredIntermediateResultFieldCoverageRatio,
+            RequiredIntermediateResultFieldCoveragePercentagePoints = plan.RequiredIntermediateResultFieldCoveragePercentagePoints,
+            RequiredIntermediateResultFieldCoverageSummary = plan.RequiredIntermediateResultFieldCoverageSummary,
+            CoveredRequiredResultFieldCount = plan.CoveredRequiredResultFieldCount,
+            MissingRequiredResultFieldCount = plan.MissingRequiredResultFieldCount,
+            MissingRequiredResultFields = plan.MissingRequiredResultFields,
+            CoveredRequiredResultFields = plan.CoveredRequiredResultFields,
+            RequiredResultFieldCoverageRatio = plan.RequiredResultFieldCoverageRatio,
+            RequiredResultFieldCoveragePercentagePoints = plan.RequiredResultFieldCoveragePercentagePoints,
+            RequiredResultFieldCoverageSummary = plan.RequiredResultFieldCoverageSummary,
+            CoveredRequiredPayloadFieldCount = plan.CoveredRequiredPayloadFieldCount,
+            MissingRequiredPayloadFieldCount = plan.MissingRequiredPayloadFieldCount,
+            MissingRequiredPayloadFields = plan.MissingRequiredPayloadFields,
+            CoveredRequiredPayloadFields = plan.CoveredRequiredPayloadFields,
+            RequiredPayloadFieldCoverageRatio = plan.RequiredPayloadFieldCoverageRatio,
+            RequiredPayloadFieldCoveragePercentagePoints = plan.RequiredPayloadFieldCoveragePercentagePoints,
+            SamplePayloadAvailable = plan.SamplePayloadAvailable,
+            RequiredPayloadFieldCoverageSummary = plan.RequiredPayloadFieldCoverageSummary,
+            RequiredRawDataSignals = plan.RequiredRawDataSignals,
+            ObservedRawDataSignals = plan.ObservedRawDataSignals,
+            MissingRawDataSignals = plan.MissingRawDataSignals,
+            RawDataSignalCoveredCount = plan.RawDataSignalCoveredCount,
+            RawDataSignalMissingCount = plan.RawDataSignalMissingCount,
+            RawDataSampleCount = plan.RawDataSampleCount,
+            RawDataListAvailable = plan.RawDataListAvailable,
+            RawDataSignalCoverageRatio = plan.RawDataSignalCoverageRatio,
+            RawDataSignalCoveragePercentagePoints = plan.RawDataSignalCoveragePercentagePoints,
+            RawDataSignalCoverageSummary = plan.RawDataSignalCoverageSummary,
+            CoveredRequiredRatedParamFieldCount = plan.CoveredRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFieldCount = plan.MissingRequiredRatedParamFieldCount,
+            MissingRequiredRatedParamFields = plan.MissingRequiredRatedParamFields,
+            CoveredRequiredRatedParamFields = plan.CoveredRequiredRatedParamFields,
+            RequiredRatedParamFieldCoverageRatio = plan.RequiredRatedParamFieldCoverageRatio,
+            RequiredRatedParamFieldCoveragePercentagePoints = plan.RequiredRatedParamFieldCoveragePercentagePoints,
+            RatedParamsAvailable = plan.RatedParamsAvailable,
+            RequiredRatedParamFieldCoverageSummary = plan.RequiredRatedParamFieldCoverageSummary,
+            LegacyAlgorithmInputsReady = plan.LegacyAlgorithmInputsReady,
+            ObservedAlgorithmInputFields = plan.ObservedAlgorithmInputFields,
+            ObservedAlgorithmInputFieldSources = plan.ObservedAlgorithmInputFieldSources,
+            MissingAlgorithmInputFields = plan.MissingAlgorithmInputFields,
+            ObservedAlgorithmInputFieldCount = plan.ObservedAlgorithmInputFieldCount,
+            MissingAlgorithmInputFieldCount = plan.MissingAlgorithmInputFieldCount,
+            AlgorithmInputFieldCoverageRatio = plan.AlgorithmInputFieldCoverageRatio,
+            AlgorithmInputFieldCoveragePercentagePoints = plan.AlgorithmInputFieldCoveragePercentagePoints,
+            AlgorithmInputFieldCoverageSummary = plan.AlgorithmInputFieldCoverageSummary,
+            RawDataSignalsReady = plan.RawDataSignalsReady,
+            RequiredStructuredPayloadSignals = plan.RequiredStructuredPayloadSignals,
+            MinimumRawSampleCount = plan.MinimumRawSampleCount,
+            RawSampleCountReady = plan.RawSampleCountReady,
+            RawSampleCountReadinessSummary = plan.RawSampleCountReadinessSummary,
+            RawSampleCountGap = plan.RawSampleCountGap,
+            RawSampleCountDecisionSummary = plan.RawSampleCountDecisionSummary,
+            MinimumStructuredPayloadSampleCount = plan.MinimumStructuredPayloadSampleCount,
+            StructuredPayloadSampleCountReady = plan.StructuredPayloadSampleCountReady,
+            StructuredPayloadSampleCountReadinessSummary = plan.StructuredPayloadSampleCountReadinessSummary,
+            StructuredPayloadSampleCountGap = plan.StructuredPayloadSampleCountGap,
+            StructuredPayloadSampleCountDecisionSummary = plan.StructuredPayloadSampleCountDecisionSummary,
+            MinimumStructuredResultSampleCount = plan.MinimumStructuredResultSampleCount,
+            StructuredResultSampleCountReady = plan.StructuredResultSampleCountReady,
+            StructuredResultSampleCountReadinessSummary = plan.StructuredResultSampleCountReadinessSummary,
+            StructuredResultSampleCountGap = plan.StructuredResultSampleCountGap,
+            StructuredResultSampleCountDecisionSummary = plan.StructuredResultSampleCountDecisionSummary,
+            ObservedStructuredPayloadSignals = plan.ObservedStructuredPayloadSignals,
+            MissingStructuredPayloadSignals = plan.MissingStructuredPayloadSignals,
+            StructuredPayloadSignalCoveredCount = plan.StructuredPayloadSignalCoveredCount,
+            StructuredPayloadSignalMissingCount = plan.StructuredPayloadSignalMissingCount,
+            StructuredPayloadSampleCount = plan.StructuredPayloadSampleCount,
+            StructuredPayloadAvailable = plan.StructuredPayloadAvailable,
+            StructuredPayloadSignalCoverageRatio = plan.StructuredPayloadSignalCoverageRatio,
+            StructuredPayloadSignalCoveragePercentagePoints = plan.StructuredPayloadSignalCoveragePercentagePoints,
+            StructuredPayloadSignalCoverageSummary = plan.StructuredPayloadSignalCoverageSummary,
+            RequiredStructuredResultSignals = plan.RequiredStructuredResultSignals,
+            ObservedStructuredResultSignals = plan.ObservedStructuredResultSignals,
+            MissingStructuredResultSignals = plan.MissingStructuredResultSignals,
+            StructuredResultSignalCoveredCount = plan.StructuredResultSignalCoveredCount,
+            StructuredResultSignalMissingCount = plan.StructuredResultSignalMissingCount,
+            StructuredResultSampleCount = plan.StructuredResultSampleCount,
+            StructuredResultAvailable = plan.StructuredResultAvailable,
+            StructuredResultSignalCoverageRatio = plan.StructuredResultSignalCoverageRatio,
+            StructuredResultSignalCoveragePercentagePoints = plan.StructuredResultSignalCoveragePercentagePoints,
+            StructuredResultSignalCoverageSummary = plan.StructuredResultSignalCoverageSummary,
+            LegacyAlgorithmInputReadinessSummary = plan.LegacyAlgorithmInputReadinessSummary,
+            DependencyNotes = plan.DependencyNotes,
+            SuggestedNextSteps = plan.SuggestedNextSteps,
+            SuggestedNextStepSummary = plan.SuggestedNextStepSummary,
+            FormulaSignals = plan.FormulaSignals,
+            CoveredFormulaSignalCount = plan.CoveredFormulaSignalCount,
+            MissingFormulaSignalCount = plan.MissingFormulaSignalCount,
+            CoveredFormulaSignals = plan.CoveredFormulaSignals,
+            MissingFormulaSignals = plan.MissingFormulaSignals,
+            FormulaSignalCoverageRatio = plan.FormulaSignalCoverageRatio,
+            FormulaSignalCoveragePercentagePoints = plan.FormulaSignalCoveragePercentagePoints,
+            FormulaSignalsBackedByObservedPayload = plan.FormulaSignalsBackedByObservedPayload,
+            FormulaSignalsObservedPayloadFields = plan.FormulaSignalsObservedPayloadFields,
+            FormulaSignalObservedPayloadGaps = plan.FormulaSignalObservedPayloadGaps,
+            FormulaSignalsObservedPayloadSummary = plan.FormulaSignalsObservedPayloadSummary,
+            LegacyAlgorithmRules = plan.LegacyAlgorithmRules,
+            CoveredLegacyAlgorithmRuleCount = plan.CoveredLegacyAlgorithmRuleCount,
+            MissingLegacyAlgorithmRuleCount = plan.MissingLegacyAlgorithmRuleCount,
+            CoveredLegacyAlgorithmRules = plan.CoveredLegacyAlgorithmRules,
+            MissingLegacyAlgorithmRules = plan.MissingLegacyAlgorithmRules,
+            LegacyAlgorithmRuleCoverageRatio = plan.LegacyAlgorithmRuleCoverageRatio,
+            LegacyAlgorithmRuleCoveragePercentagePoints = plan.LegacyAlgorithmRuleCoveragePercentagePoints,
+            LegacyAlgorithmRulesBackedByObservedPayload = plan.LegacyAlgorithmRulesBackedByObservedPayload,
+            LegacyAlgorithmRulesObservedPayloadFields = plan.LegacyAlgorithmRulesObservedPayloadFields,
+            LegacyAlgorithmRulesObservedPayloadGaps = plan.LegacyAlgorithmRulesObservedPayloadGaps,
+            LegacyAlgorithmRulesObservedPayloadSummary = plan.LegacyAlgorithmRulesObservedPayloadSummary,
+            LegacyDecisionAnchors = plan.LegacyDecisionAnchors,
+            CoveredLegacyDecisionAnchorCount = plan.CoveredLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorCount = plan.MissingLegacyDecisionAnchorCount,
+            CoveredLegacyDecisionAnchors = plan.CoveredLegacyDecisionAnchors,
+            MissingLegacyDecisionAnchors = plan.MissingLegacyDecisionAnchors,
+            LegacyDecisionAnchorCoverageRatio = plan.LegacyDecisionAnchorCoverageRatio,
+            LegacyDecisionAnchorCoveragePercentagePoints = plan.LegacyDecisionAnchorCoveragePercentagePoints,
+            LegacyDecisionAnchorsBackedByObservedPayload = plan.LegacyDecisionAnchorsBackedByObservedPayload,
+            LegacyDecisionAnchorReady = plan.LegacyDecisionAnchorReady,
+            LegacyDecisionAnchorsObservedPayloadFields = plan.LegacyDecisionAnchorsObservedPayloadFields,
+            LegacyDecisionAnchorsObservedPayloadGaps = plan.LegacyDecisionAnchorsObservedPayloadGaps,
+            LegacyDecisionAnchorObservationRules = plan.LegacyDecisionAnchorObservationRules,
+            LegacyDecisionAnchorResolutions = plan.LegacyDecisionAnchorResolutions,
+            CoveredLegacyDecisionAnchorObservationRuleCount = plan.CoveredLegacyDecisionAnchorObservationRuleCount,
+            MissingLegacyDecisionAnchorObservationRuleCount = plan.MissingLegacyDecisionAnchorObservationRuleCount,
+            ResolvedLegacyDecisionAnchorCount = plan.ResolvedLegacyDecisionAnchorCount,
+            PartialLegacyDecisionAnchorCount = plan.PartialLegacyDecisionAnchorCount,
+            MissingLegacyDecisionAnchorResolutionCount = plan.MissingLegacyDecisionAnchorResolutionCount,
+            EffectiveLegacyDecisionAnchorCoverageCount = plan.EffectiveLegacyDecisionAnchorCoverageCount,
+            EffectiveLegacyDecisionAnchorGapCount = plan.EffectiveLegacyDecisionAnchorGapCount,
+            LegacyDecisionAnchorObservationRuleCoverageRatio = plan.LegacyDecisionAnchorObservationRuleCoverageRatio,
+            LegacyDecisionAnchorObservationRuleCoveragePercentagePoints = plan.LegacyDecisionAnchorObservationRuleCoveragePercentagePoints,
+            LegacyDecisionAnchorResolutionCoverageRatio = plan.LegacyDecisionAnchorResolutionCoverageRatio,
+            LegacyDecisionAnchorResolutionCoveragePercentagePoints = plan.LegacyDecisionAnchorResolutionCoveragePercentagePoints,
+            EffectiveLegacyDecisionAnchorCoverageRatio = plan.EffectiveLegacyDecisionAnchorCoverageRatio,
+            EffectiveLegacyDecisionAnchorCoveragePercentagePoints = plan.EffectiveLegacyDecisionAnchorCoveragePercentagePoints,
+            LegacyDecisionAnchorObservationRuleSummary = plan.LegacyDecisionAnchorObservationRuleSummary,
+            LegacyDecisionAnchorResolutionSummary = plan.LegacyDecisionAnchorResolutionSummary,
+            LegacyDecisionAnchorNextActionSummary = plan.LegacyDecisionAnchorNextActionSummary,
+            SuggestedDecisionAnchorNextSteps = plan.SuggestedDecisionAnchorNextSteps,
+            SuggestedDecisionAnchorNextStepSummary = plan.SuggestedDecisionAnchorNextStepSummary,
+            LegacyDecisionAnchorGapPreviewSummary = plan.LegacyDecisionAnchorGapPreviewSummary,
+            DecisionAnchorPriorityDistributions = plan.DecisionAnchorPriorityDistributions,
+            DecisionAnchorPrimaryFieldDistributions = plan.DecisionAnchorPrimaryFieldDistributions,
+            DecisionAnchorPrimaryFieldSummary = plan.DecisionAnchorPrimaryFieldSummary,
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = crossPlanDecisionAnchorPrimaryFieldFocuses,
+            CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
+            AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
+            AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+            RequiredResultPrimaryFieldDistributions = plan.RequiredResultPrimaryFieldDistributions,
+            RequiredResultPrimaryFieldSummary = plan.RequiredResultPrimaryFieldSummary,
+            CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,
+            CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultPrimaryFieldSummary,
+            AlgorithmFamilyRequiredResultPrimaryFieldFocuses = algorithmFamilyRequiredResultPrimaryFieldFocuses,
+            AlgorithmFamilyRequiredResultPrimaryFieldSummary = algorithmFamilyRequiredResultPrimaryFieldSummary,
+            DecisionAnchorPrioritySummary = plan.DecisionAnchorPrioritySummary,
+            LegacyDecisionAnchorsObservedPayloadSummary = plan.LegacyDecisionAnchorsObservedPayloadSummary,
+            FormulaSignalSummary = plan.FormulaSignalSummary,
+            LegacyAlgorithmRuleSummary = plan.LegacyAlgorithmRuleSummary,
+            LegacyDecisionAnchorSummary = plan.LegacyDecisionAnchorSummary,
+            SelectedMethodSummary = plan.SelectedMethodSummary,
+            BaselineDominantComparisonSummary = plan.BaselineDominantComparisonSummary,
+            DependencyBuckets = plan.DependencyBuckets,
+            Distributions = plan.Distributions
         };
     }
 
@@ -295,6 +536,7 @@ public static class TestRecordViewMapper
             SelectedLeadCountVsBaseline = contract.SelectedLeadCountVsBaseline,
             SelectedLeadPercentagePointsVsBaseline = contract.SelectedLeadPercentagePointsVsBaseline,
             SelectionReason = contract.SelectionReason,
+            AlgorithmFamily = contract.AlgorithmFamily,
             AlgorithmEntry = contract.AlgorithmEntry,
             SettingsMethodName = contract.SettingsMethodName,
             LegacyMethodName = contract.LegacyMethodName,
@@ -574,6 +816,21 @@ public static class TestRecordViewMapper
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanDecisionAnchorPrimaryFieldSummary = contract.CrossPlanDecisionAnchorPrimaryFieldSummary,
+            AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = contract.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AlgorithmFamilies = x.AlgorithmFamilies,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = contract.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary,
             RequiredResultPrimaryFieldDistributions = contract.RequiredResultPrimaryFieldDistributions.Select(x => new MotorYRequiredResultPrimaryFieldDistributionSnapshot
             {
                 PrimaryField = x.PrimaryField,
@@ -599,6 +856,21 @@ public static class TestRecordViewMapper
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanRequiredResultPrimaryFieldSummary = contract.CrossPlanRequiredResultPrimaryFieldSummary,
+            AlgorithmFamilyRequiredResultPrimaryFieldFocuses = contract.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AlgorithmFamilies = x.AlgorithmFamilies,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            AlgorithmFamilyRequiredResultPrimaryFieldSummary = contract.AlgorithmFamilyRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,
@@ -658,6 +930,26 @@ public static class TestRecordViewMapper
             .Select(focus => $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp)");
 
         return $"cross-plan required-result primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
+    }
+
+    private static string BuildAlgorithmFamilyPrimaryFieldSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return $"algorithm-family {scope} primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(focus =>
+            {
+                var familyLabel = focus.AlgorithmFamilies.Count == 0
+                    ? "no-family"
+                    : string.Join("/", focus.AlgorithmFamilies);
+                return $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp, families {familyLabel})";
+            });
+
+        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
     }
 
     private static string BuildProductDisplayName(string? model, string? code, string productKind)

@@ -330,6 +330,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             SelectedLeadCountVsBaseline = selection.SelectedLeadCountVsBaseline,
             SelectedLeadPercentagePointsVsBaseline = selection.SelectedLeadPercentagePointsVsBaseline,
             SelectionReason = selection.SelectionReason,
+            AlgorithmFamily = selectedProfile?.AlgorithmFamily ?? string.Empty,
             AlgorithmEntry = selectedProfile?.LegacyAlgorithmEntry ?? string.Empty,
             SettingsMethodName = selectedProfile?.LegacySettingsMethodName ?? string.Empty,
             LegacyMethodName = selectedProfile?.LegacyMethodName ?? string.Empty,

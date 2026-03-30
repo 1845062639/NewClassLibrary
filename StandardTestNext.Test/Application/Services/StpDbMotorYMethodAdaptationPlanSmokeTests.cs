@@ -198,9 +198,9 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
     {
         var expected = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(plans);
 
-        if (focuses.Count != expected.Length)
+        if (focuses.Count != expected.Count)
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus count mismatch. expected={expected.Length}, actual={focuses.Count}");
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus count mismatch. expected={expected.Count}, actual={focuses.Count}");
         }
 
         foreach (var row in expected)
@@ -291,9 +291,9 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
     {
         var expected = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(plans);
 
-        if (focuses.Count != expected.Length)
+        if (focuses.Count != expected.Count)
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus count mismatch. expected={expected.Length}, actual={focuses.Count}");
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus count mismatch. expected={expected.Count}, actual={focuses.Count}");
         }
 
         foreach (var row in expected)

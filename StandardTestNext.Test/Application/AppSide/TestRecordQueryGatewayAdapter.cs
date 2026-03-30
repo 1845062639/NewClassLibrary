@@ -214,6 +214,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
             SelectedLeadCountVsBaseline = snapshot.SelectedLeadCountVsBaseline,
             SelectedLeadPercentagePointsVsBaseline = snapshot.SelectedLeadPercentagePointsVsBaseline,
             SelectionReason = snapshot.SelectionReason,
+            AlgorithmFamily = snapshot.AlgorithmFamily,
             AlgorithmEntry = snapshot.AlgorithmEntry,
             SettingsMethodName = snapshot.SettingsMethodName,
             LegacyMethodName = snapshot.LegacyMethodName,
@@ -468,6 +469,21 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanDecisionAnchorPrimaryFieldSummary = snapshot.CrossPlanDecisionAnchorPrimaryFieldSummary,
+            AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = snapshot.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AlgorithmFamilies = x.AlgorithmFamilies,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = snapshot.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary,
             RequiredResultPrimaryFieldDistributions = snapshot.RequiredResultPrimaryFieldDistributions.Select(x => new MotorYRequiredResultPrimaryFieldDistributionContract
             {
                 PrimaryField = x.PrimaryField,
@@ -493,6 +509,21 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanRequiredResultPrimaryFieldSummary = snapshot.CrossPlanRequiredResultPrimaryFieldSummary,
+            AlgorithmFamilyRequiredResultPrimaryFieldFocuses = snapshot.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AlgorithmFamilies = x.AlgorithmFamilies,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            AlgorithmFamilyRequiredResultPrimaryFieldSummary = snapshot.AlgorithmFamilyRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
             EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
             EffectiveLegacyDecisionAnchorGapCount = snapshot.EffectiveLegacyDecisionAnchorGapCount,

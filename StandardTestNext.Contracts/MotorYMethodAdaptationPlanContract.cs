@@ -158,6 +158,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public double SelectedLeadCountVsBaseline { get; init; }
     public int SelectedLeadPercentagePointsVsBaseline { get; init; }
     public string SelectionReason { get; init; } = string.Empty;
+    public string AlgorithmFamily { get; init; } = string.Empty;
     public string AlgorithmEntry { get; init; } = string.Empty;
     public string SettingsMethodName { get; init; } = string.Empty;
     public string LegacyMethodName { get; init; } = string.Empty;
@@ -331,10 +332,14 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string DecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYPrimaryFieldFocusContract> CrossPlanDecisionAnchorPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusContract>();
     public string CrossPlanDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusContract> AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusContract>();
+    public string AlgorithmFamilyDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionContract> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionContract>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYPrimaryFieldFocusContract> CrossPlanRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusContract>();
     public string CrossPlanRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusContract> AlgorithmFamilyRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusContract>();
+    public string AlgorithmFamilyRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;

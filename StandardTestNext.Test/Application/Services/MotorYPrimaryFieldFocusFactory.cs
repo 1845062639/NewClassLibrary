@@ -22,7 +22,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
 
-    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyPrimaryFieldFocuses(
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyPrimaryFieldFocuses(
         IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
         Func<MotorYMethodAdaptationPlanSnapshot, IEnumerable<CrossPlanPrimaryFieldCandidate>> candidateSelector)
     {

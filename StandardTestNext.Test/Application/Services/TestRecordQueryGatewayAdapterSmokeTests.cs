@@ -21,8 +21,10 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeCrossPlanDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway();
+        ShouldExposeAlgorithmFamilyDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeCrossPlanRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
+        ShouldExposeAlgorithmFamilyRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1492,6 +1494,82 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
     }
 
+    private static void ShouldExposeAlgorithmFamilyDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:23:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-ALGO-FAMILY-ANCHOR-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 190, "I": 6.3, "P": 520, "Cos": 0.81 }
+                      ],
+                      "Un": 380,
+                      "K1": 1,
+                      "R1c": 1.25,
+                      "θ1c": 25
+                    }
+                    """
+                },
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50, "θ1t": 85 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y algorithm-family decision-anchor primary-field focus smoke test returned null detail.");
+
+        var noLoadPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        var focuses = noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses;
+        var gb = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal));
+        var pfw = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+
+        if (focuses.Count != 6
+            || loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count != focuses.Count
+            || !string.Equals(noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, "algorithm-family decision-anchor primary fields top 3/6: GB=1 (50pp, weighted 50pp, families LoadB); CoefficientOfPfe=1 (50pp, weighted 25pp, families NoLoad); Pfw=1 (50pp, weighted 25pp, families NoLoad)", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, StringComparison.Ordinal)
+            || gb is null
+            || gb.WeightedCount != 2
+            || Math.Abs(gb.WeightedShare - 0.5d) > 0.0001d
+            || !gb.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || pfw is null
+            || pfw.WeightedCount != 1
+            || Math.Abs(pfw.WeightedShare - 0.25d) > 0.0001d
+            || !pfw.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y algorithm-family decision-anchor primary-field focus query smoke test mismatch. summary='{noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{x.Count}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}"))}]");
+        }
+    }
+
     private static void ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway()
     {
         var sampleTime = DateTimeOffset.Parse("2026-03-30T08:20:00+08:00");
@@ -1658,6 +1736,90 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(loadBPlan.CrossPlanRequiredResultPrimaryFieldSummary, noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y cross-plan required-result primary-field focus query smoke test mismatch. summary='{noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
+        }
+    }
+
+    private static void ShouldExposeAlgorithmFamilyRequiredResultPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:20:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-ALGO-FAMILY-RESULT-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 190, "I": 6.3, "P": 520, "Cos": 0.81 }
+                      ],
+                      "Un": 380,
+                      "K1": 1,
+                      "R1c": 1.25,
+                      "θ1c": 25
+                    }
+                    """
+                },
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50 }
+                      ],
+                      "CoefficientOfPfe": 0.97,
+                      "Pfw": 120,
+                      "R1c": 1.25,
+                      "θ1c": 25,
+                      "PolePairs": 2,
+                      "Pn": 5.5,
+                      "Un": 380,
+                      "ΔT": 75
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y algorithm-family required-result primary-field focus smoke test returned null detail.");
+
+        var noLoadPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        var focuses = noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldFocuses;
+        var pfw = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var coefficient = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+
+        if (focuses.Count != 18
+            || loadBPlan.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count != focuses.Count
+            || !string.Equals(noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary, "algorithm-family required-result primary fields top 3/18: CoefficientOfPfe=2 (100pp, weighted 100pp, families LoadB/NoLoad); Pfw=2 (100pp, weighted 100pp, families LoadB/NoLoad); Pcu2=2 (100pp, weighted 50pp, families LoadB)", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary, noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary, StringComparison.Ordinal)
+            || pfw is null
+            || pfw.WeightedCount != 4
+            || Math.Abs(pfw.WeightedShare - 1d) > 0.0001d
+            || !pfw.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || coefficient is null
+            || coefficient.WeightedCount != 4
+            || Math.Abs(coefficient.WeightedShare - 1d) > 0.0001d
+            || !coefficient.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y algorithm-family required-result primary-field focus query smoke test mismatch. summary='{noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}"))}]");
         }
     }
 
