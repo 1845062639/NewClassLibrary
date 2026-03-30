@@ -152,6 +152,7 @@ public static class TestBootstrapFormattingSmokeTests
             || !formatted.Contains("anchor-top-priority=blocking:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:primary=Ps:primary-summary=优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC:summary=top decision anchor priority=blocking; focus=B法 Ps 非负迭代收敛字段; anchor=ps-iteration; fields=Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("anchor-resolutions=ps-iteration:missing:33pp:obs=ResultDataList:miss=Ps+cuC:priority=blocking:coverage=decision anchor coverage 1/3 (33pp); missing: Ps, cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("priority-summary=decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
+            || !formatted.Contains("anchor-primary=Ps:1:100.0 %:ps-iteration:blocking:summary=decision-anchor primary fields: Ps=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
             || !formatted.Contains("primary field Ps referenced by 1/1 anchors (100pp); anchors=ps-iteration; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap priority formatting smoke test failed. actual='{formatted}'");

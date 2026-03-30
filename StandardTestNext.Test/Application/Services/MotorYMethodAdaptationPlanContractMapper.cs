@@ -579,6 +579,7 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 })
                 .ToArray(),
             DecisionAnchorPrimaryFieldDistributions = decisionAnchorPrimaryFieldDistributions,
+            DecisionAnchorPrimaryFieldSummary = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldSummary(decisionAnchorResolutions),
             RequiredResultPrimaryFieldDistributions = requiredResultPrimaryFieldDistributions,
             RequiredResultPrimaryFieldSummary = requiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,

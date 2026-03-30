@@ -529,6 +529,7 @@ public static class TestRecordViewMapper
                 SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
                 Summary = x.Summary
             }).ToArray(),
+            DecisionAnchorPrimaryFieldSummary = contract.DecisionAnchorPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,

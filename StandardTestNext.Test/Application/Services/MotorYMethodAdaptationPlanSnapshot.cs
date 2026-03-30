@@ -299,6 +299,7 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string LegacyDecisionAnchorGapPreviewSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYDecisionAnchorPriorityDistributionSnapshot> DecisionAnchorPriorityDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPriorityDistributionSnapshot>();
     public IReadOnlyList<MotorYDecisionAnchorPrimaryFieldDistributionSnapshot> DecisionAnchorPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPrimaryFieldDistributionSnapshot>();
+    public string DecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionSnapshot>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;

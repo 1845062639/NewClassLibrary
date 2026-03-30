@@ -300,6 +300,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public string LegacyDecisionAnchorGapPreviewSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYDecisionAnchorPriorityDistributionContract> DecisionAnchorPriorityDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPriorityDistributionContract>();
     public IReadOnlyList<MotorYDecisionAnchorPrimaryFieldDistributionContract> DecisionAnchorPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPrimaryFieldDistributionContract>();
+    public string DecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionContract> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionContract>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
