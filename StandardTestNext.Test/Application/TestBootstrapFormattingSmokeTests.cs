@@ -9,6 +9,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview();
         ShouldExposeDecisionAnchorPriorityAndCoverageInCliPreview();
         ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
+        ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
     }
 
     private static void ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview()
@@ -87,6 +88,57 @@ public static class TestBootstrapFormattingSmokeTests
         if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad::intermediate-result-fields/result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview()
+    {
+        var plan = new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = MotorYTestMethodCodes.NoLoad,
+            SelectionStrategy = "baseline",
+            AlgorithmEntry = "Calc_NoLoad",
+            SettingsMethodName = "空载试验",
+            SelectionReason = "smoke",
+            RawSampleCountReady = true,
+            RawDataSampleCount = 3,
+            MinimumRawSampleCount = 1,
+            StructuredPayloadSampleCountReady = true,
+            StructuredPayloadSampleCount = 2,
+            MinimumStructuredPayloadSampleCount = 1,
+            StructuredResultSampleCountReady = true,
+            StructuredResultSampleCount = 2,
+            MinimumStructuredResultSampleCount = 1,
+            CrossPlanRequiredResultPrimaryFieldSummary = "cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)",
+            CrossPlanRequiredResultPrimaryFieldFocuses = new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "Pfw",
+                    Count = 2,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 0.7d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
+                    SuggestedNextStepFocuses = new[] { "中间结果锚点", "结果字段" },
+                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=中间结果锚点, 结果字段; priorities=intermediate-result-fields, result-fields"
+                }
+            },
+            LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
+            LegacyAlgorithmInputReadinessSummary = "legacy algorithm inputs ready",
+            SelectedMethodSummary = "推荐方法沿用 baseline",
+            BaselineDominantComparisonSummary = "baseline 与 dominant 一致"
+        };
+
+        var formatter = typeof(TestBootstrap).GetMethod("FormatMethodAdaptationPlanSnapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap formatter not found.");
+        var formatted = formatter.Invoke(null, new object[] { plan }) as string
+            ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
+
+        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:MotorY.LoadB/MotorY.NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
         }
     }
 

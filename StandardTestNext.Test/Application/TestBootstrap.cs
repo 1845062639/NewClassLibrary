@@ -364,7 +364,7 @@ public sealed class TestBootstrap
             : "result-primary=" + string.Join("|", plan.RequiredResultPrimaryFieldDistributions.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}")) + $":summary={plan.RequiredResultPrimaryFieldSummary}";
         var crossPlanResultPrimary = plan.CrossPlanRequiredResultPrimaryFieldFocuses.Count == 0
             ? $"result-cross-plan={plan.CrossPlanRequiredResultPrimaryFieldSummary}"
-            : "result-cross-plan=" + string.Join("|", plan.CrossPlanRequiredResultPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.CrossPlanRequiredResultPrimaryFieldSummary}";
+            : "result-cross-plan=" + string.Join("|", plan.CrossPlanRequiredResultPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.CrossPlanRequiredResultPrimaryFieldSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
