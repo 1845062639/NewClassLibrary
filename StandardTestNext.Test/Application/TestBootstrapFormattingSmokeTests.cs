@@ -139,6 +139,8 @@ public static class TestBootstrapFormattingSmokeTests
                     LegacyMethodNames = new[] { "B法负载试验", "空载试验" },
                     SettingsMethodNames = new[] { "B法负载试验", "空载试验" },
                     LegacyAlgorithmEntries = new[] { "Calc_Load_B", "Calc_NoLoad" },
+                    UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad },
+                    UpstreamSummaryHints = new[] { "需要热试验提供 GB 校核", "空载主链直接参与 GB 比较" },
                     AnchorKeys = new[] { "gb-branch", "gb-compare" },
                     SuggestedNextStepPriorities = new[] { "blocking", "decision-branch" },
                     SuggestedNextStepFocuses = new[] { "旧算法GB分支", "旧算法GB比较" },
@@ -156,7 +158,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:upstream=MotorY.HeatRun/MotorY.NoLoad:upstream-legacy=:upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan anchor-primary formatting smoke test failed. actual='{formatted}'");
         }
