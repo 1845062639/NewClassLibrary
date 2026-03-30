@@ -54,6 +54,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         };
 
         AssertCrossPlanDecisionAnchorPrimaryFieldFocuses(actual, crossPlanPrimaryFieldFocuses);
+        AssertCrossPlanDecisionAnchorPrimaryFieldFocusSummaries(actual, crossPlanPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocuses(actual, crossPlanRequiredResultPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocusSummaries(actual, crossPlanRequiredResultPrimaryFieldFocuses);
 
@@ -206,6 +207,67 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
+        }
+    }
+
+    private static void AssertCrossPlanDecisionAnchorPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var totalPlans = plans.Count;
+        var totalWeighted = plans.Sum(plan => Math.Max(1, plan.SelectedCount));
+        if (totalPlans == 0 || totalWeighted == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: cross-plan decision-anchor primary-field baseline is empty.");
+        }
+
+        var gb = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal));
+        var coefficientOfPfe = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var pfw = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+
+        var expectedWeightedCountGb = plans
+            .Where(plan => string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal)
+                || string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
+            .Sum(plan => Math.Max(1, plan.SelectedCount));
+        var expectedWeightedShareGb = Math.Round((double)expectedWeightedCountGb / totalWeighted, 4, MidpointRounding.AwayFromZero);
+
+        var expectedWeightedCountNoLoad = plans
+            .Where(plan => string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal))
+            .Sum(plan => Math.Max(1, plan.SelectedCount));
+        var expectedWeightedShareNoLoad = Math.Round((double)expectedWeightedCountNoLoad / totalWeighted, 4, MidpointRounding.AwayFromZero);
+
+        var expectedSummary = $"cross-plan decision-anchor primary fields top 3/{focuses.Count}: GB=2 (33pp, weighted {(int)Math.Round(expectedWeightedShareGb * 100d, MidpointRounding.AwayFromZero)}pp); CoefficientOfPfe=1 (17pp, weighted {(int)Math.Round(expectedWeightedShareNoLoad * 100d, MidpointRounding.AwayFromZero)}pp); Pfw=1 (17pp, weighted {(int)Math.Round(expectedWeightedShareNoLoad * 100d, MidpointRounding.AwayFromZero)}pp)";
+
+        if (gb is null
+            || gb.Count != 2
+            || Math.Abs(gb.Share - 0.3333d) > 0.0001d
+            || gb.WeightedCount != expectedWeightedCountGb
+            || Math.Abs(gb.WeightedShare - expectedWeightedShareGb) > 0.0001d
+            || !gb.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch", "gb-temperature-branch" }, StringComparer.Ordinal)
+            || !gb.SuggestedNextStepFocuses.SequenceEqual(new[] { "额定参数", "负载B分支", "热态分支" }, StringComparer.Ordinal)
+            || !gb.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || coefficientOfPfe is null
+            || coefficientOfPfe.Count != 1
+            || Math.Abs(coefficientOfPfe.Share - 0.1667d) > 0.0001d
+            || coefficientOfPfe.WeightedCount != expectedWeightedCountNoLoad
+            || Math.Abs(coefficientOfPfe.WeightedShare - expectedWeightedShareNoLoad) > 0.0001d
+            || !coefficientOfPfe.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !coefficientOfPfe.AnchorKeys.SequenceEqual(new[] { "pfw-split" }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || pfw is null
+            || pfw.Count != 1
+            || Math.Abs(pfw.Share - 0.1667d) > 0.0001d
+            || pfw.WeightedCount != expectedWeightedCountNoLoad
+            || Math.Abs(pfw.WeightedShare - expectedWeightedShareNoLoad) > 0.0001d
+            || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !pfw.AnchorKeys.SequenceEqual(new[] { "pfw-fit-window" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepPriorities.SequenceEqual(new[] { "follow-up" }, StringComparer.Ordinal)
+            || !plans.All(plan => string.Equals(plan.CrossPlanDecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit cross-plan decision-anchor primary-field summary mismatch. expectedSummary='{expectedSummary}', actualSummary='{plans.FirstOrDefault()?.CrossPlanDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
         }
     }
 
