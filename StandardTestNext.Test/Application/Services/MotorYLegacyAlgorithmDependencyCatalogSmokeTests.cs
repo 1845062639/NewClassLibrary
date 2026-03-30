@@ -216,7 +216,19 @@ public static class MotorYLegacyAlgorithmDependencyCatalogSmokeTests
                 IsBaselineMethod = route.IsBaselineMethod
             });
 
-                var snapshotService = new StpDbSnapshotQueryService();
+        if (contract.CrossPlanDecisionAnchorPrimaryFieldFocuses.Count != 0
+            || !string.Equals(contract.CrossPlanDecisionAnchorPrimaryFieldSummary, "cross-plan decision-anchor primary fields: none", StringComparison.Ordinal)
+            || contract.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count != 0
+            || !string.Equals(contract.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, "algorithm-family decision-anchor primary fields: none", StringComparison.Ordinal)
+            || contract.CrossPlanRequiredResultPrimaryFieldFocuses.Count != 0
+            || !string.Equals(contract.CrossPlanRequiredResultPrimaryFieldSummary, "cross-plan required-result primary fields: none", StringComparison.Ordinal)
+            || contract.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count != 0
+            || !string.Equals(contract.AlgorithmFamilyRequiredResultPrimaryFieldSummary, "algorithm-family required-result primary fields: none", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm dependency smoke test failed: single-plan contract aggregation defaults mismatch. anchorCrossPlanCount={contract.CrossPlanDecisionAnchorPrimaryFieldFocuses.Count}, anchorFamilyCount={contract.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count}, resultCrossPlanCount={contract.CrossPlanRequiredResultPrimaryFieldFocuses.Count}, resultFamilyCount={contract.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count}");
+        }
+
+        var snapshotService = new StpDbSnapshotQueryService();
         var plans = snapshotService.ListMotorYMethodAdaptationPlans();
         var loadBPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
             ?? throw new InvalidOperationException("Motor_Y legacy algorithm dependency smoke test failed: missing LoadB adaptation plan from stp.db snapshot.");
