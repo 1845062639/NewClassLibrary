@@ -55,6 +55,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
 
         AssertCrossPlanDecisionAnchorPrimaryFieldFocuses(actual, crossPlanPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocuses(actual, crossPlanRequiredResultPrimaryFieldFocuses);
+        AssertCrossPlanRequiredResultPrimaryFieldFocusSummaries(actual, crossPlanRequiredResultPrimaryFieldFocuses);
 
         foreach (var row in expected)
         {
@@ -239,6 +240,55 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
+        }
+    }
+
+    private static void AssertCrossPlanRequiredResultPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var totalPlans = plans.Count;
+        var totalWeighted = plans.Sum(plan => Math.Max(1, plan.SelectedCount));
+        if (totalPlans == 0 || totalWeighted == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field baseline is empty.");
+        }
+
+        var pfw = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var coefficientOfPfe = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var pcu2 = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+
+        var expectedWeightedCount = plans
+            .Where(plan => string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal)
+                || string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal)
+                || string.Equals(plan.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
+            .Sum(plan => Math.Max(1, plan.SelectedCount));
+        var expectedWeightedShare = Math.Round((double)expectedWeightedCount / totalWeighted, 4, MidpointRounding.AwayFromZero);
+        var expectedSummary = $"cross-plan required-result primary fields top 3/{focuses.Count}: CoefficientOfPfe=3 (50pp, weighted {(int)Math.Round(expectedWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp); Pfw=3 (50pp, weighted {(int)Math.Round(expectedWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp); Pcu2=2 (33pp, weighted 20pp)";
+
+        if (pfw is null
+            || pfw.Count != 3
+            || Math.Abs(pfw.Share - 0.5d) > 0.0001d
+            || pfw.WeightedCount != expectedWeightedCount
+            || Math.Abs(pfw.WeightedShare - expectedWeightedShare) > 0.0001d
+            || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadA, MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepFocuses.SequenceEqual(new[] { "中间结果锚点", "结果字段" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepPriorities.SequenceEqual(new[] { "intermediate-result-fields", "result-fields" }, StringComparer.Ordinal)
+            || coefficientOfPfe is null
+            || coefficientOfPfe.Count != 3
+            || Math.Abs(coefficientOfPfe.Share - 0.5d) > 0.0001d
+            || coefficientOfPfe.WeightedCount != expectedWeightedCount
+            || Math.Abs(coefficientOfPfe.WeightedShare - expectedWeightedShare) > 0.0001d
+            || !coefficientOfPfe.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadA, MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || pcu2 is null
+            || pcu2.Count != 2
+            || Math.Abs(pcu2.Share - 0.3333d) > 0.0001d
+            || pcu2.WeightedCount != 81
+            || Math.Abs(pcu2.WeightedShare - 0.198d) > 0.0001d
+            || !pcu2.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadA, MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !plans.All(plan => string.Equals(plan.CrossPlanRequiredResultPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal)))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit cross-plan required-result primary-field summary mismatch. expectedSummary='{expectedSummary}', actualSummary='{plans.FirstOrDefault()?.CrossPlanRequiredResultPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Take(5).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
         }
     }
 
