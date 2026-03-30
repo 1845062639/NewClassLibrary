@@ -92,6 +92,17 @@ public sealed class MotorYDecisionAnchorTopPrioritySnapshot
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYLegacyAlgorithmSourceEvidenceSnapshot
+{
+    public string SectionKey { get; init; } = string.Empty;
+    public string MethodName { get; init; } = string.Empty;
+    public string SourceFile { get; init; } = string.Empty;
+    public int StartLine { get; init; }
+    public int EndLine { get; init; }
+    public IReadOnlyList<string> ReferencedFields { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYPrimaryFieldFocusSnapshot
 {
     public string PrimaryField { get; init; } = string.Empty;
@@ -166,6 +177,7 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public bool UpstreamDependenciesSatisfied { get; init; }
     public string UpstreamDependencySummary { get; init; } = string.Empty;
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYLegacyAlgorithmSourceEvidenceSnapshot> SourceEvidences { get; init; } = Array.Empty<MotorYLegacyAlgorithmSourceEvidenceSnapshot>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();

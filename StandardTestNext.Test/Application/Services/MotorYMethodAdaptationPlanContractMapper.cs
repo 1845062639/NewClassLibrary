@@ -363,6 +363,18 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = upstream.UpstreamDependencySummary,
             RequiredPayloadFields = requiredPayloadFields,
+            SourceEvidences = (dependencyProfile?.SourceEvidences ?? Array.Empty<MotorYLegacyAlgorithmSourceEvidence>())
+                .Select(evidence => new MotorYLegacyAlgorithmSourceEvidenceContract
+                {
+                    SectionKey = evidence.SectionKey,
+                    MethodName = evidence.MethodName,
+                    SourceFile = evidence.SourceFile,
+                    StartLine = evidence.StartLine,
+                    EndLine = evidence.EndLine,
+                    ReferencedFields = evidence.ReferencedFields,
+                    Summary = evidence.Summary
+                })
+                .ToArray(),
             RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
             RequiredIntermediateResultFields = dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),

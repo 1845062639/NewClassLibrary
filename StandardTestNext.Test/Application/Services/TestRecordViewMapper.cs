@@ -327,6 +327,16 @@ public static class TestRecordViewMapper
             UpstreamDependenciesSatisfied = contract.UpstreamDependenciesSatisfied,
             UpstreamDependencySummary = contract.UpstreamDependencySummary,
             RequiredPayloadFields = contract.RequiredPayloadFields,
+            SourceEvidences = contract.SourceEvidences.Select(x => new MotorYLegacyAlgorithmSourceEvidenceSnapshot
+            {
+                SectionKey = x.SectionKey,
+                MethodName = x.MethodName,
+                SourceFile = x.SourceFile,
+                StartLine = x.StartLine,
+                EndLine = x.EndLine,
+                ReferencedFields = x.ReferencedFields,
+                Summary = x.Summary
+            }).ToArray(),
             RequiredRatedParamFields = contract.RequiredRatedParamFields,
             RequiredResultFields = contract.RequiredResultFields,
             RequiredIntermediateResultFields = contract.RequiredIntermediateResultFields,

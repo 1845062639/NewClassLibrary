@@ -102,6 +102,17 @@ public sealed class MotorYRequiredResultPrimaryFieldDistributionContract
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYLegacyAlgorithmSourceEvidenceContract
+{
+    public string SectionKey { get; init; } = string.Empty;
+    public string MethodName { get; init; } = string.Empty;
+    public string SourceFile { get; init; } = string.Empty;
+    public int StartLine { get; init; }
+    public int EndLine { get; init; }
+    public IReadOnlyList<string> ReferencedFields { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYPrimaryFieldFocusContract
 {
     public string PrimaryField { get; init; } = string.Empty;
@@ -167,6 +178,7 @@ public sealed class MotorYMethodAdaptationPlanContract
     public bool UpstreamDependenciesSatisfied { get; init; }
     public string UpstreamDependencySummary { get; init; } = string.Empty;
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYLegacyAlgorithmSourceEvidenceContract> SourceEvidences { get; init; } = Array.Empty<MotorYLegacyAlgorithmSourceEvidenceContract>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();

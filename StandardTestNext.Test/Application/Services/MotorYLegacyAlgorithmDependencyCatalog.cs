@@ -5,6 +5,17 @@ namespace StandardTestNext.Test.Application.Services;
 /// 供 next-gen 适配计划 / App 提示 / 后续算法 adapter 直接消费。
 /// 目标不是现在就重写算法，而是先把“要对齐旧算法至少需要什么输入、会走什么关键计算规则”显式化并锁进闭环。
 /// </summary>
+public sealed class MotorYLegacyAlgorithmSourceEvidence
+{
+    public string SectionKey { get; init; } = string.Empty;
+    public string MethodName { get; init; } = string.Empty;
+    public string SourceFile { get; init; } = string.Empty;
+    public int StartLine { get; init; }
+    public int EndLine { get; init; }
+    public IReadOnlyList<string> ReferencedFields { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYLegacyAlgorithmDependencyProfile
 {
     public string CanonicalCode { get; init; } = string.Empty;
@@ -13,6 +24,7 @@ public sealed class MotorYLegacyAlgorithmDependencyProfile
     public IReadOnlyList<string> UpstreamCanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyDictionary<string, IReadOnlyList<string>> UpstreamLegacyAliases { get; init; } = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
     public IReadOnlyList<string> RequiredPayloadFields { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<MotorYLegacyAlgorithmSourceEvidence> SourceEvidences { get; init; } = Array.Empty<MotorYLegacyAlgorithmSourceEvidence>();
     public IReadOnlyList<string> RequiredRatedParamFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredResultFields { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> RequiredIntermediateResultFields { get; init; } = Array.Empty<string>();
@@ -63,6 +75,23 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                     .ToArray(),
                 StringComparer.Ordinal);
 
+    private const string LegacyAlgorithmSourceFile = "ClassLibary/StandardTest.Library/Algorithm/Motor/Algorithm_Motor_Y.cs";
+
+    private static MotorYLegacyAlgorithmSourceEvidence Evidence(string sectionKey, string methodName, int startLine, int endLine, string summary, params string[] referencedFields)
+        => new()
+        {
+            SectionKey = sectionKey,
+            MethodName = methodName,
+            SourceFile = LegacyAlgorithmSourceFile,
+            StartLine = startLine,
+            EndLine = endLine,
+            ReferencedFields = referencedFields
+                .Where(field => !string.IsNullOrWhiteSpace(field))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray(),
+            Summary = summary
+        };
+
     private static readonly IReadOnlyDictionary<string, MotorYLegacyAlgorithmDependencyProfile> Profiles =
         new Dictionary<string, MotorYLegacyAlgorithmDependencyProfile>(StringComparer.Ordinal)
         {
@@ -73,6 +102,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 RequiresRatedParams = false,
                 UpstreamCanonicalCodes = Array.Empty<string>(),
                 RequiredPayloadFields = new[] { "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c" },
+                SourceEvidences = new[]
+                {
+                    Evidence("dc-resistance-cold-baseline", "Direct_Current_Resistance", 1, 1, "直流电阻结果作为后续空载/热试验引用的冷态基线，当前证据来自旧对象字段口径与下游算法引用关系。", "Ruv", "Rvw", "Rwu", "R1", "R1c", "θ1c")
+                },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "R1", "R1c", "θ1c" },
                 RequiredIntermediateResultFields = new[] { "R1", "R1c", "θ1c" },
@@ -109,6 +142,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
                 UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.DcResistance),
                 RequiredPayloadFields = new[] { "DataList", "Un", "R1c", "θ1c", "K1", "Order" },
+                SourceEvidences = new[]
+                {
+                    Evidence("rconverse-branch", "NoLoad", 184, 193, "空载算法先按 RConverseType 决定是 R0→θ0 还是 θ0→R0 分支。", "RConverseType", "R0", "θ0", "R1c", "K1", "θ1c"),
+                    Evidence("per-point-precompute", "NoLoad", 195, 202, "逐点预计算 U0/Un、R0、P0cu1、Pcon，作为后续 Pfw/Pfe 拟合输入。", "DataList.U0", "DataList.I0", "DataList.P0", "DataList.θ0", "DataList.R0", "DataList.P0cu1", "DataList.Pcon"),
+                    Evidence("pfw-and-pfe-fit", "NoLoad", 216, 238, "Pfw 仅使用 U0/Un<0.51 的样本线性拟合，Pfe 与 CoefficientOfPfe 来自多项式回归。", "Pfw", "Pfe", "CoefficientOfPfe", "DataList.U0DivideUn", "DataList.U0DivideUnSquare", "DataList.Pcon", "I0", "ΔI0", "P0", "Pcu")
+                },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "I0", "ΔI0", "P0", "Pcu", "Pfw", "Pfe", "CoefficientOfPfe" },
                 RequiredIntermediateResultFields = new[] { "R0", "θ0", "Pcon", "P0cu1", "Pfw", "Pfe", "CoefficientOfPfe" },
@@ -149,6 +188,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
                 UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.DcResistance),
                 RequiredPayloadFields = new[] { "Data1List", "Data2List", "Rc", "θc", "Pn", "K1", "Order", "HotStateType" },
+                SourceEvidences = new[]
+                {
+                    Evidence("first-seconds-interval", "Thermal", 554, 561, "热试验先按 Pn 选取 firstSecondsInterval（30/90/120s）。", "Pn", "firstSecondsInterval"),
+                    Evidence("rn-selection", "Thermal", 567, 605, "θb 取末段 1/4 均值，Rw/Rn 由 R-Time 拟合并按 HotStateType 选择实测或外推。", "Data1List.Time", "Data1List.θb", "Data2List.Time", "Data2List.R", "Rw", "Rn", "HotStateType", "Time", "θb"),
+                    Evidence("gb-temperature-branch", "Thermal", 648, 679, "GB2012/TB 与 GB2023 走不同温升公式，并最终给出 θw/θs/Rws。", "GB", "Δθ", "Δθn", "θw", "θs", "Rws", "Rc", "θc", "Rn", "Rw")
+                },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },
                 RequiredIntermediateResultFields = new[] { "firstSecondsInterval", "Rw", "Rn", "Rws", "θw", "θs", "θb" },
@@ -189,6 +234,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
                 UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun),
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θa", "PolePairs", "Pn", "Un", "ΔT" },
+                SourceEvidences = new[]
+                {
+                    Evidence("raw-point-precompute", "Load_A", 697, 717, "A 法先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx。", "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "Pfw", "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx"),
+                    Evidence("temperature-correction", "Load_A", 718, 730, "A 法再按 θa 进行温度折算，得到 Pcu1x/Pcu2x/Sx/Nx/P2x/η。", "θa", "Pcu1x", "ΔPcu1", "Pcu2x", "ΔPcu2", "P1x", "Sx", "Nx", "P2x", "η"),
+                    Evidence("result-fit-grid", "Load_A", 731, 794, "A 法用 P2x 曲线回归 125/100/75/50/25% 五个额定点结果表。", "ResultDataList", "Pn", "P2", "P1", "S", "Cosφ", "I1", "η", "Percentage")
+                },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Pcu1", "Pcu2", "ResultDataList", "η" },
                 RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "P2x", "η" },
@@ -229,6 +280,13 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun },
                 UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad, MotorYTestMethodCodes.HeatRun),
                 RequiredPayloadFields = new[] { "RawDataList", "CoefficientOfPfe", "Pfw", "R1c", "θ1c", "θw", "θb", "PolePairs", "Pn", "Un", "ΔT", "K1", "K2" },
+                SourceEvidences = new[]
+                {
+                    Evidence("raw-point-precompute", "Load_B", 275, 299, "B 法先逐点计算 R1t/Pcu1t/Nst/St/Ub/Pfe/Pcu2t/Tx/P2tx/Pl。", "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "Pfw", "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl"),
+                    Evidence("correlation-refit", "Load_B", 320, 332, "B 法用 Tx²-Pl 关系拟合 A/B/R，且 R<0.95 时会删坏点后重算。", "A", "B", "R", "Tx", "Pl", "bad-point-refit"),
+                    Evidence("gb-thermal-branch", "Load_B", 334, 369, "GB 版本决定 θs 计算分支，并影响 Ps/Pcu1x/Pcu2x/Nx/P2x/η。", "GB", "θw", "θb", "RawDataList.θa", "θs", "Ps", "Pcu1x", "Sx", "Pcu2x", "Nx", "P2x", "η"),
+                    Evidence("result-ps-iteration", "Load_B", 398, 454, "B 法结果表按 GB 切换 ratios，并循环下调 cuC 直到所有 Ps 非负。", "ResultDataList", "ratios", "cuC", "Ps", "Pcu1", "Pcu2", "P2", "P1", "S", "Cosφ", "I1", "Percentage")
+                },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
                 RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl", "A", "B", "R", "Ps", "cuC", "θs" },
@@ -270,6 +328,12 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.NoLoad },
                 UpstreamLegacyAliases = BuildUpstreamLegacyAliases(MotorYTestMethodCodes.NoLoad),
                 RequiredPayloadFields = new[] { "DataList", "CoefficientOfPfe", "Un", "In", "Tn", "PolePairs", "R1c", "θ1c", "K1", "C1" },
+                SourceEvidences = new[]
+                {
+                    Evidence("torquecal-precompute", "Lock_Rotor", 26, 47, "堵转算法在 TorqueCalType=1 时先补 θ1s/R/Pkcu1/Pfe/ns/Tk。", "TorqueCalType", "RCalType", "CoefficientOfPfe", "DataList.θ", "DataList.Uk", "DataList.Ik", "DataList.Pk", "DataList.θ1s", "DataList.R", "DataList.Pkcu1", "DataList.Pfe", "DataList.ns", "DataList.Tk", "R1c", "θ1c", "K1", "Un", "PolePairs", "C1"),
+                    Evidence("low-voltage-logfit", "Lock_Rotor", 49, 71, "最大堵转电压 <0.9Un 时走 log-log 拟合并据最大电流点换算 Ikn/Pkn/Tkn。", "Un", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "DataList.Uk", "DataList.Ik", "DataList.Pk", "DataList.Tk"),
+                    Evidence("near-rated-fit", "Lock_Rotor", 72, 87, "堵转电压在 0.9-1.1Un 时直接用 Uk-I/P/T 多项式拟合求额定点结果。", "Un", "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn", "DataList.Uk", "DataList.Ik", "DataList.Pk", "DataList.Tk")
+                },
                 RequiredRatedParamFields = Array.Empty<string>(),
                 RequiredResultFields = new[] { "Ikn", "Pkn", "Tkn", "IknDivideIn", "TknDivideTn" },
                 RequiredIntermediateResultFields = new[] { "θ1s", "R", "Pkcu1", "Pfe", "ns", "Tk", "Ikn", "Pkn", "Tkn" },
