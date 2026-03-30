@@ -74,6 +74,37 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         AssertAlgorithmFamilyRequiredResultPrimaryFieldFocuses(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
         AssertAlgorithmFamilyRequiredResultPrimaryFieldFocusSummaries(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
 
+        var familyResultCoefficient = algorithmFamilyRequiredResultPrimaryFieldFocuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var familyResultPfw = algorithmFamilyRequiredResultPrimaryFieldFocuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var familyResultPcu2 = algorithmFamilyRequiredResultPrimaryFieldFocuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+        if (familyResultCoefficient is null
+            || familyResultPfw is null
+            || familyResultPcu2 is null
+            || familyResultCoefficient.Count != 2
+            || Math.Abs(familyResultCoefficient.Share - 0.3333d) > 0.0001d
+            || familyResultCoefficient.WeightedCount != 492
+            || Math.Abs(familyResultCoefficient.WeightedShare - 0.2293d) > 0.0001d
+            || !familyResultCoefficient.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !familyResultCoefficient.AlgorithmFamilies.SequenceEqual(new[] { "LoadB", "NoLoad" }, StringComparer.Ordinal)
+            || !string.Equals(familyResultCoefficient.Summary, "family=LoadB; cross-plan primary field CoefficientOfPfe appears in 1/1 plans (100pp), weighted 61/61 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=结果字段; priorities=result-fields", StringComparison.Ordinal)
+            || familyResultPfw.Count != 2
+            || Math.Abs(familyResultPfw.Share - 0.3333d) > 0.0001d
+            || familyResultPfw.WeightedCount != 492
+            || Math.Abs(familyResultPfw.WeightedShare - 0.2293d) > 0.0001d
+            || !familyResultPfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !familyResultPfw.AlgorithmFamilies.SequenceEqual(new[] { "LoadB", "NoLoad" }, StringComparer.Ordinal)
+            || !string.Equals(familyResultPfw.Summary, "family=LoadB; cross-plan primary field Pfw appears in 1/1 plans (100pp), weighted 61/61 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=中间结果锚点, 结果字段; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal)
+            || familyResultPcu2.Count != 2
+            || Math.Abs(familyResultPcu2.Share - 0.3333d) > 0.0001d
+            || familyResultPcu2.WeightedCount != 491
+            || Math.Abs(familyResultPcu2.WeightedShare - 0.2289d) > 0.0001d
+            || !familyResultPcu2.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadA, MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !familyResultPcu2.AlgorithmFamilies.SequenceEqual(new[] { "LoadA", "LoadB" }, StringComparer.Ordinal)
+            || !string.Equals(familyResultPcu2.Summary, "family=LoadA; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 430/430 selected samples (100pp); codes=MotorY.LoadA; families=LoadA; focuses=结果字段; priorities=result-fields", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family required-result weighted focus lock mismatch. actual=[{string.Join(" | ", algorithmFamilyRequiredResultPrimaryFieldFocuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AlgorithmFamilies)}:{x.Summary}"))}]");
+        }
+
         foreach (var row in expected)
         {
             var snapshot = actual.FirstOrDefault(x => string.Equals(x.CanonicalCode, row.CanonicalCode, StringComparison.Ordinal));
@@ -81,6 +112,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing row for {row.CanonicalCode}.");
             }
+        }
 
             if (snapshot.TotalCount != row.TotalCount
                 || snapshot.BaselineCount != row.BaselineCount
