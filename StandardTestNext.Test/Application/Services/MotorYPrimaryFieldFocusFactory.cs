@@ -159,6 +159,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var profileKeys = rows.Select(x => x.Candidate.ProfileKey).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyMethodNames = rows.Select(x => x.Candidate.LegacyMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var settingsMethodNames = rows.Select(x => x.Candidate.SettingsMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var legacyAlgorithmEntries = rows.Select(x => x.Candidate.AlgorithmEntry).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
@@ -169,7 +170,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var profileKeySummary = profileKeys.Length == 0 ? "none" : string.Join(", ", profileKeys);
                 var legacyMethodNameSummary = legacyMethodNames.Length == 0 ? "none" : string.Join(", ", legacyMethodNames);
                 var settingsMethodNameSummary = settingsMethodNames.Length == 0 ? "none" : string.Join(", ", settingsMethodNames);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var legacyAlgorithmEntrySummary = legacyAlgorithmEntries.Length == 0 ? "none" : string.Join(", ", legacyAlgorithmEntries);
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -186,6 +188,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                     ProfileKeys = profileKeys,
                     LegacyMethodNames = legacyMethodNames,
                     SettingsMethodNames = settingsMethodNames,
+                    LegacyAlgorithmEntries = legacyAlgorithmEntries,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -224,8 +227,11 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topSettingsMethods = top.SettingsMethodNames.Count == 0
             ? "none"
             : string.Join("/", top.SettingsMethodNames);
+        var topLegacyAlgorithmEntries = top.LegacyAlgorithmEntries.Count == 0
+            ? "none"
+            : string.Join("/", top.LegacyAlgorithmEntries);
 
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@algo-entries={topLegacyAlgorithmEntries}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
