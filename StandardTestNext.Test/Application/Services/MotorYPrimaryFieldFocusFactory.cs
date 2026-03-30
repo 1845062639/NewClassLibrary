@@ -22,6 +22,41 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
 
+    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        Func<MotorYMethodAdaptationPlanSnapshot, IEnumerable<CrossPlanPrimaryFieldCandidate>> candidateSelector)
+    {
+        if (plans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        return plans
+            .Where(plan => !string.IsNullOrWhiteSpace(plan.AlgorithmFamily))
+            .GroupBy(plan => plan.AlgorithmFamily, StringComparer.Ordinal)
+            .OrderBy(group => group.Key, StringComparer.Ordinal)
+            .SelectMany(group =>
+            {
+                var familyPlans = group.ToArray();
+                var familyFocuses = BuildCrossPlanPrimaryFieldFocuses(familyPlans, candidateSelector);
+                return familyFocuses.Select(focus => new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = focus.PrimaryField,
+                    Count = focus.Count,
+                    Share = focus.Share,
+                    WeightedCount = focus.WeightedCount,
+                    WeightedShare = focus.WeightedShare,
+                    CanonicalCodes = focus.CanonicalCodes,
+                    AlgorithmFamilies = new[] { group.Key },
+                    AnchorKeys = focus.AnchorKeys,
+                    SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
+                    SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
+                    Summary = $"family={group.Key}; {focus.Summary}"
+                });
+            })
+            .ToArray();
+    }
+
     private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildCrossPlanPrimaryFieldFocuses(
         IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
         Func<MotorYMethodAdaptationPlanSnapshot, IEnumerable<CrossPlanPrimaryFieldCandidate>> candidateSelector)
@@ -93,6 +128,26 @@ internal static class MotorYPrimaryFieldFocusFactory
             "result-fields" => 11,
             _ => 99
         };
+
+    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
+        => BuildAlgorithmFamilyPrimaryFieldFocuses(
+            plans,
+            plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
+                distribution.PrimaryField,
+                plan.AlgorithmFamily,
+                distribution.AnchorKeys,
+                distribution.SuggestedNextStepFocuses,
+                distribution.SuggestedNextStepPriorities)));
+
+    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
+        => BuildAlgorithmFamilyPrimaryFieldFocuses(
+            plans,
+            plan => plan.RequiredResultPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
+                distribution.PrimaryField,
+                plan.AlgorithmFamily,
+                Array.Empty<string>(),
+                distribution.DisplayNames,
+                distribution.BucketKeys)));
 
     private sealed record CrossPlanPrimaryFieldCandidate(
         string PrimaryField,

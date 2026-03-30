@@ -11,6 +11,8 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
         ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview();
         ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
+        ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
+        ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
     }
 
     private static void ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview()
@@ -294,6 +296,122 @@ public static class TestBootstrapFormattingSmokeTests
             || !formatted.Contains("primary field Ps referenced by 1/1 anchors (100pp); anchors=ps-iteration; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap priority formatting smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses()
+    {
+        var focuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(new[]
+        {
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.NoLoad,
+                AlgorithmFamily = "NoLoad",
+                SelectedCount = 3,
+                DecisionAnchorPrimaryFieldDistributions = new[]
+                {
+                    new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "Pfw",
+                        Count = 1,
+                        Share = 1d,
+                        AnchorKeys = new[] { "pfw-fit-window" },
+                        SuggestedNextStepFocuses = new[] { "空载风摩耗拟合窗口" },
+                        SuggestedNextStepPriorities = new[] { "blocking" }
+                    }
+                }
+            },
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadB,
+                AlgorithmFamily = "LoadB",
+                SelectedCount = 7,
+                DecisionAnchorPrimaryFieldDistributions = new[]
+                {
+                    new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "Ps",
+                        Count = 1,
+                        Share = 1d,
+                        AnchorKeys = new[] { "ps-iteration" },
+                        SuggestedNextStepFocuses = new[] { "B法 Ps 非负迭代收敛字段" },
+                        SuggestedNextStepPriorities = new[] { "blocking" }
+                    }
+                }
+            }
+        });
+
+        var noLoad = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var loadB = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Ps", StringComparison.Ordinal));
+
+        if (focuses.Count != 2
+            || noLoad is null
+            || loadB is null
+            || !noLoad.AlgorithmFamilies.SequenceEqual(new[] { "NoLoad" }, StringComparer.Ordinal)
+            || !loadB.AlgorithmFamilies.SequenceEqual(new[] { "LoadB" }, StringComparer.Ordinal)
+            || noLoad.WeightedCount != 3
+            || loadB.WeightedCount != 7
+            || !noLoad.Summary.StartsWith("family=NoLoad; cross-plan primary field Pfw appears in 1/1 plans (100pp), weighted 3/3 selected samples (100pp)", StringComparison.Ordinal)
+            || !loadB.Summary.StartsWith("family=LoadB; cross-plan primary field Ps appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap algorithm-family decision-anchor focus smoke test failed. actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.AlgorithmFamilies)}:{x.WeightedCount}:{x.WeightedShare:P1}:{x.Summary}"))}]");
+        }
+    }
+
+    private static void ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses()
+    {
+        var focuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(new[]
+        {
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.NoLoad,
+                AlgorithmFamily = "NoLoad",
+                SelectedCount = 4,
+                RequiredResultPrimaryFieldDistributions = new[]
+                {
+                    new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "CoefficientOfPfe",
+                        Count = 2,
+                        Share = 1d,
+                        BucketKeys = new[] { "result-fields" },
+                        DisplayNames = new[] { "结果字段" }
+                    }
+                }
+            },
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadA,
+                AlgorithmFamily = "LoadA",
+                SelectedCount = 6,
+                RequiredResultPrimaryFieldDistributions = new[]
+                {
+                    new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "Pcu2",
+                        Count = 1,
+                        Share = 1d,
+                        BucketKeys = new[] { "result-fields" },
+                        DisplayNames = new[] { "结果字段" }
+                    }
+                }
+            }
+        });
+
+        var noLoad = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var loadA = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+
+        if (focuses.Count != 2
+            || noLoad is null
+            || loadA is null
+            || !noLoad.AlgorithmFamilies.SequenceEqual(new[] { "NoLoad" }, StringComparer.Ordinal)
+            || !loadA.AlgorithmFamilies.SequenceEqual(new[] { "LoadA" }, StringComparer.Ordinal)
+            || noLoad.WeightedCount != 4
+            || loadA.WeightedCount != 6
+            || !noLoad.Summary.StartsWith("family=NoLoad; cross-plan primary field CoefficientOfPfe appears in 1/1 plans (100pp), weighted 4/4 selected samples (100pp)", StringComparison.Ordinal)
+            || !loadA.Summary.StartsWith("family=LoadA; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 6/6 selected samples (100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap algorithm-family required-result focus smoke test failed. actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.AlgorithmFamilies)}:{x.WeightedCount}:{x.WeightedShare:P1}:{x.Summary}"))}]");
         }
     }
 }
