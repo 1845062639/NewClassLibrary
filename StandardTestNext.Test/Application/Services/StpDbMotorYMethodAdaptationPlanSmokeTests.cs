@@ -112,7 +112,6 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing row for {row.CanonicalCode}.");
             }
-        }
 
             if (snapshot.TotalCount != row.TotalCount
                 || snapshot.BaselineCount != row.BaselineCount
@@ -261,12 +260,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
 
     private static void AssertLegacyAlgorithmSourceEvidence(MotorYMethodAdaptationPlanSnapshot snapshot)
     {
-        if (snapshot.LegacyDependencyProfile is null)
-        {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing legacy dependency profile for {snapshot.CanonicalCode}.");
-        }
-
-        var sourceEvidences = snapshot.LegacyDependencyProfile.SourceEvidences;
+        var sourceEvidences = snapshot.SourceEvidences;
         if (sourceEvidences.Count == 0)
         {
             throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: no source evidences for {snapshot.CanonicalCode}.");

@@ -281,8 +281,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .ToArray();
         var requiredResultPrimaryFieldDistributions = BuildRequiredResultPrimaryFieldDistributions(resultCoverage, intermediateResultCoverage);
         var requiredResultPrimaryFieldSummary = BuildRequiredResultPrimaryFieldSummary(requiredResultPrimaryFieldDistributions);
+        var crossPlanDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
+        const string crossPlanDecisionAnchorPrimaryFieldSummary = "cross-plan decision-anchor primary fields: pending cross-plan aggregation";
+        var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
+        const string algorithmFamilyDecisionAnchorPrimaryFieldSummary = "algorithm-family decision-anchor primary fields: pending family aggregation";
         var crossPlanRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
         const string crossPlanRequiredResultPrimaryFieldSummary = "cross-plan required-result primary fields: pending cross-plan aggregation";
+        var algorithmFamilyRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
+        const string algorithmFamilyRequiredResultPrimaryFieldSummary = "algorithm-family required-result primary fields: pending family aggregation";
 
         return new MotorYMethodAdaptationPlanContract
         {

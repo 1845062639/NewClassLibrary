@@ -601,7 +601,7 @@ WHERE COALESCE(curr.Code, '') <> ''
         var legacyCodeDistributions = LoadMotorYLegacyCodeSelections(connection);
         var observedLegacyCodesByCanonicalCode = LoadObservedLegacyCodesByCanonicalCode(connection);
 
-        return LoadMotorYMethodDecisions(connection)
+        var plans = LoadMotorYMethodDecisions(connection)
             .Select(decision =>
             {
                 var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(decision);
