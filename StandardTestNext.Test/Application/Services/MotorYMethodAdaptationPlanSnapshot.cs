@@ -92,6 +92,18 @@ public sealed class MotorYDecisionAnchorTopPrioritySnapshot
     public string Summary { get; init; } = string.Empty;
 }
 
+public sealed class MotorYPrimaryFieldFocusSnapshot
+{
+    public string PrimaryField { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 public sealed class MotorYRequiredResultPrimaryFieldDistributionSnapshot
 {
     public string PrimaryField { get; init; } = string.Empty;
@@ -301,6 +313,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public IReadOnlyList<MotorYDecisionAnchorPriorityDistributionSnapshot> DecisionAnchorPriorityDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPriorityDistributionSnapshot>();
     public IReadOnlyList<MotorYDecisionAnchorPrimaryFieldDistributionSnapshot> DecisionAnchorPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYDecisionAnchorPrimaryFieldDistributionSnapshot>();
     public string DecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> CrossPlanDecisionAnchorPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+    public string CrossPlanDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionSnapshot>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;

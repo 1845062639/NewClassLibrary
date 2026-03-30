@@ -28,6 +28,12 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no legacy-code distribution rows returned.");
         }
 
+        var crossPlanPrimaryFieldFocuses = service.ListMotorYDecisionAnchorPrimaryFieldFocuses();
+        if (crossPlanPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no cross-plan decision-anchor primary-field focuses returned.");
+        }
+
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
 
@@ -40,6 +46,8 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             BuildExpected(connection, MotorYTestMethodCodes.LoadB, 5),
             BuildExpected(connection, MotorYTestMethodCodes.LockedRotor, 11)
         };
+
+        AssertCrossPlanDecisionAnchorPrimaryFieldFocuses(actual, crossPlanPrimaryFieldFocuses);
 
         foreach (var row in expected)
         {
@@ -157,6 +165,76 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 }
 
                 AssertRoute(actualDistribution.Route, row.CanonicalCode, distribution.MethodValue, $"distribution/{row.CanonicalCode}:{distribution.MethodValue}");
+            }
+        }
+    }
+
+    private static void AssertCrossPlanDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        static int GetDecisionAnchorPrioritySortOrder(string priority)
+            => priority switch
+            {
+                "blocking" => 0,
+                "follow-up" => 1,
+                "resolved" => 2,
+                _ => 9
+            };
+
+        var total = plans.Count;
+        var expected = plans
+            .SelectMany(plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new { plan.CanonicalCode, Distribution = distribution }))
+            .Where(x => !string.IsNullOrWhiteSpace(x.Distribution.PrimaryField))
+            .GroupBy(x => x.Distribution.PrimaryField, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var rows = group.OrderBy(x => x.CanonicalCode, StringComparer.Ordinal).ToArray();
+                var share = Math.Round((double)rows.Length / total, 4, MidpointRounding.AwayFromZero);
+                var canonicalCodes = rows.Select(x => x.CanonicalCode).Distinct(StringComparer.Ordinal).ToArray();
+                var anchorKeys = rows.SelectMany(x => x.Distribution.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var focusesLocal = rows.SelectMany(x => x.Distribution.SuggestedNextStepFocuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var priorities = rows.SelectMany(x => x.Distribution.SuggestedNextStepPriorities).Distinct(StringComparer.Ordinal).OrderBy(GetDecisionAnchorPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
+                var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
+                var summary = $"cross-plan decision-anchor primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; anchors={string.Join(", ", anchorKeys)}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                return new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = group.Key,
+                    Count = rows.Length,
+                    Share = share,
+                    CanonicalCodes = canonicalCodes,
+                    AnchorKeys = anchorKeys,
+                    SuggestedNextStepFocuses = focusesLocal,
+                    SuggestedNextStepPriorities = priorities,
+                    Summary = summary
+                };
+            })
+            .ToArray();
+
+        if (focuses.Count != expected.Length)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus count mismatch. expected={expected.Length}, actual={focuses.Count}");
+        }
+
+        foreach (var row in expected)
+        {
+            var actual = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, row.PrimaryField, StringComparison.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing cross-plan primary-field focus {row.PrimaryField}.");
+            }
+
+            if (actual.Count != row.Count
+                || Math.Abs(actual.Share - row.Share) > 0.0001d
+                || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
+                || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
         }
     }
