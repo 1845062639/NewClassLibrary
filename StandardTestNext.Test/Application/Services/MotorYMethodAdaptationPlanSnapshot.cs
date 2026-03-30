@@ -133,6 +133,10 @@ public sealed class MotorYPrimaryFieldFocusSnapshot
     public IReadOnlyList<string> LegacyMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SettingsMethodNames { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> LegacyAlgorithmEntries { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SourceSections { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SourceRanges { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> FormNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> FormSourceRanges { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();

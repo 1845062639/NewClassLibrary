@@ -88,14 +88,18 @@ public static class TestBootstrapFormattingSmokeTests
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
                     MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
                     LegacyAlgorithmEntries = new[] { "Calc_Load_B", "Calc_NoLoad" },
+                    SourceSections = new[] { "pfw-fit-window", "pfw-iteration" },
+                    SourceRanges = new[] { "L300-L320", "L120-L150" },
+                    FormNames = new[] { "FrmMotor_Y_LoadB", "FrmMotor_Y_NoLoad" },
+                    FormSourceRanges = new[] { "L410", "L263" },
                     SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
                     SuggestedNextStepFocuses = new[] { "NoLoad result field", "LoadB result field" },
-                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; algo-entries=Calc_Load_B, Calc_NoLoad; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields"
+                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields"
                 }
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:algo-entries=Calc_Load_B|Calc_NoLoad:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; algo-entries=Calc_Load_B, Calc_NoLoad; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:algo-entries=Calc_Load_B|Calc_NoLoad:source-sections=pfw-fit-window|pfw-iteration:source-ranges=L120-L150|L300-L320:forms=FrmMotor_Y_LoadB|FrmMotor_Y_NoLoad:form-ranges=L263|L410:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
@@ -470,7 +474,7 @@ public static class TestBootstrapFormattingSmokeTests
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
         if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=LoadB:5:profiles=:legacy-methods=B法负载试验:settings-methods=B法负载试验:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
-            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=:profiles=:legacy-methods=:settings-methods=:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
+            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=LoadB:5:profiles=:legacy-methods=B法负载试验:settings-methods=B法负载试验:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family plan formatting smoke test failed. actual='{formatted}'");
         }

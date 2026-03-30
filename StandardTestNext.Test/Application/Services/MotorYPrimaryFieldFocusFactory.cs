@@ -14,6 +14,11 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -30,6 +35,11 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -66,6 +76,11 @@ internal static class MotorYPrimaryFieldFocusFactory
                     ProfileKeys = focus.ProfileKeys,
                     LegacyMethodNames = focus.LegacyMethodNames,
                     SettingsMethodNames = focus.SettingsMethodNames,
+                    LegacyAlgorithmEntries = focus.LegacyAlgorithmEntries,
+                    SourceSections = focus.SourceSections,
+                    SourceRanges = focus.SourceRanges,
+                    FormNames = focus.FormNames,
+                    FormSourceRanges = focus.FormSourceRanges,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -108,6 +123,11 @@ internal static class MotorYPrimaryFieldFocusFactory
                     ProfileKeys = focus.ProfileKeys,
                     LegacyMethodNames = focus.LegacyMethodNames,
                     SettingsMethodNames = focus.SettingsMethodNames,
+                    LegacyAlgorithmEntries = focus.LegacyAlgorithmEntries,
+                    SourceSections = focus.SourceSections,
+                    SourceRanges = focus.SourceRanges,
+                    FormNames = focus.FormNames,
+                    FormSourceRanges = focus.FormSourceRanges,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -160,6 +180,10 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var legacyMethodNames = rows.Select(x => x.Candidate.LegacyMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var settingsMethodNames = rows.Select(x => x.Candidate.SettingsMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyAlgorithmEntries = rows.Select(x => x.Candidate.AlgorithmEntry).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var sourceSections = rows.SelectMany(x => x.Candidate.SourceSections).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var sourceRanges = rows.SelectMany(x => x.Candidate.SourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var formNames = rows.SelectMany(x => x.Candidate.FormNames).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var formSourceRanges = rows.SelectMany(x => x.Candidate.FormSourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
@@ -171,7 +195,11 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var legacyMethodNameSummary = legacyMethodNames.Length == 0 ? "none" : string.Join(", ", legacyMethodNames);
                 var settingsMethodNameSummary = settingsMethodNames.Length == 0 ? "none" : string.Join(", ", settingsMethodNames);
                 var legacyAlgorithmEntrySummary = legacyAlgorithmEntries.Length == 0 ? "none" : string.Join(", ", legacyAlgorithmEntries);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var sourceSectionSummary = sourceSections.Length == 0 ? "none" : string.Join(", ", sourceSections);
+                var sourceRangeSummary = sourceRanges.Length == 0 ? "none" : string.Join(", ", sourceRanges);
+                var formNameSummary = formNames.Length == 0 ? "none" : string.Join(", ", formNames);
+                var formSourceRangeSummary = formSourceRanges.Length == 0 ? "none" : string.Join(", ", formSourceRanges);
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; source-sections={sourceSectionSummary}; source-ranges={sourceRangeSummary}; forms={formNameSummary}; form-ranges={formSourceRangeSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -189,6 +217,10 @@ internal static class MotorYPrimaryFieldFocusFactory
                     LegacyMethodNames = legacyMethodNames,
                     SettingsMethodNames = settingsMethodNames,
                     LegacyAlgorithmEntries = legacyAlgorithmEntries,
+                    SourceSections = sourceSections,
+                    SourceRanges = sourceRanges,
+                    FormNames = formNames,
+                    FormSourceRanges = formSourceRanges,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -451,6 +483,11 @@ internal static class MotorYPrimaryFieldFocusFactory
         string ProfileKey,
         string LegacyMethodName,
         string SettingsMethodName,
+        string AlgorithmEntry,
+        IReadOnlyList<string> SourceSections,
+        IReadOnlyList<string> SourceRanges,
+        IReadOnlyList<string> FormNames,
+        IReadOnlyList<string> FormSourceRanges,
         IReadOnlyList<string> AnchorKeys,
         IReadOnlyList<string> Focuses,
         IReadOnlyList<string> Priorities);
