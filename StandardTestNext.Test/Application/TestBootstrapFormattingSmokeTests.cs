@@ -477,7 +477,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:algo-entries=none:dominant-algo=none:source-sections=none:source-ranges=none:dominant-source=none:forms=none:form-ranges=none:dominant-form=none:upstream=none:upstream-legacy=none:upstream-hints=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }
@@ -568,7 +568,12 @@ public static class TestBootstrapFormattingSmokeTests
                     DominantShare = 0.7778d,
                     SelectedCount = 7,
                     SelectedShare = 0.7778d,
-                    Summary = "family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking"
+                    DominantLegacyAlgorithmEntry = "Calc_Load_B",
+                    DominantSourceSection = "gb-temperature-branch",
+                    DominantSourceRange = "L702-L736",
+                    DominantFormName = "FrmMotor_Y_Load_B",
+                    DominantFormSourceRange = "L361",
+                    Summary = "family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; methods=51; method-keys=LoadB:51; profiles=delivery; legacy-methods=B法负载试验; settings-methods=B法负载试验; algo-entries=Calc_Load_B; dominant-algo-entry=Calc_Load_B; dominant-source=gb-temperature-branch@L702-L736; dominant-form=FrmMotor_Y_Load_B@L361; families=LoadB; focuses=热态分支; priorities=blocking"
                 }
             },
             AlgorithmFamilyRequiredResultPrimaryFieldSummary = "algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)",
@@ -619,7 +624,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7); dominant-family=LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@upstream-legacy=none", StringComparison.Ordinal)
+        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:algo-entries=none:dominant-algo=Calc_Load_B:source-sections=none:source-ranges=none:dominant-source=gb-temperature-branch@L702-L736:forms=none:form-ranges=none:dominant-form=FrmMotor_Y_Load_B@L361:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7); dominant-family=LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@upstream-legacy=none", StringComparison.Ordinal)
             || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:algo-entries=:source-sections=:source-ranges=:forms=:form-ranges=:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7); dominant-family=LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@upstream-legacy=none", StringComparison.Ordinal)
             || !formatted.Contains("anchor-variant=GB:1:100.0 %:weighted=7:100.0 %:baseline=2:22.2 %:dominant=7:77.8 %:selected=7:77.8 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:variants=delivery:blocking:summary=variant-kind decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7); dominant-variant=delivery@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@upstream-legacy=none", StringComparison.Ordinal)
             || !formatted.Contains("baseline=method=5, method-key=LoadB:5, profile=baseline", StringComparison.Ordinal)
