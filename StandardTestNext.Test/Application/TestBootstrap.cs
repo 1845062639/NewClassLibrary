@@ -137,6 +137,8 @@ public sealed class TestBootstrap
         var stpMethodAdaptationPlans = LoadStpMethodAdaptationPlans(stpDbSnapshotQueryService);
         var stpCrossPlanPrimaryFieldFocuses = BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var stpCrossPlanRequiredResultPrimaryFieldFocuses = BuildCrossPlanRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
+        var stpAlgorithmFamilyAnchorPrimaryFieldFocuses = BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
+        var stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses = BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
         var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
@@ -200,6 +202,14 @@ public sealed class TestBootstrap
         if (stpCrossPlanRequiredResultPrimaryFieldFocuses.Count > 0)
         {
             Console.WriteLine($"[Test] stp.db Motor_Y cross-plan required-result primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpCrossPlanRequiredResultPrimaryFieldFocuses)}");
+        }
+        if (stpAlgorithmFamilyAnchorPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y algorithm-family anchor primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpAlgorithmFamilyAnchorPrimaryFieldFocuses)}");
+        }
+        if (stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y algorithm-family required-result primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses)}");
         }
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
@@ -279,6 +289,46 @@ public sealed class TestBootstrap
         catch (Exception ex)
         {
             Console.WriteLine($"[Test] stp.db Motor_Y cross-plan required-result primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y algorithm-family anchor primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y algorithm-family required-result primary fields unavailable: {ex.Message}");
             return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
         }
     }

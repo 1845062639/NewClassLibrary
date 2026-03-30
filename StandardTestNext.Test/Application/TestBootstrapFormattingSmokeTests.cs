@@ -11,6 +11,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
         ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview();
         ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
+        ShouldFormatAlgorithmFamilyPrimaryFieldFocuses();
         ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
         ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
     }
@@ -296,6 +297,38 @@ public static class TestBootstrapFormattingSmokeTests
             || !formatted.Contains("primary field Ps referenced by 1/1 anchors (100pp); anchors=ps-iteration; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap priority formatting smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldFormatAlgorithmFamilyPrimaryFieldFocuses()
+    {
+        var formatter = typeof(TestBootstrap).GetMethod("FormatCrossPlanPrimaryFieldFocuses", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter not found.");
+
+        var formatted = formatter.Invoke(null, new object[]
+        {
+            new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "GB",
+                    Count = 1,
+                    Share = 1d,
+                    WeightedCount = 100,
+                    WeightedShare = 1d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
+                    AlgorithmFamilies = new[] { "LoadB" },
+                    AnchorKeys = new[] { "gb-temperature-branch" },
+                    SuggestedNextStepPriorities = new[] { "blocking" },
+                    SuggestedNextStepFocuses = new[] { "热态分支" },
+                    Summary = "family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking"
+                }
+            }
+        }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
+
+        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:MotorY.LoadB:gb-temperature-branch:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }
     }
 

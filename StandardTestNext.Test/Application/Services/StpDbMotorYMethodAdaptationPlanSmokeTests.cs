@@ -40,6 +40,18 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no cross-plan required-result primary-field focuses returned.");
         }
 
+        var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = service.ListMotorYAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
+        if (algorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no algorithm-family decision-anchor primary-field focuses returned.");
+        }
+
+        var algorithmFamilyRequiredResultPrimaryFieldFocuses = service.ListMotorYAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
+        if (algorithmFamilyRequiredResultPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no algorithm-family required-result primary-field focuses returned.");
+        }
+
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
 
@@ -57,6 +69,8 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         AssertCrossPlanDecisionAnchorPrimaryFieldFocusSummaries(actual, crossPlanPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocuses(actual, crossPlanRequiredResultPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocusSummaries(actual, crossPlanRequiredResultPrimaryFieldFocuses);
+        AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(actual, algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
+        AssertAlgorithmFamilyRequiredResultPrimaryFieldFocuses(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
 
         foreach (var row in expected)
         {
@@ -301,6 +315,76 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+            }
+        }
+    }
+
+    private static void AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var expected = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(plans);
+
+        if (focuses.Count != expected.Count)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family decision-anchor primary-field focus count mismatch. expected={expected.Count}, actual={focuses.Count}");
+        }
+
+        foreach (var row in expected)
+        {
+            var actual = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, row.PrimaryField, StringComparison.Ordinal)
+                && x.AlgorithmFamilies.SequenceEqual(row.AlgorithmFamilies, StringComparer.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing algorithm-family decision-anchor primary-field focus {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}.");
+            }
+
+            if (actual.Count != row.Count
+                || Math.Abs(actual.Share - row.Share) > 0.0001d
+                || actual.WeightedCount != row.WeightedCount
+                || Math.Abs(actual.WeightedShare - row.WeightedShare) > 0.0001d
+                || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
+                || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family decision-anchor primary-field focus mismatch for {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+            }
+        }
+    }
+
+    private static void AssertAlgorithmFamilyRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var expected = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(plans);
+
+        if (focuses.Count != expected.Count)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family required-result primary-field focus count mismatch. expected={expected.Count}, actual={focuses.Count}");
+        }
+
+        foreach (var row in expected)
+        {
+            var actual = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, row.PrimaryField, StringComparison.Ordinal)
+                && x.AlgorithmFamilies.SequenceEqual(row.AlgorithmFamilies, StringComparer.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing algorithm-family required-result primary-field focus {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}.");
+            }
+
+            if (actual.Count != row.Count
+                || Math.Abs(actual.Share - row.Share) > 0.0001d
+                || actual.WeightedCount != row.WeightedCount
+                || Math.Abs(actual.WeightedShare - row.WeightedShare) > 0.0001d
+                || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
+                || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family required-result primary-field focus mismatch for {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
         }
     }
