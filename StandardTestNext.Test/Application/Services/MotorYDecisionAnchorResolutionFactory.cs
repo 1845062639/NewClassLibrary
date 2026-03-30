@@ -40,6 +40,17 @@ internal sealed class MotorYDecisionAnchorPriorityDistribution
     public string DominantSuggestedNextStepSummary { get; init; } = string.Empty;
 }
 
+internal sealed class MotorYDecisionAnchorPrimaryFieldDistribution
+{
+    public string PrimaryField { get; init; } = string.Empty;
+    public int Count { get; init; }
+    public double Share { get; init; }
+    public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
+    public string Summary { get; init; } = string.Empty;
+}
+
 internal static class MotorYDecisionAnchorResolutionFactory
 {
     private static (string Category, string Focus, IReadOnlyList<string> Fields) BuildResolutionSuggestionParts(string canonicalCode, string anchorKey, IReadOnlyList<string> missingPayloadFields)
@@ -476,6 +487,79 @@ internal static class MotorYDecisionAnchorResolutionFactory
                 ? "none"
                 : string.Join(", ", distribution.SuggestedNextStepFields.Take(3)) + (distribution.SuggestedNextStepFields.Count > 3 ? ", ..." : string.Empty);
             return $"{distribution.Priority}={distribution.Count}/{resolutions.Count} ({(int)Math.Round(distribution.Share * 100d, MidpointRounding.AwayFromZero)}pp) anchors [{string.Join(", ", distribution.AnchorKeys)}], focus {focusPreview}, fields {fieldPreview}";
+        }));
+    }
+
+    public static IReadOnlyList<MotorYDecisionAnchorPrimaryFieldDistribution> BuildPrimaryFieldDistributions(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        if (resolutions.Count == 0)
+        {
+            return Array.Empty<MotorYDecisionAnchorPrimaryFieldDistribution>();
+        }
+
+        return resolutions
+            .Where(x => !string.IsNullOrWhiteSpace(x.SuggestedPrimaryNextField))
+            .GroupBy(x => x.SuggestedPrimaryNextField, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => GetPrioritySortOrder(group.Min(x => x.SuggestedNextStepPriority)))
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .Select(group =>
+            {
+                var ordered = group
+                    .OrderBy(x => x.AnchorKey, StringComparer.Ordinal)
+                    .ToArray();
+                var share = Math.Round((double)ordered.Length / resolutions.Count, 4, MidpointRounding.AwayFromZero);
+                var anchorKeys = ordered.Select(x => x.AnchorKey).ToArray();
+                var focuses = ordered
+                    .Select(x => x.SuggestedNextStepFocus)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.Ordinal)
+                    .ToArray();
+                var priorities = ordered
+                    .Select(x => x.SuggestedNextStepPriority)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .Distinct(StringComparer.Ordinal)
+                    .OrderBy(GetPrioritySortOrder)
+                    .ThenBy(x => x, StringComparer.Ordinal)
+                    .ToArray();
+                var focusPreview = focuses.Length == 0
+                    ? "none"
+                    : string.Join(", ", focuses.Take(2)) + (focuses.Length > 2 ? ", ..." : string.Empty);
+                var priorityPreview = priorities.Length == 0
+                    ? "none"
+                    : string.Join(", ", priorities);
+                var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
+                var summary = $"decision-anchor primary field {group.Key} suggested by {ordered.Length}/{resolutions.Count} anchors ({percentagePoints}pp); anchors={string.Join(", ", anchorKeys)}; focus={focusPreview}; priorities={priorityPreview}";
+
+                return new MotorYDecisionAnchorPrimaryFieldDistribution
+                {
+                    PrimaryField = group.Key,
+                    Count = ordered.Length,
+                    Share = share,
+                    AnchorKeys = anchorKeys,
+                    SuggestedNextStepFocuses = focuses,
+                    SuggestedNextStepPriorities = priorities,
+                    Summary = summary
+                };
+            })
+            .ToArray();
+    }
+
+    public static string BuildPrimaryFieldSummary(IReadOnlyList<MotorYDecisionAnchorResolution> resolutions)
+    {
+        var distributions = BuildPrimaryFieldDistributions(resolutions);
+        if (distributions.Count == 0)
+        {
+            return "decision-anchor primary fields unavailable";
+        }
+
+        return "decision-anchor primary fields: " + string.Join("; ", distributions.Select(distribution =>
+        {
+            var percentagePoints = (int)Math.Round(distribution.Share * 100d, MidpointRounding.AwayFromZero);
+            var focusPreview = distribution.SuggestedNextStepFocuses.Count == 0
+                ? "none"
+                : string.Join(", ", distribution.SuggestedNextStepFocuses.Take(2)) + (distribution.SuggestedNextStepFocuses.Count > 2 ? ", ..." : string.Empty);
+            return $"{distribution.PrimaryField}={distribution.Count}/{resolutions.Count} ({percentagePoints}pp) anchors [{string.Join(", ", distribution.AnchorKeys)}], focus {focusPreview}";
         }));
     }
 

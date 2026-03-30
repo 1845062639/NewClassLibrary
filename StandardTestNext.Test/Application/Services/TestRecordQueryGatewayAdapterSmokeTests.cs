@@ -19,6 +19,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
+        ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1336,6 +1337,65 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(loadBPlan.DecisionAnchorTopPriorityDetail.Summary, "top decision anchor priority=blocking; focus=B法坏点剔除后二次拟合证据; anchor=correlation-refit; fields=R, A, B, η, T", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y decision-anchor primary-next-field query smoke test mismatch. actualTop={loadBPlan.DecisionAnchorTopPriority}/{loadBPlan.DecisionAnchorTopPriorityDominantAnchorKey}/{loadBPlan.DecisionAnchorTopPriorityPrimaryField}/'{loadBPlan.DecisionAnchorTopPriorityPrimaryFieldSummary}'; actual=[{string.Join(" | ", loadBPlan.LegacyDecisionAnchorResolutions.Select(x => $"{x.AnchorKey}:{x.SuggestedPrimaryNextField}:{x.SuggestedPrimaryNextFieldSummary}"))}]");
+        }
+    }
+
+    private static void ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:25:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-PRIMARY-FIELD-DIST-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50, "θ1t": 85 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y decision-anchor primary-field distribution smoke test returned null detail.");
+
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        var distributions = loadBPlan.DecisionAnchorPrimaryFieldDistributions;
+        var r = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "R", StringComparison.Ordinal));
+        var gb = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal));
+        var ps = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "Ps", StringComparison.Ordinal));
+        var thetaW = distributions.SingleOrDefault(x => string.Equals(x.PrimaryField, "θw", StringComparison.Ordinal));
+
+        if (distributions.Count != 4
+            || r is null
+            || r.Count != 1
+            || !r.AnchorKeys.SequenceEqual(new[] { "correlation-refit" }, StringComparer.Ordinal)
+            || !r.SuggestedNextStepFocuses.SequenceEqual(new[] { "B法坏点剔除后二次拟合证据" }, StringComparer.Ordinal)
+            || !r.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || !string.Equals(r.Summary, "decision-anchor primary field R suggested by 1/4 anchors (25pp); anchors=correlation-refit; focus=B法坏点剔除后二次拟合证据; priorities=blocking", StringComparison.Ordinal)
+            || gb is null
+            || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal)
+            || ps is null
+            || !ps.AnchorKeys.SequenceEqual(new[] { "ps-iteration" }, StringComparer.Ordinal)
+            || thetaW is null
+            || !thetaW.AnchorKeys.SequenceEqual(new[] { "thermal-carryover" }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y decision-anchor primary-field distribution query smoke test mismatch. actual=[{string.Join(" | ", distributions.Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepFocuses)}:{string.Join("/", x.SuggestedNextStepPriorities)}"))}]");
         }
     }
 

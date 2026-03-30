@@ -836,31 +836,17 @@ WHERE COALESCE(curr.Code, '') <> ''
                     ruleCoverage,
                     decisionAnchorCoverage,
                     decisionAnchorResolutions);
-                var decisionAnchorPrimaryFieldDistributions = decisionAnchorResolutions
-                    .Where(resolution => !string.IsNullOrWhiteSpace(resolution.SuggestedPrimaryNextField))
-                    .GroupBy(resolution => resolution.SuggestedPrimaryNextField, StringComparer.Ordinal)
-                    .Select(group =>
+                var decisionAnchorPrimaryFieldDistributions = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldDistributions(decisionAnchorResolutions)
+                    .Select(distribution => new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
                     {
-                        var items = group.ToArray();
-                        var share = decisionAnchorResolutions.Count == 0
-                            ? 0d
-                            : Math.Round((double)items.Length / decisionAnchorResolutions.Count, 4, MidpointRounding.AwayFromZero);
-                        var anchorKeys = items.Select(x => x.AnchorKey).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-                        var focuses = items.Select(x => x.SuggestedNextStepFocus).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-                        var priorities = items.Select(x => x.SuggestedNextStepPriority).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-                        return new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
-                        {
-                            PrimaryField = group.Key,
-                            Count = items.Length,
-                            Share = share,
-                            AnchorKeys = anchorKeys,
-                            SuggestedNextStepFocuses = focuses,
-                            SuggestedNextStepPriorities = priorities,
-                            Summary = $"primary field {group.Key} referenced by {items.Length}/{decisionAnchorResolutions.Count} anchors ({(int)Math.Round(share * 100d, MidpointRounding.AwayFromZero)}pp); anchors={(anchorKeys.Length == 0 ? "none" : string.Join(", ", anchorKeys))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}"
-                        };
+                        PrimaryField = distribution.PrimaryField,
+                        Count = distribution.Count,
+                        Share = distribution.Share,
+                        AnchorKeys = distribution.AnchorKeys,
+                        SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses,
+                        SuggestedNextStepPriorities = distribution.SuggestedNextStepPriorities,
+                        Summary = distribution.Summary
                     })
-                    .OrderByDescending(x => x.Count)
-                    .ThenBy(x => x.PrimaryField, StringComparer.Ordinal)
                     .ToArray();
                 var requiredResultPrimaryFieldDistributions = BuildRequiredResultPrimaryFieldDistributions(resultCoverage, intermediateResultCoverage);
                 var requiredResultPrimaryFieldSummary = BuildRequiredResultPrimaryFieldSummary(requiredResultPrimaryFieldDistributions);
