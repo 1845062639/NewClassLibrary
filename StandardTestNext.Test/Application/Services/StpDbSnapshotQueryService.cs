@@ -1217,6 +1217,10 @@ WHERE COALESCE(curr.Code, '') <> ''
         var algorithmFamilyDecisionAnchorSummary = BuildAlgorithmFamilyPrimaryFieldSummary("decision-anchor", algorithmFamilyDecisionAnchorFocuses);
         var algorithmFamilyRequiredResultFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(plans);
         var algorithmFamilyRequiredResultSummary = BuildAlgorithmFamilyPrimaryFieldSummary("required-result", algorithmFamilyRequiredResultFocuses);
+        var variantKindDecisionAnchorFocuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindDecisionAnchorPrimaryFieldFocuses(plans);
+        var variantKindDecisionAnchorSummary = BuildVariantKindPrimaryFieldSummary("decision-anchor", variantKindDecisionAnchorFocuses);
+        var variantKindRequiredResultFocuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindRequiredResultPrimaryFieldFocuses(plans);
+        var variantKindRequiredResultSummary = BuildVariantKindPrimaryFieldSummary("required-result", variantKindRequiredResultFocuses);
         var crossPlanFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(plans);
         var crossPlanSummary = BuildCrossPlanDecisionAnchorPrimaryFieldSummary(crossPlanFocuses);
         var crossPlanRequiredResultFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(plans);
@@ -1229,10 +1233,14 @@ WHERE COALESCE(curr.Code, '') <> ''
                 crossPlanSummary,
                 algorithmFamilyDecisionAnchorFocuses,
                 algorithmFamilyDecisionAnchorSummary,
+                variantKindDecisionAnchorFocuses,
+                variantKindDecisionAnchorSummary,
                 crossPlanRequiredResultFocuses,
                 crossPlanRequiredResultSummary,
                 algorithmFamilyRequiredResultFocuses,
-                algorithmFamilyRequiredResultSummary))
+                algorithmFamilyRequiredResultSummary,
+                variantKindRequiredResultFocuses,
+                variantKindRequiredResultSummary))
             .ToArray();
     }
 
@@ -1242,10 +1250,14 @@ WHERE COALESCE(curr.Code, '') <> ''
         string crossPlanDecisionAnchorPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
         string algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> variantKindDecisionAnchorPrimaryFieldFocuses,
+        string variantKindDecisionAnchorPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> crossPlanRequiredResultPrimaryFieldFocuses,
         string crossPlanRequiredResultPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyRequiredResultPrimaryFieldFocuses,
-        string algorithmFamilyRequiredResultPrimaryFieldSummary)
+        string algorithmFamilyRequiredResultPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> variantKindRequiredResultPrimaryFieldFocuses,
+        string variantKindRequiredResultPrimaryFieldSummary)
     {
         return new MotorYMethodAdaptationPlanSnapshot
         {
@@ -1452,12 +1464,16 @@ WHERE COALESCE(curr.Code, '') <> ''
             CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
             AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
             AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+            VariantKindDecisionAnchorPrimaryFieldFocuses = variantKindDecisionAnchorPrimaryFieldFocuses,
+            VariantKindDecisionAnchorPrimaryFieldSummary = variantKindDecisionAnchorPrimaryFieldSummary,
             RequiredResultPrimaryFieldDistributions = plan.RequiredResultPrimaryFieldDistributions,
             RequiredResultPrimaryFieldSummary = plan.RequiredResultPrimaryFieldSummary,
             CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,
             CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultPrimaryFieldSummary,
             AlgorithmFamilyRequiredResultPrimaryFieldFocuses = algorithmFamilyRequiredResultPrimaryFieldFocuses,
             AlgorithmFamilyRequiredResultPrimaryFieldSummary = algorithmFamilyRequiredResultPrimaryFieldSummary,
+            VariantKindRequiredResultPrimaryFieldFocuses = variantKindRequiredResultPrimaryFieldFocuses,
+            VariantKindRequiredResultPrimaryFieldSummary = variantKindRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = plan.DecisionAnchorPrioritySummary,
             LegacyDecisionAnchorsObservedPayloadSummary = plan.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = plan.FormulaSignalSummary,
@@ -1550,6 +1566,9 @@ WHERE COALESCE(curr.Code, '') <> ''
 
     private static string BuildAlgorithmFamilyPrimaryFieldSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
         => MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyFocusSummary(scope, focuses);
+
+    private static string BuildVariantKindPrimaryFieldSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+        => MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary(scope, focuses);
 
     private static IReadOnlyList<string> BuildSuggestedNextSteps(
         string canonicalCode,
