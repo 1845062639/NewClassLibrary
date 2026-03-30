@@ -18,6 +18,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
         ShouldExposeLegacyAlgorithmSourceEvidenceThroughAppQueryGateway();
+        ShouldExposeAdditionalLegacyAlgorithmSourceEvidenceThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
@@ -903,21 +904,13 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
 
     private static TestRecordItemAggregate CreateMotorYDetailedDecisionItem(string canonicalCode, int methodValue, DateTimeOffset sampleTime)
     {
-        if (!string.Equals(canonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal))
-        {
-            return CreateMotorYDecisionItem(canonicalCode, methodValue, sampleTime);
-        }
-
         var route = MotorYLegacyAlgorithmRouteResolver.Resolve(canonicalCode, methodValue)
             ?? throw new InvalidOperationException($"Missing Motor_Y route for {canonicalCode}:{methodValue}.");
 
-        return new TestRecordItemAggregate
+        string dataJson;
+        if (string.Equals(canonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal))
         {
-            TestRecordItemId = Guid.NewGuid(),
-            ItemCode = canonicalCode,
-            MethodCode = route.MethodKey,
-            IsValid = true,
-            DataJson = $$"""
+            dataJson = $$"""
             {
               "BuildProfile": {
                 "CanonicalCode": "{{route.CanonicalCode}}",
@@ -959,7 +952,122 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
               "CoefficientOfPfe": [0.0, 0.12, 0.03],
               "RConverseType": 0
             }
-            """
+            """;
+        }
+        else if (string.Equals(canonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
+        {
+            dataJson = $$"""
+            {
+              "BuildProfile": {
+                "CanonicalCode": "{{route.CanonicalCode}}",
+                "MethodValue": {{route.MethodValue}},
+                "MethodKey": "{{route.MethodKey}}",
+                "ProfileKey": "{{route.ProfileKey}}",
+                "VariantKind": "{{route.VariantKind}}",
+                "AlgorithmFamily": "{{route.AlgorithmFamily}}",
+                "LegacyEnumName": "{{route.LegacyEnumName}}",
+                "LegacyFormName": "{{route.LegacyFormName}}",
+                "LegacyAlgorithmEntry": "{{route.LegacyAlgorithmEntry}}",
+                "LegacyMethodName": "{{route.LegacyMethodName}}",
+                "LegacySettingsMethodName": "{{route.LegacySettingsMethodName}}",
+                "IsBaselineMethod": {{route.IsBaselineMethod.ToString().ToLowerInvariant()}}
+              },
+              "GB": 1,
+              "Pn": 55.0,
+              "HotStateType": 1,
+              "Rn": 1.42,
+              "θs": 95.0,
+              "θw": 102.5,
+              "Data1List": [
+                { "Time": 0, "P1": 100.0, "θ1": 80.0, "θb": 29.5 },
+                { "Time": 30, "P1": 101.0, "θ1": 81.2, "θb": 30.1 },
+                { "Time": 60, "P1": 102.5, "θ1": 82.4, "θb": 30.6 }
+              ],
+              "Data2List": [
+                { "Time": 0, "R": 1.18 },
+                { "Time": 30, "R": 1.23 },
+                { "Time": 60, "R": 1.29 }
+              ]
+            }
+            """;
+        }
+        else if (string.Equals(canonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
+        {
+            dataJson = $$"""
+            {
+              "BuildProfile": {
+                "CanonicalCode": "{{route.CanonicalCode}}",
+                "MethodValue": {{route.MethodValue}},
+                "MethodKey": "{{route.MethodKey}}",
+                "ProfileKey": "{{route.ProfileKey}}",
+                "VariantKind": "{{route.VariantKind}}",
+                "AlgorithmFamily": "{{route.AlgorithmFamily}}",
+                "LegacyEnumName": "{{route.LegacyEnumName}}",
+                "LegacyFormName": "{{route.LegacyFormName}}",
+                "LegacyAlgorithmEntry": "{{route.LegacyAlgorithmEntry}}",
+                "LegacyMethodName": "{{route.LegacyMethodName}}",
+                "LegacySettingsMethodName": "{{route.LegacySettingsMethodName}}",
+                "IsBaselineMethod": {{route.IsBaselineMethod.ToString().ToLowerInvariant()}}
+              },
+              "CoefficientOfPfe": 0.97,
+              "Pfw": 120.0,
+              "θa": 75.0,
+              "RawDataList": [
+                { "U": 380.0, "I1": 10.2, "P1t": 500.0, "Nt": 1450.0, "Tt": 12.0, "Frequency": 50.0, "θ1t": 85.0 },
+                { "U": 380.0, "I1": 11.6, "P1t": 560.0, "Nt": 1438.0, "Tt": 13.8, "Frequency": 50.0, "θ1t": 86.2 }
+              ],
+              "ResultDataList": [
+                { "Rate": 0.5, "Pcu1": 55.0, "Pcu2": 72.0, "η": 0.88 },
+                { "Rate": 1.0, "Pcu1": 82.0, "Pcu2": 110.0, "η": 0.91 }
+              ],
+              "Pcu1": 82.0,
+              "Pcu2": 110.0,
+              "η": 0.91
+            }
+            """;
+        }
+        else if (string.Equals(canonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
+        {
+            dataJson = $$"""
+            {
+              "BuildProfile": {
+                "CanonicalCode": "{{route.CanonicalCode}}",
+                "MethodValue": {{route.MethodValue}},
+                "MethodKey": "{{route.MethodKey}}",
+                "ProfileKey": "{{route.ProfileKey}}",
+                "VariantKind": "{{route.VariantKind}}",
+                "AlgorithmFamily": "{{route.AlgorithmFamily}}",
+                "LegacyEnumName": "{{route.LegacyEnumName}}",
+                "LegacyFormName": "{{route.LegacyFormName}}",
+                "LegacyAlgorithmEntry": "{{route.LegacyAlgorithmEntry}}",
+                "LegacyMethodName": "{{route.LegacyMethodName}}",
+                "LegacySettingsMethodName": "{{route.LegacySettingsMethodName}}",
+                "IsBaselineMethod": {{route.IsBaselineMethod.ToString().ToLowerInvariant()}}
+              },
+              "Method": {{route.MethodValue}},
+              "RatioOfUkToUn": 0.82,
+              "RawDataList": [
+                { "Uk": 115.0, "Ik": 185.0, "Pk": 12.6, "Tk": 78.0 },
+                { "Uk": 118.0, "Ik": 188.0, "Pk": 12.9, "Tk": 79.5 }
+              ],
+              "Ikn": 186.5,
+              "Pkn": 12.75,
+              "Tkn": 78.75
+            }
+            """;
+        }
+        else
+        {
+            return CreateMotorYDecisionItem(canonicalCode, methodValue, sampleTime);
+        }
+
+        return new TestRecordItemAggregate
+        {
+            TestRecordItemId = Guid.NewGuid(),
+            ItemCode = canonicalCode,
+            MethodCode = route.MethodKey,
+            IsValid = true,
+            DataJson = dataJson
         };
     }
 
@@ -1230,6 +1338,92 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
                 && x.ReferencedFields.Contains("cuC", StringComparer.Ordinal)))
         {
             throw new InvalidOperationException($"Motor_Y legacy algorithm source evidence query smoke test mismatch for '{MotorYTestMethodCodes.LoadB}'. actual=[{string.Join(" | ", loadBPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
+        }
+    }
+
+    private static void ShouldExposeAdditionalLegacyAlgorithmSourceEvidenceThroughAppQueryGateway()
+    {
+        var baseTime = DateTimeOffset.Parse("2026-03-29T09:30:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-SOURCE-002",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime,
+            Items =
+            {
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.HeatRun, 3, baseTime),
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.LoadA, 4, baseTime.AddMinutes(1)),
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.LockedRotor, 11, baseTime.AddMinutes(2))
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y additional legacy algorithm source evidence query smoke test returned null detail.");
+        }
+
+        var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        var heatRunPlan = plans[MotorYTestMethodCodes.HeatRun];
+        var loadAPlan = plans[MotorYTestMethodCodes.LoadA];
+        var lockedRotorPlan = plans[MotorYTestMethodCodes.LockedRotor];
+
+        if (heatRunPlan.SourceEvidences.Count != 4
+            || !heatRunPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "first-seconds-interval", "theta-b-last-quarter-window", "rn-selection", "gb-temperature-branch" }, StringComparer.Ordinal)
+            || !heatRunPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "Thermal", StringComparison.Ordinal))
+            || !heatRunPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "theta-b-last-quarter-window", StringComparison.Ordinal)
+                && x.StartLine == 563
+                && x.EndLine == 569
+                && x.ReferencedFields.Contains("Data1List.θb", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("θb", StringComparer.Ordinal))
+            || !heatRunPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "gb-temperature-branch", StringComparison.Ordinal)
+                && x.StartLine == 584
+                && x.EndLine == 636
+                && x.ReferencedFields.Contains("GB", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("θw", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("θs", StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y additional source evidence smoke test mismatch for '{MotorYTestMethodCodes.HeatRun}'. actual=[{string.Join(" | ", heatRunPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
+        }
+
+        if (loadAPlan.SourceEvidences.Count != 4
+            || !loadAPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "upstream-ready", "raw-point-precompute", "rated-load-fit-grid", "payload-rated-quantity-ready" }, StringComparer.Ordinal)
+            || !loadAPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "Load_A", StringComparison.Ordinal))
+            || !loadAPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "rated-load-fit-grid", StringComparison.Ordinal)
+                && x.StartLine == 268
+                && x.EndLine == 280
+                && x.ReferencedFields.Contains("ResultDataList", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Pcu1", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("η", StringComparer.Ordinal))
+            || !loadAPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "upstream-ready", StringComparison.Ordinal)
+                && x.StartLine == 241
+                && x.EndLine == 251
+                && x.ReferencedFields.Contains("CoefficientOfPfe", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Pfw", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("θa", StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y additional source evidence smoke test mismatch for '{MotorYTestMethodCodes.LoadA}'. actual=[{string.Join(" | ", loadAPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
+        }
+
+        if (lockedRotorPlan.SourceEvidences.Count != 3
+            || !lockedRotorPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "ratio-of-uk-branch", "raw-point-precompute", "locked-rotor-result" }, StringComparer.Ordinal)
+            || !lockedRotorPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "Lock_Rotor", StringComparison.Ordinal))
+            || !lockedRotorPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "ratio-of-uk-branch", StringComparison.Ordinal)
+                && x.StartLine == 676
+                && x.EndLine == 684
+                && x.ReferencedFields.Contains("RatioOfUkToUn", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Uk", StringComparer.Ordinal))
+            || !lockedRotorPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "locked-rotor-result", StringComparison.Ordinal)
+                && x.StartLine == 694
+                && x.EndLine == 709
+                && x.ReferencedFields.Contains("Ikn", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Pkn", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Tkn", StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y additional source evidence smoke test mismatch for '{MotorYTestMethodCodes.LockedRotor}'. actual=[{string.Join(" | ", lockedRotorPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
         }
     }
 
