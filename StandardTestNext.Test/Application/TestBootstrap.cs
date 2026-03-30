@@ -290,7 +290,23 @@ public sealed class TestBootstrap
 
     private static string FormatCrossPlanPrimaryFieldFocuses(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
     {
-        return string.Join(", ", focuses.Select(focus => $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}"));
+        var totalWeighted = focuses.Count == 0
+            ? 0
+            : focuses
+                .Select(focus => focus.WeightedShare <= 0d
+                    ? 0
+                    : (int)Math.Round(focus.WeightedCount / focus.WeightedShare, MidpointRounding.AwayFromZero))
+                .Where(value => value > 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+        return string.Join(", ", focuses.Select(focus =>
+        {
+            var weightedBase = totalWeighted > 0
+                ? totalWeighted
+                : focus.WeightedCount;
+            return $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:weighted={focus.WeightedCount}/{weightedBase}:{focus.WeightedShare:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}";
+        }));
     }
 
     private static string FormatMethodAdaptationPlanSnapshot(MotorYMethodAdaptationPlanSnapshot plan)
