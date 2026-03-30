@@ -191,8 +191,9 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 SourceEvidences = new[]
                 {
                     Evidence("first-seconds-interval", "Thermal", 554, 561, "热试验先按 Pn 选取 firstSecondsInterval（30/90/120s）。", "Pn", "firstSecondsInterval"),
-                    Evidence("rn-selection", "Thermal", 567, 605, "θb 取末段 1/4 均值，Rw/Rn 由 R-Time 拟合并按 HotStateType 选择实测或外推。", "Data1List.Time", "Data1List.θb", "Data2List.Time", "Data2List.R", "Rw", "Rn", "HotStateType", "Time", "θb"),
-                    Evidence("gb-temperature-branch", "Thermal", 648, 679, "GB2012/TB 与 GB2023 走不同温升公式，并最终给出 θw/θs/Rws。", "GB", "Δθ", "Δθn", "θw", "θs", "Rws", "Rc", "θc", "Rn", "Rw")
+                    Evidence("theta-b-last-quarter-window", "Thermal", 563, 569, "θb 取 Data1List 末段 1/4 时间窗内的环境温度平均值，属于后续 Δθ/θs 计算的环境基线。", "Data1List.Time", "Data1List.θb", "θb"),
+                    Evidence("rn-selection", "Thermal", 570, 605, "Rw/Rn 由 R-Time 拟合并按 HotStateType 选择首个实测点或 firstSecondsInterval 外推值。", "Data2List.Time", "Data2List.R", "Rw", "Rn", "HotStateType", "Time"),
+                    Evidence("gb-temperature-branch", "Thermal", 648, 679, "GB2012/TB 与 GB2023 走不同温升公式，并最终给出 θw/θs/Rws。", "GB", "Δθ", "Δθn", "θw", "θs", "Rws", "Rc", "θc", "Rn", "Rw", "θb")
                 },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "Rw", "Rn", "Δθ", "Δθn", "θw", "θs", "θb" },

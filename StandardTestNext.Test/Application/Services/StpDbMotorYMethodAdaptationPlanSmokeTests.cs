@@ -170,6 +170,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             AssertSampleCountReadiness(snapshot);
             AssertDecisionAnchorPriorityDistribution(snapshot);
             AssertDecisionAnchorPrimaryFieldDistribution(snapshot);
+            AssertLegacyAlgorithmSourceEvidence(snapshot);
 
             foreach (var distribution in row.Distributions)
             {
@@ -222,6 +223,50 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+            }
+        }
+    }
+
+    private static void AssertLegacyAlgorithmSourceEvidence(MotorYMethodAdaptationPlanSnapshot snapshot)
+    {
+        if (snapshot.LegacyDependencyProfile is null)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing legacy dependency profile for {snapshot.CanonicalCode}.");
+        }
+
+        var sourceEvidences = snapshot.LegacyDependencyProfile.SourceEvidences;
+        if (sourceEvidences.Count == 0)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: no source evidences for {snapshot.CanonicalCode}.");
+        }
+
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.HeatRun, StringComparison.Ordinal))
+        {
+            var thetaBWindow = sourceEvidences.FirstOrDefault(x => string.Equals(x.SectionKey, "theta-b-last-quarter-window", StringComparison.Ordinal));
+            if (thetaBWindow is null
+                || thetaBWindow.StartLine != 563
+                || thetaBWindow.EndLine != 569
+                || !thetaBWindow.ReferencedFields.Contains("Data1List.Time", StringComparer.Ordinal)
+                || !thetaBWindow.ReferencedFields.Contains("Data1List.θb", StringComparer.Ordinal)
+                || !thetaBWindow.ReferencedFields.Contains("θb", StringComparer.Ordinal)
+                || !thetaBWindow.Summary.Contains("1/4", StringComparison.Ordinal)
+                || !thetaBWindow.Summary.Contains("环境温度", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: HeatRun theta-b evidence mismatch. actual='{thetaBWindow?.Summary}', lines={thetaBWindow?.StartLine}-{thetaBWindow?.EndLine}, fields=[{string.Join(",", thetaBWindow?.ReferencedFields ?? Array.Empty<string>())}]");
+            }
+
+            var rnSelection = sourceEvidences.FirstOrDefault(x => string.Equals(x.SectionKey, "rn-selection", StringComparison.Ordinal));
+            if (rnSelection is null
+                || rnSelection.StartLine != 570
+                || rnSelection.EndLine != 605
+                || !rnSelection.ReferencedFields.Contains("Data2List.Time", StringComparer.Ordinal)
+                || !rnSelection.ReferencedFields.Contains("Data2List.R", StringComparer.Ordinal)
+                || !rnSelection.ReferencedFields.Contains("Rw", StringComparer.Ordinal)
+                || !rnSelection.ReferencedFields.Contains("Rn", StringComparer.Ordinal)
+                || !rnSelection.ReferencedFields.Contains("HotStateType", StringComparer.Ordinal)
+                || rnSelection.ReferencedFields.Contains("Data1List.θb", StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: HeatRun rn-selection evidence mismatch. actual='{rnSelection?.Summary}', lines={rnSelection?.StartLine}-{rnSelection?.EndLine}, fields=[{string.Join(",", rnSelection?.ReferencedFields ?? Array.Empty<string>())}]");
             }
         }
     }
