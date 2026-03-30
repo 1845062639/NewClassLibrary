@@ -440,6 +440,7 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 AnchorKeys = x.AnchorKeys,
                 SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
                 SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                CanonicalCodes = x.CanonicalCodes,
                 Summary = x.Summary
             }).ToArray(),
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,

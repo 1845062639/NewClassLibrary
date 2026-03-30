@@ -1387,6 +1387,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !r.AnchorKeys.SequenceEqual(new[] { "correlation-refit" }, StringComparer.Ordinal)
             || !r.SuggestedNextStepFocuses.SequenceEqual(new[] { "B法坏点剔除后二次拟合证据" }, StringComparer.Ordinal)
             || !r.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || !r.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
             || !string.Equals(r.Summary, "decision-anchor primary field R suggested by 1/4 anchors (25pp); anchors=correlation-refit; focus=B法坏点剔除后二次拟合证据; priorities=blocking", StringComparison.Ordinal)
             || gb is null
             || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal)

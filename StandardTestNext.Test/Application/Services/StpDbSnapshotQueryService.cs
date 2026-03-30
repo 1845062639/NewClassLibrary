@@ -845,6 +845,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                         AnchorKeys = distribution.AnchorKeys,
                         SuggestedNextStepFocuses = distribution.SuggestedNextStepFocuses,
                         SuggestedNextStepPriorities = distribution.SuggestedNextStepPriorities,
+                        CanonicalCodes = new[] { selection.CanonicalCode },
                         Summary = distribution.Summary
                     })
                     .ToArray();

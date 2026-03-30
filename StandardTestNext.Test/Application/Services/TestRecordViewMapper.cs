@@ -527,6 +527,7 @@ public static class TestRecordViewMapper
                 AnchorKeys = x.AnchorKeys,
                 SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
                 SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                CanonicalCodes = x.CanonicalCodes,
                 Summary = x.Summary
             }).ToArray(),
             DecisionAnchorPrimaryFieldSummary = contract.DecisionAnchorPrimaryFieldSummary,

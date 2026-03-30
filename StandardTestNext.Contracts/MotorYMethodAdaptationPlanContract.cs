@@ -76,6 +76,7 @@ public sealed class MotorYDecisionAnchorPrimaryFieldDistributionContract
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public string Summary { get; init; } = string.Empty;
 }
 

@@ -48,6 +48,7 @@ internal sealed class MotorYDecisionAnchorPrimaryFieldDistribution
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public string Summary { get; init; } = string.Empty;
 }
 
@@ -539,6 +540,7 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
+                    CanonicalCodes = Array.Empty<string>(),
                     Summary = summary
                 };
             })
