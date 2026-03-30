@@ -263,13 +263,41 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
 
             if (actual.Count != row.Count
                 || Math.Abs(actual.Share - row.Share) > 0.0001d
+                || actual.WeightedCount != row.WeightedCount
+                || Math.Abs(actual.WeightedShare - row.WeightedShare) > 0.0001d
+                || actual.BaselineCount != row.BaselineCount
+                || Math.Abs(actual.BaselineShare - row.BaselineShare) > 0.0001d
+                || actual.BaselineWeightedCount != row.BaselineWeightedCount
+                || Math.Abs(actual.BaselineWeightedShare - row.BaselineWeightedShare) > 0.0001d
+                || actual.DominantCount != row.DominantCount
+                || Math.Abs(actual.DominantShare - row.DominantShare) > 0.0001d
+                || actual.DominantWeightedCount != row.DominantWeightedCount
+                || Math.Abs(actual.DominantWeightedShare - row.DominantWeightedShare) > 0.0001d
+                || actual.SelectedCount != row.SelectedCount
+                || Math.Abs(actual.SelectedShare - row.SelectedShare) > 0.0001d
+                || actual.SelectedWeightedCount != row.SelectedWeightedCount
+                || Math.Abs(actual.SelectedWeightedShare - row.SelectedWeightedShare) > 0.0001d
+                || actual.BaselineMethodValue != row.BaselineMethodValue
+                || !string.Equals(actual.BaselineMethodKey, row.BaselineMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.BaselineProfileKey, row.BaselineProfileKey, StringComparison.Ordinal)
+                || actual.DominantMethodValue != row.DominantMethodValue
+                || !string.Equals(actual.DominantMethodKey, row.DominantMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.DominantProfileKey, row.DominantProfileKey, StringComparison.Ordinal)
+                || actual.SelectedMethodValue != row.SelectedMethodValue
+                || !string.Equals(actual.SelectedMethodKey, row.SelectedMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.SelectedProfileKey, row.SelectedProfileKey, StringComparison.Ordinal)
                 || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.MethodValues.SequenceEqual(row.MethodValues)
+                || !actual.MethodKeys.SequenceEqual(row.MethodKeys, StringComparer.Ordinal)
+                || !actual.ProfileKeys.SequenceEqual(row.ProfileKeys, StringComparer.Ordinal)
+                || !actual.LegacyMethodNames.SequenceEqual(row.LegacyMethodNames, StringComparer.Ordinal)
+                || !actual.SettingsMethodNames.SequenceEqual(row.SettingsMethodNames, StringComparer.Ordinal)
                 || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
                 || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
                 || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
                 || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:baseline={row.BaselineCount}/{row.BaselineShare}:{row.BaselineWeightedCount}/{row.BaselineWeightedShare}:dominant={row.DominantCount}/{row.DominantShare}:{row.DominantWeightedCount}/{row.DominantWeightedShare}:selected={row.SelectedCount}/{row.SelectedShare}:{row.SelectedWeightedCount}/{row.SelectedWeightedShare}:baseline-route={row.BaselineMethodValue}/{row.BaselineMethodKey}/{row.BaselineProfileKey}:dominant-route={row.DominantMethodValue}/{row.DominantMethodKey}/{row.DominantProfileKey}:selected-route={row.SelectedMethodValue}/{row.SelectedMethodKey}/{row.SelectedProfileKey}:methods={string.Join(',', row.MethodValues)}:methodKeys={string.Join(',', row.MethodKeys)}:profiles={string.Join(',', row.ProfileKeys)}:legacy={string.Join(',', row.LegacyMethodNames)}:settings={string.Join(',', row.SettingsMethodNames)}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:baseline={actual.BaselineCount}/{actual.BaselineShare}:{actual.BaselineWeightedCount}/{actual.BaselineWeightedShare}:dominant={actual.DominantCount}/{actual.DominantShare}:{actual.DominantWeightedCount}/{actual.DominantWeightedShare}:selected={actual.SelectedCount}/{actual.SelectedShare}:{actual.SelectedWeightedCount}/{actual.SelectedWeightedShare}:baseline-route={actual.BaselineMethodValue}/{actual.BaselineMethodKey}/{actual.BaselineProfileKey}:dominant-route={actual.DominantMethodValue}/{actual.DominantMethodKey}/{actual.DominantProfileKey}:selected-route={actual.SelectedMethodValue}/{actual.SelectedMethodKey}/{actual.SelectedProfileKey}:methods={string.Join(',', actual.MethodValues)}:methodKeys={string.Join(',', actual.MethodKeys)}:profiles={string.Join(',', actual.ProfileKeys)}:legacy={string.Join(',', actual.LegacyMethodNames)}:settings={string.Join(',', actual.SettingsMethodNames)}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
         }
     }
@@ -432,13 +460,39 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 || Math.Abs(actual.Share - row.Share) > 0.0001d
                 || actual.WeightedCount != row.WeightedCount
                 || Math.Abs(actual.WeightedShare - row.WeightedShare) > 0.0001d
+                || actual.BaselineCount != row.BaselineCount
+                || Math.Abs(actual.BaselineShare - row.BaselineShare) > 0.0001d
+                || actual.BaselineWeightedCount != row.BaselineWeightedCount
+                || Math.Abs(actual.BaselineWeightedShare - row.BaselineWeightedShare) > 0.0001d
+                || actual.DominantCount != row.DominantCount
+                || Math.Abs(actual.DominantShare - row.DominantShare) > 0.0001d
+                || actual.DominantWeightedCount != row.DominantWeightedCount
+                || Math.Abs(actual.DominantWeightedShare - row.DominantWeightedShare) > 0.0001d
+                || actual.SelectedCount != row.SelectedCount
+                || Math.Abs(actual.SelectedShare - row.SelectedShare) > 0.0001d
+                || actual.SelectedWeightedCount != row.SelectedWeightedCount
+                || Math.Abs(actual.SelectedWeightedShare - row.SelectedWeightedShare) > 0.0001d
+                || actual.BaselineMethodValue != row.BaselineMethodValue
+                || !string.Equals(actual.BaselineMethodKey, row.BaselineMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.BaselineProfileKey, row.BaselineProfileKey, StringComparison.Ordinal)
+                || actual.DominantMethodValue != row.DominantMethodValue
+                || !string.Equals(actual.DominantMethodKey, row.DominantMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.DominantProfileKey, row.DominantProfileKey, StringComparison.Ordinal)
+                || actual.SelectedMethodValue != row.SelectedMethodValue
+                || !string.Equals(actual.SelectedMethodKey, row.SelectedMethodKey, StringComparison.Ordinal)
+                || !string.Equals(actual.SelectedProfileKey, row.SelectedProfileKey, StringComparison.Ordinal)
                 || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.MethodValues.SequenceEqual(row.MethodValues)
+                || !actual.MethodKeys.SequenceEqual(row.MethodKeys, StringComparer.Ordinal)
+                || !actual.ProfileKeys.SequenceEqual(row.ProfileKeys, StringComparer.Ordinal)
+                || !actual.LegacyMethodNames.SequenceEqual(row.LegacyMethodNames, StringComparer.Ordinal)
+                || !actual.SettingsMethodNames.SequenceEqual(row.SettingsMethodNames, StringComparer.Ordinal)
                 || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
                 || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
                 || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
                 || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
             {
-                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family decision-anchor primary-field focus mismatch for {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family decision-anchor primary-field focus mismatch for {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:baseline={row.BaselineCount}/{row.BaselineShare}:{row.BaselineWeightedCount}/{row.BaselineWeightedShare}:dominant={row.DominantCount}/{row.DominantShare}:{row.DominantWeightedCount}/{row.DominantWeightedShare}:selected={row.SelectedCount}/{row.SelectedShare}:{row.SelectedWeightedCount}/{row.SelectedWeightedShare}:baseline-route={row.BaselineMethodValue}/{row.BaselineMethodKey}/{row.BaselineProfileKey}:dominant-route={row.DominantMethodValue}/{row.DominantMethodKey}/{row.DominantProfileKey}:selected-route={row.SelectedMethodValue}/{row.SelectedMethodKey}/{row.SelectedProfileKey}:methods={string.Join(',', row.MethodValues)}:methodKeys={string.Join(',', row.MethodKeys)}:profiles={string.Join(',', row.ProfileKeys)}:legacy={string.Join(',', row.LegacyMethodNames)}:settings={string.Join(',', row.SettingsMethodNames)}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:baseline={actual.BaselineCount}/{actual.BaselineShare}:{actual.BaselineWeightedCount}/{actual.BaselineWeightedShare}:dominant={actual.DominantCount}/{actual.DominantShare}:{actual.DominantWeightedCount}/{actual.DominantWeightedShare}:selected={actual.SelectedCount}/{actual.SelectedShare}:{actual.SelectedWeightedCount}/{actual.SelectedWeightedShare}:baseline-route={actual.BaselineMethodValue}/{actual.BaselineMethodKey}/{actual.BaselineProfileKey}:dominant-route={actual.DominantMethodValue}/{actual.DominantMethodKey}/{actual.DominantProfileKey}:selected-route={actual.SelectedMethodValue}/{actual.SelectedMethodKey}/{actual.SelectedProfileKey}:methods={string.Join(',', actual.MethodValues)}:methodKeys={string.Join(',', actual.MethodKeys)}:profiles={string.Join(',', actual.ProfileKeys)}:legacy={string.Join(',', actual.LegacyMethodNames)}:settings={string.Join(',', actual.SettingsMethodNames)}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
         }
     }
