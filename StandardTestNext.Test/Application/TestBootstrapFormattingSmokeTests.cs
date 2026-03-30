@@ -9,6 +9,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview();
         ShouldExposeDecisionAnchorPriorityAndCoverageInCliPreview();
         ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
+        ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview();
         ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
     }
 
@@ -85,9 +86,61 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad::intermediate-result-fields/result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad::intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview()
+    {
+        var plan = new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = MotorYTestMethodCodes.NoLoad,
+            SelectionStrategy = "baseline",
+            AlgorithmEntry = "Calc_NoLoad",
+            SettingsMethodName = "空载试验",
+            SelectionReason = "smoke",
+            RawSampleCountReady = true,
+            RawDataSampleCount = 3,
+            MinimumRawSampleCount = 1,
+            StructuredPayloadSampleCountReady = true,
+            StructuredPayloadSampleCount = 2,
+            MinimumStructuredPayloadSampleCount = 1,
+            StructuredResultSampleCountReady = true,
+            StructuredResultSampleCount = 2,
+            MinimumStructuredResultSampleCount = 1,
+            CrossPlanDecisionAnchorPrimaryFieldSummary = "cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)",
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "GB",
+                    Count = 2,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 0.7d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    AnchorKeys = new[] { "gb-branch", "gb-compare" },
+                    SuggestedNextStepPriorities = new[] { "blocking", "decision-branch" },
+                    SuggestedNextStepFocuses = new[] { "旧算法GB分支", "旧算法GB比较" },
+                    Summary = "cross-plan primary field GB appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=旧算法GB分支, 旧算法GB比较; priorities=blocking, decision-branch"
+                }
+            },
+            LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
+            LegacyAlgorithmInputReadinessSummary = "legacy algorithm inputs ready",
+            SelectedMethodSummary = "推荐方法沿用 baseline",
+            BaselineDominantComparisonSummary = "baseline 与 dominant 一致"
+        };
+
+        var formatter = typeof(TestBootstrap).GetMethod("FormatMethodAdaptationPlanSnapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap formatter not found.");
+        var formatted = formatter.Invoke(null, new object[] { plan }) as string
+            ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
+
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:MotorY.LoadB/MotorY.NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap weighted cross-plan anchor-primary formatting smoke test failed. actual='{formatted}'");
         }
     }
 

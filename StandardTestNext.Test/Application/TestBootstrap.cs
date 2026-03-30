@@ -305,7 +305,7 @@ public sealed class TestBootstrap
             var weightedBase = totalWeighted > 0
                 ? totalWeighted
                 : focus.WeightedCount;
-            return $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:weighted={focus.WeightedCount}/{weightedBase}:{focus.WeightedShare:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}";
+            return $"{focus.PrimaryField}:{focus.Count}:{focus.Share:P1}:weighted={focus.WeightedCount}/{weightedBase}:{focus.WeightedShare:P1}:{FormatPreview(focus.CanonicalCodes, 3)}:{FormatPreview(focus.AnchorKeys, 3)}:{FormatPreview(focus.SuggestedNextStepPriorities, 3)}:summary={focus.Summary}";
         }));
     }
 
@@ -358,7 +358,7 @@ public sealed class TestBootstrap
             : "anchor-primary=" + string.Join("|", plan.DecisionAnchorPrimaryFieldDistributions.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.DecisionAnchorPrimaryFieldSummary}";
         var crossPlanAnchorPrimary = plan.CrossPlanDecisionAnchorPrimaryFieldFocuses.Count == 0
             ? $"anchor-cross-plan={plan.CrossPlanDecisionAnchorPrimaryFieldSummary}"
-            : "anchor-cross-plan=" + string.Join("|", plan.CrossPlanDecisionAnchorPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.CrossPlanDecisionAnchorPrimaryFieldSummary}";
+            : "anchor-cross-plan=" + string.Join("|", plan.CrossPlanDecisionAnchorPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.CrossPlanDecisionAnchorPrimaryFieldSummary}";
         var resultFieldPrimary = plan.RequiredResultPrimaryFieldDistributions.Count == 0
             ? $"result-primary={plan.RequiredResultPrimaryFieldSummary}"
             : "result-primary=" + string.Join("|", plan.RequiredResultPrimaryFieldDistributions.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}")) + $":summary={plan.RequiredResultPrimaryFieldSummary}";
