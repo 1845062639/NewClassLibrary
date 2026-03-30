@@ -733,6 +733,57 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         }
     }
 
+    private static void AssertPrimaryFieldFocusesEquivalent(
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> expected,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> actual,
+        string scenario)
+    {
+        if (expected.Count != actual.Count)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: {scenario} count mismatch. expected={expected.Count}, actual={actual.Count}.");
+        }
+
+        for (var index = 0; index < expected.Count; index++)
+        {
+            var exp = expected[index];
+            var act = actual[index];
+            if (!string.Equals(exp.PrimaryField, act.PrimaryField, StringComparison.Ordinal)
+                || exp.Count != act.Count
+                || Math.Abs(exp.Share - act.Share) > 0.0001d
+                || exp.WeightedCount != act.WeightedCount
+                || Math.Abs(exp.WeightedShare - act.WeightedShare) > 0.0001d
+                || exp.BaselineCount != act.BaselineCount
+                || Math.Abs(exp.BaselineShare - act.BaselineShare) > 0.0001d
+                || exp.DominantCount != act.DominantCount
+                || Math.Abs(exp.DominantShare - act.DominantShare) > 0.0001d
+                || exp.SelectedCount != act.SelectedCount
+                || Math.Abs(exp.SelectedShare - act.SelectedShare) > 0.0001d
+                || !exp.CanonicalCodes.SequenceEqual(act.CanonicalCodes, StringComparer.Ordinal)
+                || !exp.AlgorithmFamilies.SequenceEqual(act.AlgorithmFamilies, StringComparer.Ordinal)
+                || !exp.VariantKinds.SequenceEqual(act.VariantKinds, StringComparer.Ordinal)
+                || !exp.MethodValues.SequenceEqual(act.MethodValues)
+                || !exp.MethodKeys.SequenceEqual(act.MethodKeys, StringComparer.Ordinal)
+                || !exp.ProfileKeys.SequenceEqual(act.ProfileKeys, StringComparer.Ordinal)
+                || !exp.LegacyMethodNames.SequenceEqual(act.LegacyMethodNames, StringComparer.Ordinal)
+                || !exp.SettingsMethodNames.SequenceEqual(act.SettingsMethodNames, StringComparer.Ordinal)
+                || !exp.LegacyAlgorithmEntries.SequenceEqual(act.LegacyAlgorithmEntries, StringComparer.Ordinal)
+                || !exp.SourceSections.SequenceEqual(act.SourceSections, StringComparer.Ordinal)
+                || !exp.SourceRanges.SequenceEqual(act.SourceRanges, StringComparer.Ordinal)
+                || !exp.FormNames.SequenceEqual(act.FormNames, StringComparer.Ordinal)
+                || !exp.FormSourceRanges.SequenceEqual(act.FormSourceRanges, StringComparer.Ordinal)
+                || !exp.UpstreamCanonicalCodes.SequenceEqual(act.UpstreamCanonicalCodes, StringComparer.Ordinal)
+                || !exp.UpstreamSummaryHints.SequenceEqual(act.UpstreamSummaryHints, StringComparer.Ordinal)
+                || !exp.UpstreamLegacyCodes.SequenceEqual(act.UpstreamLegacyCodes, StringComparer.Ordinal)
+                || !exp.AnchorKeys.SequenceEqual(act.AnchorKeys, StringComparer.Ordinal)
+                || !exp.SuggestedNextStepFocuses.SequenceEqual(act.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !exp.SuggestedNextStepPriorities.SequenceEqual(act.SuggestedNextStepPriorities, StringComparer.Ordinal)
+                || !string.Equals(exp.Summary, act.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: {scenario} mismatch at index {index}. expected='{exp.PrimaryField}:{exp.Count}:{exp.WeightedCount}:{exp.Summary}', actual='{act.PrimaryField}:{act.Count}:{act.WeightedCount}:{act.Summary}'.");
+            }
+        }
+    }
+
     private static void AssertDecisionAnchorPriorityDistribution(MotorYMethodAdaptationPlanSnapshot snapshot)
     {
         var expectedResolutions = snapshot.LegacyDecisionAnchorResolutions

@@ -344,6 +344,68 @@ public sealed class TestBootstrap
         }
     }
 
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildVariantKindDecisionAnchorPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYVariantKindDecisionAnchorPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y variant-kind anchor primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildVariantKindRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYVariantKindRequiredResultPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y variant-kind required-result primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
+    private static string FormatRoutePreview(int? methodValue, string methodKey, string profileKey)
+    {
+        var parts = new List<string>();
+
+        if (methodValue.HasValue)
+        {
+            parts.Add($"method={methodValue.Value}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(methodKey))
+        {
+            parts.Add($"method-key={methodKey}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(profileKey))
+        {
+            parts.Add($"profile={profileKey}");
+        }
+
+        return parts.Count == 0 ? "none" : string.Join(", ", parts);
+    }
+
     private static string FormatMethodAdaptationPlans(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
     {
         return string.Join(", ", plans.Select(FormatMethodAdaptationPlanSnapshot));

@@ -136,10 +136,16 @@ public sealed class MotorYPrimaryFieldFocusContract
     public double WeightedShare { get; init; }
     public int BaselineCount { get; init; }
     public double BaselineShare { get; init; }
+    public int BaselineWeightedCount { get; init; }
+    public double BaselineWeightedShare { get; init; }
     public int DominantCount { get; init; }
     public double DominantShare { get; init; }
+    public int DominantWeightedCount { get; init; }
+    public double DominantWeightedShare { get; init; }
     public int SelectedCount { get; init; }
     public double SelectedShare { get; init; }
+    public int SelectedWeightedCount { get; init; }
+    public double SelectedWeightedShare { get; init; }
     public int? BaselineMethodValue { get; init; }
     public string BaselineMethodKey { get; init; } = string.Empty;
     public string BaselineProfileKey { get; init; } = string.Empty;

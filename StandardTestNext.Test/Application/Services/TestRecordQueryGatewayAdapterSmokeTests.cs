@@ -2516,6 +2516,59 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         }
     }
 
+    private static TestRecordDetailContract CreateMotorYMethodAdaptationPlanDetail()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T00:00:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-VARIANT-KIND-FOCUS-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 380, "I0": 4.2, "P0": 320 }
+                      ],
+                      "P0": 320
+                    }
+                    """
+                },
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50 }
+                      ],
+                      "ResultDataList": [
+                        { "P2": 4.1, "Pcu2": 220 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        return CreateGateway(record).GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y variant-kind primary-field focus smoke test returned null detail.");
+    }
+
     private static TestRecordQueryGatewayAdapter CreateGateway(params TestRecordAggregate[] records)
     {
         return CreateGateway(records, Array.Empty<TestReportSnapshot>());
