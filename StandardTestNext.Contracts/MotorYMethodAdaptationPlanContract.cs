@@ -151,6 +151,8 @@ public sealed class MotorYPrimaryFieldFocusContract
 public sealed class MotorYMethodAdaptationPlanContract
 {
     public string CanonicalCode { get; init; } = string.Empty;
+    public string SourceEvidenceSummary { get; init; } = string.Empty;
+    public string FormDependencyEvidenceSummary { get; init; } = string.Empty;
     public string DecisionAnchorTopPriority { get; init; } = string.Empty;
     public string DecisionAnchorTopPrioritySummary { get; init; } = string.Empty;
     public string DecisionAnchorTopPriorityDominantAnchorKey { get; init; } = string.Empty;

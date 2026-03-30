@@ -1307,7 +1307,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
         var loadBPlan = plans[MotorYTestMethodCodes.LoadB];
 
-        if (noLoadPlan.SourceEvidences.Count != 3
+        if (!string.Equals(noLoadPlan.SourceEvidenceSummary, "source evidence 3: rconverse-branch:NoLoad:L184-L193:fields=RConverseType, R0, θ0, R1c, ... | per-point-precompute:NoLoad:L194-L215:fields=DataList.U, DataList.I, DataList.P, DataList.Cos, ... | pfw-and-pfe-fit:NoLoad:L216-L238:fields=Pfw, CoefficientOfPfe, Pfe, DataList.P, ...", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.FormDependencyEvidenceSummary, "form dependency evidence 1: FrmMotor_Y_NoLoad:L263:upstream=MotorY.DcResistance:methods=TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>", StringComparison.Ordinal)
+            || noLoadPlan.SourceEvidences.Count != 3
             || !noLoadPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "rconverse-branch", "per-point-precompute", "pfw-and-pfe-fit" }, StringComparer.Ordinal)
             || !noLoadPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "NoLoad", StringComparison.Ordinal))
             || !noLoadPlan.SourceEvidences.Select(x => x.SourceFile).All(x => string.Equals(x, "ClassLibary/StandardTest.Library/Algorithm/Motor/Algorithm_Motor_Y.cs", StringComparison.Ordinal))

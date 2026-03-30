@@ -372,6 +372,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     Profile = profileMapper(x.Route)
                 })
                 .ToArray(),
+            SourceEvidenceSummary = BuildSourceEvidenceSummary(dependencyProfile?.SourceEvidences ?? Array.Empty<MotorYLegacyAlgorithmSourceEvidence>()),
+            FormDependencyEvidenceSummary = BuildFormDependencyEvidenceSummary(dependencyProfile?.FormDependencyEvidences ?? Array.Empty<MotorYLegacyFormDependencyEvidence>()),
             RequiresRatedParams = dependencyProfile?.RequiresRatedParams == true,
             UpstreamCanonicalCodes = dependencyProfile?.UpstreamCanonicalCodes ?? Array.Empty<string>(),
             UpstreamLegacyAliases = upstreamLegacyAliases,
@@ -912,6 +914,36 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             .ToArray();
 
         return $"required-result primary fields: {string.Join(", ", preview)}";
+    }
+
+    private static string BuildSourceEvidenceSummary(IReadOnlyList<MotorYLegacyAlgorithmSourceEvidence> evidences)
+    {
+        if (evidences.Count == 0)
+        {
+            return "source evidence: none";
+        }
+
+        var preview = evidences
+            .Take(3)
+            .Select(x => $"{x.SectionKey}:{x.MethodName}:{x.SourceRange}:fields={FormatPreview(x.ReferencedFields, 4)}")
+            .ToArray();
+
+        return $"source evidence {evidences.Count}: {string.Join(" | ", preview)}";
+    }
+
+    private static string BuildFormDependencyEvidenceSummary(IReadOnlyList<MotorYLegacyFormDependencyEvidence> evidences)
+    {
+        if (evidences.Count == 0)
+        {
+            return "form dependency evidence: none";
+        }
+
+        var preview = evidences
+            .Take(3)
+            .Select(x => $"{x.FormName}:{x.SourceRange}:upstream={FormatPreview(x.UpstreamCanonicalCodes, 3)}:methods={FormatPreview(x.ReferencedMethods, 2)}")
+            .ToArray();
+
+        return $"form dependency evidence {evidences.Count}: {string.Join(" | ", preview)}";
     }
 
     private static string FormatPreview(IEnumerable<string> values, int maxCount)
