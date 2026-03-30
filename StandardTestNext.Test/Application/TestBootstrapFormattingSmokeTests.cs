@@ -85,6 +85,7 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedCount = 7,
                     WeightedShare = 0.7d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
                     SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
                     SuggestedNextStepFocuses = new[] { "NoLoad result field", "LoadB result field" },
                     Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields"
@@ -92,7 +93,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad::intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
@@ -128,6 +129,7 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 0.7d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
                     AlgorithmFamilies = new[] { "LoadB", "NoLoad" },
+                    MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
                     AnchorKeys = new[] { "gb-branch", "gb-compare" },
                     SuggestedNextStepPriorities = new[] { "blocking", "decision-branch" },
                     SuggestedNextStepFocuses = new[] { "旧算法GB分支", "旧算法GB比较" },
@@ -145,7 +147,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:methods=LoadB:5/NoLoad:0:profiles=:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan anchor-primary formatting smoke test failed. actual='{formatted}'");
         }
@@ -181,6 +183,7 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 0.7d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
                     AlgorithmFamilies = new[] { "LoadB", "NoLoad" },
+                    MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
                     SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
                     SuggestedNextStepFocuses = new[] { "中间结果锚点", "结果字段" },
                     Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; families=LoadB, NoLoad; focuses=中间结果锚点, 结果字段; priorities=intermediate-result-fields, result-fields"
@@ -197,7 +200,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=LoadB:5/NoLoad:0:profiles=:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
         }
@@ -321,6 +324,7 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 1d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
                     AlgorithmFamilies = new[] { "LoadB" },
+                    MethodKeys = new[] { "LoadB:5" },
                     AnchorKeys = new[] { "gb-temperature-branch" },
                     SuggestedNextStepPriorities = new[] { "blocking" },
                     SuggestedNextStepFocuses = new[] { "热态分支" },
@@ -329,7 +333,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:MotorY.LoadB:gb-temperature-branch:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }

@@ -201,7 +201,11 @@ internal static class MotorYPrimaryFieldFocusFactory
             ? "none"
             : string.Join("/", top.CanonicalCodes.Take(3));
 
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}";
+        var topMethodKeys = top.MethodKeys.Count == 0
+            ? "none"
+            : string.Join("/", top.MethodKeys);
+
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -230,7 +234,18 @@ internal static class MotorYPrimaryFieldFocusFactory
             .ThenBy(group => group.Key, StringComparer.Ordinal)
             .FirstOrDefault()?.Key ?? "none";
 
-        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}";
+        var dominantMethodKeys = focuses
+            .Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal))
+            .SelectMany(focus => focus.MethodKeys)
+            .Where(methodKey => !string.IsNullOrWhiteSpace(methodKey))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(methodKey => methodKey, StringComparer.Ordinal)
+            .ToArray();
+        var dominantMethodKeySummary = dominantMethodKeys.Length == 0
+            ? "none"
+            : string.Join("/", dominantMethodKeys);
+
+        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}@method-keys={dominantMethodKeySummary}";
     }
 
     public static string BuildVariantKindFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -260,7 +275,18 @@ internal static class MotorYPrimaryFieldFocusFactory
             .ThenBy(group => group.Key, StringComparer.Ordinal)
             .FirstOrDefault()?.Key ?? "none";
 
-        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}";
+        var dominantMethodKeys = focuses
+            .Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal))
+            .SelectMany(focus => focus.MethodKeys)
+            .Where(methodKey => !string.IsNullOrWhiteSpace(methodKey))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(methodKey => methodKey, StringComparer.Ordinal)
+            .ToArray();
+        var dominantMethodKeySummary = dominantMethodKeys.Length == 0
+            ? "none"
+            : string.Join("/", dominantMethodKeys);
+
+        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}@method-keys={dominantMethodKeySummary}";
     }
 
     private static int GetPrioritySortOrder(string priority)
