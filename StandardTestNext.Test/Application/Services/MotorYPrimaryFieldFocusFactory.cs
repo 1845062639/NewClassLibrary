@@ -7,6 +7,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plans,
             plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
+                plan.AlgorithmFamily,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -16,6 +17,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plans,
             plan => plan.RequiredResultPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
+                plan.AlgorithmFamily,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -55,12 +57,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                     ? 0d
                     : Math.Round((double)weightedCount / totalWeighted, 4, MidpointRounding.AwayFromZero);
                 var canonicalCodes = rows.Select(x => x.CanonicalCode).Distinct(StringComparer.Ordinal).ToArray();
+                var algorithmFamilies = rows.Select(x => x.Candidate.AlgorithmFamily).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
                 var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
                 var weightedPercentagePoints = (int)Math.Round(weightedShare * 100d, MidpointRounding.AwayFromZero);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -70,6 +73,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                     WeightedCount = weightedCount,
                     WeightedShare = weightedShare,
                     CanonicalCodes = canonicalCodes,
+                    AlgorithmFamilies = algorithmFamilies,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -92,6 +96,7 @@ internal static class MotorYPrimaryFieldFocusFactory
 
     private sealed record CrossPlanPrimaryFieldCandidate(
         string PrimaryField,
+        string AlgorithmFamily,
         IReadOnlyList<string> AnchorKeys,
         IReadOnlyList<string> Focuses,
         IReadOnlyList<string> Priorities);
