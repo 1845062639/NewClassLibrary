@@ -9,6 +9,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -20,6 +23,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -51,6 +57,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                     CanonicalCodes = focus.CanonicalCodes,
                     AlgorithmFamilies = new[] { group.Key },
                     VariantKinds = focus.VariantKinds,
+                    MethodValues = focus.MethodValues,
+                    MethodKeys = focus.MethodKeys,
+                    ProfileKeys = focus.ProfileKeys,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -88,6 +97,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                     CanonicalCodes = focus.CanonicalCodes,
                     AlgorithmFamilies = focus.AlgorithmFamilies,
                     VariantKinds = new[] { group.Key },
+                    MethodValues = focus.MethodValues,
+                    MethodKeys = focus.MethodKeys,
+                    ProfileKeys = focus.ProfileKeys,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -134,12 +146,18 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var canonicalCodes = rows.Select(x => x.CanonicalCode).Distinct(StringComparer.Ordinal).ToArray();
                 var algorithmFamilies = rows.Select(x => x.Candidate.AlgorithmFamily).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var variantKinds = rows.Select(x => x.Candidate.VariantKind).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(GetVariantKindSortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
+                var methodValues = rows.Where(x => x.Candidate.MethodValue.HasValue).Select(x => x.Candidate.MethodValue!.Value).Distinct().OrderBy(x => x).ToArray();
+                var methodKeys = rows.Select(x => x.Candidate.MethodKey).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var profileKeys = rows.Select(x => x.Candidate.ProfileKey).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
                 var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
                 var weightedPercentagePoints = (int)Math.Round(weightedShare * 100d, MidpointRounding.AwayFromZero);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var methodValueSummary = methodValues.Length == 0 ? "none" : string.Join(", ", methodValues);
+                var methodKeySummary = methodKeys.Length == 0 ? "none" : string.Join(", ", methodKeys);
+                var profileKeySummary = profileKeys.Length == 0 ? "none" : string.Join(", ", profileKeys);
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -151,6 +169,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                     CanonicalCodes = canonicalCodes,
                     AlgorithmFamilies = algorithmFamilies,
                     VariantKinds = variantKinds,
+                    MethodValues = methodValues,
+                    MethodKeys = methodKeys,
+                    ProfileKeys = profileKeys,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -272,6 +293,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -283,6 +307,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -294,6 +321,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -305,6 +335,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
                 plan.SelectedRoute?.VariantKind ?? string.Empty,
+                plan.SelectedRoute?.MethodValue,
+                plan.SelectedRoute?.MethodKey ?? string.Empty,
+                plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -313,6 +346,9 @@ internal static class MotorYPrimaryFieldFocusFactory
         string PrimaryField,
         string AlgorithmFamily,
         string VariantKind,
+        int? MethodValue,
+        string MethodKey,
+        string ProfileKey,
         IReadOnlyList<string> AnchorKeys,
         IReadOnlyList<string> Focuses,
         IReadOnlyList<string> Priorities);
