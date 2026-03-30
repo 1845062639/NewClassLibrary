@@ -17,6 +17,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldPreferCanonicalLegacyCodeAliasForAppMethodAdaptationPlan();
         ShouldExposeMotorYMethodDecisionSummaryThroughAppQueryGateway();
         ShouldExposeMotorYMethodAdaptationPlanThroughAppQueryGateway();
+        ShouldExposeLegacyAlgorithmSourceEvidenceThroughAppQueryGateway();
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
@@ -1165,6 +1166,70 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         if (canonicalCode == MotorYTestMethodCodes.NoLoad && !distribution.SequenceEqual(new[] { 59, 0 }))
         {
             throw new InvalidOperationException($"Motor_Y method adaptation plan query smoke test distribution ordering mismatch for '{canonicalCode}'. actual=[{string.Join(", ", distribution)}]");
+        }
+    }
+
+    private static void ShouldExposeLegacyAlgorithmSourceEvidenceThroughAppQueryGateway()
+    {
+        var baseTime = DateTimeOffset.Parse("2026-03-29T09:15:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-SOURCE-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = baseTime,
+            Items =
+            {
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.NoLoad, 59, baseTime),
+                CreateMotorYDetailedDecisionItem(MotorYTestMethodCodes.LoadB, 5, baseTime.AddMinutes(1))
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult();
+        if (detail is null)
+        {
+            throw new InvalidOperationException("Motor_Y legacy algorithm source evidence query smoke test returned null detail.");
+        }
+
+        var plans = detail.MotorYMethodAdaptationPlans.ToDictionary(x => x.CanonicalCode, StringComparer.Ordinal);
+        var noLoadPlan = plans[MotorYTestMethodCodes.NoLoad];
+        var loadBPlan = plans[MotorYTestMethodCodes.LoadB];
+
+        if (noLoadPlan.SourceEvidences.Count != 3
+            || !noLoadPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "rconverse-branch", "per-point-precompute", "pfw-and-pfe-fit" }, StringComparer.Ordinal)
+            || !noLoadPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "NoLoad", StringComparison.Ordinal))
+            || !noLoadPlan.SourceEvidences.Select(x => x.SourceFile).All(x => string.Equals(x, "ClassLibary/StandardTest.Library/Algorithm/Motor/Algorithm_Motor_Y.cs", StringComparison.Ordinal))
+            || !noLoadPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "rconverse-branch", StringComparison.Ordinal)
+                && x.StartLine == 184
+                && x.EndLine == 193
+                && x.ReferencedFields.SequenceEqual(new[] { "RConverseType", "R0", "θ0", "R1c", "K1", "θ1c" }, StringComparer.Ordinal))
+            || !noLoadPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "pfw-and-pfe-fit", StringComparison.Ordinal)
+                && x.StartLine == 216
+                && x.EndLine == 238
+                && x.ReferencedFields.Contains("CoefficientOfPfe", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Pfw", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Pfe", StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm source evidence query smoke test mismatch for '{MotorYTestMethodCodes.NoLoad}'. actual=[{string.Join(" | ", noLoadPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
+        }
+
+        if (loadBPlan.SourceEvidences.Count != 4
+            || !loadBPlan.SourceEvidences.Select(x => x.SectionKey).SequenceEqual(new[] { "raw-point-precompute", "correlation-refit", "gb-thermal-branch", "result-ps-iteration" }, StringComparer.Ordinal)
+            || !loadBPlan.SourceEvidences.Select(x => x.MethodName).All(x => string.Equals(x, "Load_B", StringComparison.Ordinal))
+            || !loadBPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "correlation-refit", StringComparison.Ordinal)
+                && x.StartLine == 320
+                && x.EndLine == 332
+                && x.ReferencedFields.SequenceEqual(new[] { "A", "B", "R", "Tx", "Pl", "bad-point-refit" }, StringComparer.Ordinal))
+            || !loadBPlan.SourceEvidences.Any(x => string.Equals(x.SectionKey, "result-ps-iteration", StringComparison.Ordinal)
+                && x.StartLine == 398
+                && x.EndLine == 454
+                && x.ReferencedFields.Contains("ResultDataList", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("Ps", StringComparer.Ordinal)
+                && x.ReferencedFields.Contains("cuC", StringComparer.Ordinal)))
+        {
+            throw new InvalidOperationException($"Motor_Y legacy algorithm source evidence query smoke test mismatch for '{MotorYTestMethodCodes.LoadB}'. actual=[{string.Join(" | ", loadBPlan.SourceEvidences.Select(x => $"{x.SectionKey}:{x.MethodName}:{x.StartLine}-{x.EndLine}:{string.Join(",", x.ReferencedFields)}"))}]");
         }
     }
 
