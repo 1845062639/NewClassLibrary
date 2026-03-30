@@ -134,6 +134,12 @@ public sealed class MotorYPrimaryFieldFocusContract
     public double Share { get; init; }
     public int WeightedCount { get; init; }
     public double WeightedShare { get; init; }
+    public int BaselineCount { get; init; }
+    public double BaselineShare { get; init; }
+    public int DominantCount { get; init; }
+    public double DominantShare { get; init; }
+    public int SelectedCount { get; init; }
+    public double SelectedShare { get; init; }
     public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AlgorithmFamilies { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> VariantKinds { get; init; } = Array.Empty<string>();
