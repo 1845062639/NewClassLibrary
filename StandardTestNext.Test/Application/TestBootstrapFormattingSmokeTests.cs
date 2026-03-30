@@ -130,6 +130,8 @@ public static class TestBootstrapFormattingSmokeTests
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
                     AlgorithmFamilies = new[] { "LoadB", "NoLoad" },
                     MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
+                    LegacyMethodNames = new[] { "B法负载试验", "空载试验" },
+                    SettingsMethodNames = new[] { "B法负载试验", "空载试验" },
                     AnchorKeys = new[] { "gb-branch", "gb-compare" },
                     SuggestedNextStepPriorities = new[] { "blocking", "decision-branch" },
                     SuggestedNextStepFocuses = new[] { "旧算法GB分支", "旧算法GB比较" },
@@ -147,7 +149,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:methods=LoadB:5/NoLoad:0:profiles=:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch:summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan anchor-primary formatting smoke test failed. actual='{formatted}'");
         }
@@ -369,6 +371,9 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 1d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
                     AlgorithmFamilies = new[] { "LoadB" },
+                    MethodKeys = new[] { "LoadB:5" },
+                    LegacyMethodNames = new[] { "B法负载试验" },
+                    SettingsMethodNames = new[] { "B法负载试验" },
                     AnchorKeys = new[] { "gb-temperature-branch" },
                     SuggestedNextStepPriorities = new[] { "blocking" },
                     SuggestedNextStepFocuses = new[] { "热态分支" },
@@ -403,8 +408,8 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
-            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=LoadB:5:profiles=:legacy-methods=B法负载试验:settings-methods=B法负载试验:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=:profiles=:legacy-methods=:settings-methods=:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family plan formatting smoke test failed. actual='{formatted}'");
         }

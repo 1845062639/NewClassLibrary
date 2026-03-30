@@ -1732,6 +1732,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, "cross-plan decision-anchor primary fields top 3/6: GB=1 (50pp, weighted 50pp); CoefficientOfPfe=1 (50pp, weighted 25pp); Pfw=1 (50pp, weighted 25pp)", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, StringComparison.Ordinal)
             || rConverse is null
+            || !rConverse.MethodKeys.SequenceEqual(new[] { "NoLoad:0" }, StringComparer.Ordinal)
+            || !rConverse.LegacyMethodNames.SequenceEqual(new[] { "空载试验" }, StringComparer.Ordinal)
+            || !rConverse.SettingsMethodNames.SequenceEqual(new[] { "空载试验" }, StringComparer.Ordinal)
             || rConverse.Count != 1
             || Math.Abs(rConverse.Share - 0.5d) > 0.0001d
             || !rConverse.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
@@ -1749,6 +1752,9 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || gb.WeightedCount != 2
             || Math.Abs(gb.WeightedShare - 0.5d) > 0.0001d
             || !gb.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !gb.MethodKeys.SequenceEqual(new[] { "LoadB:5" }, StringComparer.Ordinal)
+            || !gb.LegacyMethodNames.SequenceEqual(new[] { "B法负载试验" }, StringComparer.Ordinal)
+            || !gb.SettingsMethodNames.SequenceEqual(new[] { "B法负载试验" }, StringComparer.Ordinal)
             || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y cross-plan decision-anchor primary-field focus query smoke test mismatch. noLoadSummary='{noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary}', loadBSummary='{loadBPlan.CrossPlanDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", noLoadCrossPlan.Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}"))}]");
