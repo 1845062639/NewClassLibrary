@@ -173,45 +173,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
     {
-        static int GetDecisionAnchorPrioritySortOrder(string priority)
-            => priority switch
-            {
-                "blocking" => 0,
-                "follow-up" => 1,
-                "resolved" => 2,
-                _ => 9
-            };
-
-        var total = plans.Count;
-        var expected = plans
-            .SelectMany(plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new { plan.CanonicalCode, Distribution = distribution }))
-            .Where(x => !string.IsNullOrWhiteSpace(x.Distribution.PrimaryField))
-            .GroupBy(x => x.Distribution.PrimaryField, StringComparer.Ordinal)
-            .OrderByDescending(group => group.Count())
-            .ThenBy(group => group.Key, StringComparer.Ordinal)
-            .Select(group =>
-            {
-                var rows = group.OrderBy(x => x.CanonicalCode, StringComparer.Ordinal).ToArray();
-                var share = Math.Round((double)rows.Length / total, 4, MidpointRounding.AwayFromZero);
-                var canonicalCodes = rows.Select(x => x.CanonicalCode).Distinct(StringComparer.Ordinal).ToArray();
-                var anchorKeys = rows.SelectMany(x => x.Distribution.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-                var focusesLocal = rows.SelectMany(x => x.Distribution.SuggestedNextStepFocuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
-                var priorities = rows.SelectMany(x => x.Distribution.SuggestedNextStepPriorities).Distinct(StringComparer.Ordinal).OrderBy(GetDecisionAnchorPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
-                var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
-                var summary = $"cross-plan decision-anchor primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; anchors={string.Join(", ", anchorKeys)}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
-                return new MotorYPrimaryFieldFocusSnapshot
-                {
-                    PrimaryField = group.Key,
-                    Count = rows.Length,
-                    Share = share,
-                    CanonicalCodes = canonicalCodes,
-                    AnchorKeys = anchorKeys,
-                    SuggestedNextStepFocuses = focusesLocal,
-                    SuggestedNextStepPriorities = priorities,
-                    Summary = summary
-                };
-            })
-            .ToArray();
+        var expected = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(plans);
 
         if (focuses.Count != expected.Length)
         {
