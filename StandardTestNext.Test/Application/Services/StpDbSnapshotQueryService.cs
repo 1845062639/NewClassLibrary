@@ -1199,11 +1199,6 @@ WHERE COALESCE(curr.Code, '') <> ''
             })
             .ToArray();
 
-        var snapshots = methodDecisions
-            .Select(decision => decision)
-            .ToArray();
-
-        var plans = snapshots;
         var algorithmFamilyDecisionAnchorFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(plans);
         var algorithmFamilyDecisionAnchorSummary = BuildAlgorithmFamilyPrimaryFieldSummary("decision-anchor", algorithmFamilyDecisionAnchorFocuses);
         var algorithmFamilyRequiredResultFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(plans);

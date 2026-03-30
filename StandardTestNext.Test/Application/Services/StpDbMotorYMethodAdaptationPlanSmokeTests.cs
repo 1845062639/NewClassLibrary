@@ -70,7 +70,9 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         AssertCrossPlanRequiredResultPrimaryFieldFocuses(actual, crossPlanRequiredResultPrimaryFieldFocuses);
         AssertCrossPlanRequiredResultPrimaryFieldFocusSummaries(actual, crossPlanRequiredResultPrimaryFieldFocuses);
         AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(actual, algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
+        AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocusSummaries(actual, algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
         AssertAlgorithmFamilyRequiredResultPrimaryFieldFocuses(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
+        AssertAlgorithmFamilyRequiredResultPrimaryFieldFocusSummaries(actual, algorithmFamilyRequiredResultPrimaryFieldFocuses);
 
         foreach (var row in expected)
         {
@@ -386,6 +388,114 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: algorithm-family required-result primary-field focus mismatch for {row.PrimaryField}/{string.Join('/', row.AlgorithmFamilies)}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
+        }
+    }
+
+    private static void AssertAlgorithmFamilyDecisionAnchorPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var noLoadPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        if (noLoadPlan is null || loadBPlan is null)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: missing NoLoad/LoadB plans for algorithm-family decision-anchor summary assertions.");
+        }
+
+        var gb = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal));
+        var coefficientOfPfe = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal));
+        var pfw = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal));
+        const string expectedSummary = "algorithm-family decision-anchor primary fields top 3/6: GB=1 (50pp, weighted 32pp, families LoadB); CoefficientOfPfe=1 (100pp, weighted 100pp, families NoLoad); Pfw=1 (100pp, weighted 100pp, families NoLoad)";
+
+        if (gb is null
+            || gb.Count != 1
+            || Math.Abs(gb.Share - 0.5d) > 0.0001d
+            || gb.WeightedCount != 61
+            || Math.Abs(gb.WeightedShare - 0.3211d) > 0.0001d
+            || !gb.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !gb.AnchorKeys.SequenceEqual(new[] { "gb-temperature-branch" }, StringComparer.Ordinal)
+            || !gb.SuggestedNextStepFocuses.SequenceEqual(new[] { "热态分支" }, StringComparer.Ordinal)
+            || !gb.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || coefficientOfPfe is null
+            || coefficientOfPfe.Count != 1
+            || Math.Abs(coefficientOfPfe.Share - 1d) > 0.0001d
+            || coefficientOfPfe.WeightedCount != 431
+            || Math.Abs(coefficientOfPfe.WeightedShare - 1d) > 0.0001d
+            || !coefficientOfPfe.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !coefficientOfPfe.AnchorKeys.SequenceEqual(new[] { "pfw-split" }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || pfw is null
+            || pfw.Count != 1
+            || Math.Abs(pfw.Share - 1d) > 0.0001d
+            || pfw.WeightedCount != 431
+            || Math.Abs(pfw.WeightedShare - 1d) > 0.0001d
+            || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !pfw.AnchorKeys.SequenceEqual(new[] { "pfw-fit-window" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepPriorities.SequenceEqual(new[] { "follow-up" }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit algorithm-family decision-anchor primary-field summary mismatch. expectedSummary='{expectedSummary}', noLoadSummary='{noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}', loadBSummary='{loadBPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Take(6).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
+        }
+    }
+
+    private static void AssertAlgorithmFamilyRequiredResultPrimaryFieldFocusSummaries(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var noLoadPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        if (noLoadPlan is null || loadBPlan is null)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: missing NoLoad/LoadB plans for algorithm-family required-result summary assertions.");
+        }
+
+        var coefficientOfPfe = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal));
+        var coefficientOfPfeNoLoad = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal));
+        var pfwLoadB = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal));
+        var pcu2 = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal)
+            && x.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal));
+        const string expectedSummary = "algorithm-family required-result primary fields top 3/18: CoefficientOfPfe=2 (100pp, weighted 100pp, families LoadB/NoLoad); Pfw=2 (100pp, weighted 100pp, families LoadB/NoLoad); Pcu2=1 (50pp, weighted 32pp, families LoadB)";
+
+        if (coefficientOfPfe is null
+            || coefficientOfPfe.Count != 1
+            || Math.Abs(coefficientOfPfe.Share - 1d) > 0.0001d
+            || coefficientOfPfe.WeightedCount != 61
+            || Math.Abs(coefficientOfPfe.WeightedShare - 1d) > 0.0001d
+            || !coefficientOfPfe.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !coefficientOfPfe.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || coefficientOfPfeNoLoad is null
+            || coefficientOfPfeNoLoad.Count != 1
+            || Math.Abs(coefficientOfPfeNoLoad.Share - 1d) > 0.0001d
+            || coefficientOfPfeNoLoad.WeightedCount != 431
+            || Math.Abs(coefficientOfPfeNoLoad.WeightedShare - 1d) > 0.0001d
+            || !coefficientOfPfeNoLoad.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || pfwLoadB is null
+            || pfwLoadB.Count != 1
+            || Math.Abs(pfwLoadB.Share - 1d) > 0.0001d
+            || pfwLoadB.WeightedCount != 61
+            || Math.Abs(pfwLoadB.WeightedShare - 1d) > 0.0001d
+            || pcu2 is null
+            || pcu2.Count != 1
+            || Math.Abs(pcu2.Share - 0.5d) > 0.0001d
+            || pcu2.WeightedCount != 61
+            || Math.Abs(pcu2.WeightedShare - 0.3211d) > 0.0001d
+            || !pcu2.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !pcu2.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !pcu2.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit algorithm-family required-result primary-field summary mismatch. expectedSummary='{expectedSummary}', noLoadSummary='{noLoadPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}', loadBSummary='{loadBPlan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}', actual=[{string.Join(" | ", focuses.Take(8).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
         }
     }
 
