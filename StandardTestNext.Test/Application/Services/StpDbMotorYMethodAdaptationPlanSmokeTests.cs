@@ -136,6 +136,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             AssertLegacyCodeDistributionConsistency(snapshot, legacyCodeDistributionRows, row.CanonicalCode);
             AssertSampleCountReadiness(snapshot);
             AssertDecisionAnchorPriorityDistribution(snapshot);
+            AssertDecisionAnchorPrimaryFieldDistribution(snapshot);
 
             foreach (var distribution in row.Distributions)
             {
@@ -307,6 +308,78 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             || !string.Equals(snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary, expectedTopResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: top decision-anchor priority mismatch for {snapshot.CanonicalCode}. expected={expectedTopPriority.Priority}/{expectedTopPriority.DominantAnchorKey}/{expectedTopPriority.DominantSuggestedNextStepFocus}/{string.Join(',', expectedTopPriority.DominantSuggestedNextStepFields)}/'{expectedTopPriority.DominantSuggestedNextStepSummary}'/'{expectedTopPrioritySummary}'/'{expectedTopResolution?.SuggestedPrimaryNextField ?? string.Empty}'/'{expectedTopResolution?.SuggestedPrimaryNextFieldSummary ?? string.Empty}', actual={snapshot.DecisionAnchorTopPriority}/{snapshot.DecisionAnchorTopPriorityDominantAnchorKey}/{snapshot.DecisionAnchorTopPriorityFocus}/{string.Join(',', snapshot.DecisionAnchorTopPriorityFields)}/'{snapshot.DecisionAnchorTopPriorityNextStepSummary}'/'{snapshot.DecisionAnchorTopPrioritySummary}'/'{snapshot.DecisionAnchorTopPriorityPrimaryField}'/'{snapshot.DecisionAnchorTopPriorityPrimaryFieldSummary}'");
+        }
+    }
+
+    private static void AssertDecisionAnchorPrimaryFieldDistribution(MotorYMethodAdaptationPlanSnapshot snapshot)
+    {
+        var expectedResolutions = snapshot.LegacyDecisionAnchorResolutions
+            .Select(x => new MotorYDecisionAnchorResolution
+            {
+                AnchorKey = x.AnchorKey,
+                ResolvedByObservedPayload = x.ResolvedByObservedPayload,
+                PartiallyResolvedByObservedPayload = x.PartiallyResolvedByObservedPayload,
+                RequiredPayloadFields = x.RequiredPayloadFields,
+                ObservedPayloadFields = x.ObservedPayloadFields,
+                MissingPayloadFields = x.MissingPayloadFields,
+                CoverageRatio = x.CoverageRatio,
+                CoveragePercentagePoints = x.CoveragePercentagePoints,
+                ResolutionStage = x.ResolutionStage,
+                SuggestedNextStepCategory = x.SuggestedNextStepCategory,
+                SuggestedNextStepFocus = x.SuggestedNextStepFocus,
+                SuggestedNextStepFields = x.SuggestedNextStepFields,
+                SuggestedNextSteps = x.SuggestedNextSteps,
+                SuggestedNextStepSummary = x.SuggestedNextStepSummary,
+                SuggestedNextStepPriority = x.SuggestedNextStepPriority,
+                SuggestedNextStepPrioritySummary = x.SuggestedNextStepPrioritySummary,
+                SuggestedNextStepCoverageSummary = x.SuggestedNextStepCoverageSummary,
+                SuggestedPrimaryNextField = x.SuggestedPrimaryNextField,
+                SuggestedPrimaryNextFieldSummary = x.SuggestedPrimaryNextFieldSummary,
+                Summary = x.Summary
+            })
+            .ToArray();
+        var expectedDistributions = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldDistributions(expectedResolutions);
+        var expectedSummary = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldSummary(expectedResolutions);
+
+        if (snapshot.DecisionAnchorPrimaryFieldDistributions.Count != expectedDistributions.Count)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field distribution count mismatch for {snapshot.CanonicalCode}. expected={expectedDistributions.Count}, actual={snapshot.DecisionAnchorPrimaryFieldDistributions.Count}");
+        }
+
+        foreach (var expected in expectedDistributions)
+        {
+            var actual = snapshot.DecisionAnchorPrimaryFieldDistributions.FirstOrDefault(x => string.Equals(x.PrimaryField, expected.PrimaryField, StringComparison.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing decision-anchor primary-field distribution {snapshot.CanonicalCode}/{expected.PrimaryField}.");
+            }
+
+            if (actual.Count != expected.Count || Math.Abs(actual.Share - expected.Share) > 0.0001d)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field numeric mismatch for {snapshot.CanonicalCode}/{expected.PrimaryField}. expectedCount={expected.Count}, actualCount={actual.Count}, expectedShare={expected.Share}, actualShare={actual.Share}");
+            }
+
+            if (!actual.AnchorKeys.SequenceEqual(expected.AnchorKeys, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepFocuses.SequenceEqual(expected.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepPriorities.SequenceEqual(expected.SuggestedNextStepPriorities, StringComparer.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field payload mismatch for {snapshot.CanonicalCode}/{expected.PrimaryField}. expectedAnchors={string.Join(',', expected.AnchorKeys)}, actualAnchors={string.Join(',', actual.AnchorKeys)}, expectedFocuses={string.Join(',', expected.SuggestedNextStepFocuses)}, actualFocuses={string.Join(',', actual.SuggestedNextStepFocuses)}, expectedPriorities={string.Join(',', expected.SuggestedNextStepPriorities)}, actualPriorities={string.Join(',', actual.SuggestedNextStepPriorities)}");
+            }
+
+            if (actual.CanonicalCodes.Count != 1 || !string.Equals(actual.CanonicalCodes[0], snapshot.CanonicalCode, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field canonical-code projection mismatch for {snapshot.CanonicalCode}/{expected.PrimaryField}. actualCodes={string.Join(',', actual.CanonicalCodes)}");
+            }
+
+            if (!string.Equals(actual.Summary, expected.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field summary mismatch for {snapshot.CanonicalCode}/{expected.PrimaryField}. expected='{expected.Summary}', actual='{actual.Summary}'");
+            }
+        }
+
+        if (!string.Equals(snapshot.DecisionAnchorPrimaryFieldSummary, expectedSummary, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: decision-anchor primary-field summary mismatch for {snapshot.CanonicalCode}. expected='{expectedSummary}', actual='{snapshot.DecisionAnchorPrimaryFieldSummary}'");
         }
     }
 

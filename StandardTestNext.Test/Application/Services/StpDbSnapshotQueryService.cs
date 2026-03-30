@@ -851,6 +851,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     .ToArray();
                 var requiredResultPrimaryFieldDistributions = BuildRequiredResultPrimaryFieldDistributions(resultCoverage, intermediateResultCoverage);
                 var requiredResultPrimaryFieldSummary = BuildRequiredResultPrimaryFieldSummary(requiredResultPrimaryFieldDistributions);
+                var decisionAnchorPrimaryFieldSummary = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldSummary(decisionAnchorResolutions);
 
                 return new MotorYMethodAdaptationPlanSnapshot
                 {
@@ -1150,6 +1151,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                         })
                         .ToArray(),
                     DecisionAnchorPrimaryFieldDistributions = decisionAnchorPrimaryFieldDistributions,
+                    DecisionAnchorPrimaryFieldSummary = decisionAnchorPrimaryFieldSummary,
                     RequiredResultPrimaryFieldDistributions = requiredResultPrimaryFieldDistributions,
                     RequiredResultPrimaryFieldSummary = requiredResultPrimaryFieldSummary,
                     DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,
