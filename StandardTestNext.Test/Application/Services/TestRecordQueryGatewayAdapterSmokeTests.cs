@@ -1638,11 +1638,24 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !pfw.SuggestedNextStepPriorities.SequenceEqual(new[] { "intermediate-result-fields", "result-fields" }, StringComparer.Ordinal)
             || coefficient is null
             || coefficient.Count != 2
+            || Math.Abs(coefficient.Share - 1d) > 0.0001d
+            || coefficient.WeightedCount != 2
+            || Math.Abs(coefficient.WeightedShare - 1d) > 0.0001d
             || !coefficient.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !coefficient.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !coefficient.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || !string.Equals(coefficient.Summary, "cross-plan primary field CoefficientOfPfe appears in 2/2 plans (100pp), weighted 2/2 selected samples (100pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=结果字段; priorities=result-fields", StringComparison.Ordinal)
             || pcu2 is null
             || pcu2.Count != 1
+            || Math.Abs(pcu2.Share - 0.5d) > 0.0001d
+            || pcu2.WeightedCount != 1
+            || Math.Abs(pcu2.WeightedShare - 0.5d) > 0.0001d
             || !pcu2.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
-            || !string.Equals(noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary, "cross-plan required-result primary fields top 3/18: CoefficientOfPfe=2 (100pp, weighted 100pp); Pfw=2 (100pp, weighted 100pp); Pcu2=2 (100pp, weighted 100pp)", StringComparison.Ordinal))
+            || !pcu2.SuggestedNextStepFocuses.SequenceEqual(new[] { "结果字段" }, StringComparer.Ordinal)
+            || !pcu2.SuggestedNextStepPriorities.SequenceEqual(new[] { "result-fields" }, StringComparer.Ordinal)
+            || !string.Equals(pcu2.Summary, "cross-plan primary field Pcu2 appears in 1/2 plans (50pp), weighted 1/2 selected samples (50pp); codes=MotorY.LoadB; focuses=结果字段; priorities=result-fields", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary, "cross-plan required-result primary fields top 3/18: CoefficientOfPfe=2 (100pp, weighted 100pp); Pfw=2 (100pp, weighted 100pp); Pcu2=2 (100pp, weighted 100pp)", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.CrossPlanRequiredResultPrimaryFieldSummary, noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary, StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y cross-plan required-result primary-field focus query smoke test mismatch. summary='{noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
         }
