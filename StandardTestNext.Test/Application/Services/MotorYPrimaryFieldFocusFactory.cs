@@ -342,6 +342,12 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topLegacyAlgorithmEntries = top.LegacyAlgorithmEntries.Count == 0
             ? "none"
             : string.Join("/", top.LegacyAlgorithmEntries);
+        var topFormNames = top.FormNames.Count == 0
+            ? "none"
+            : string.Join("/", top.FormNames);
+        var topFormRanges = top.FormSourceRanges.Count == 0
+            ? "none"
+            : string.Join("/", top.FormSourceRanges);
         var topUpstreamCodes = top.UpstreamCanonicalCodes.Count == 0
             ? "none"
             : string.Join("/", top.UpstreamCanonicalCodes);
@@ -349,7 +355,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             ? "none"
             : string.Join("/", top.UpstreamSummaryHints);
 
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@algo-entries={topLegacyAlgorithmEntries}@baseline={top.BaselineCount}/{top.Count}@dominant-share={top.DominantCount}/{top.Count}@selected-share={top.SelectedCount}/{top.Count}@upstream={topUpstreamCodes}@upstream-hints={topUpstreamHints}";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@algo-entries={topLegacyAlgorithmEntries}@forms={topFormNames}@form-ranges={topFormRanges}@baseline={top.BaselineCount}/{top.Count}@dominant-share={top.DominantCount}/{top.Count}@selected-share={top.SelectedCount}/{top.Count}@upstream={topUpstreamCodes}@upstream-hints={topUpstreamHints}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
