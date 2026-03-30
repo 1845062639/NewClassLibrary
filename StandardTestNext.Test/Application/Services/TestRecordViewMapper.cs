@@ -50,6 +50,30 @@ public static class TestRecordViewMapper
 
     public static TestRecordDetailView ToDetailView(this TestRecordDetail detail)
     {
+        var motorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails);
+        var motorYMethodAdaptationPlans = motorYMethodDecisions
+            .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
+                snapshot,
+                MapBuildProfile,
+                BuildLegacyCodeDistributions(detail.ItemDetails, snapshot.CanonicalCode)))
+            .Select(MapAdaptationPlanSnapshot)
+            .ToArray();
+
+        var crossPlanDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(motorYMethodAdaptationPlans);
+        var crossPlanDecisionAnchorPrimaryFieldSummary = BuildCrossPlanDecisionAnchorPrimaryFieldSummary(crossPlanDecisionAnchorPrimaryFieldFocuses);
+        var crossPlanRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(motorYMethodAdaptationPlans);
+        var crossPlanRequiredResultPrimaryFieldSummary = BuildCrossPlanRequiredResultPrimaryFieldSummary(crossPlanRequiredResultPrimaryFieldFocuses);
+
+        motorYMethodAdaptationPlans = motorYMethodAdaptationPlans
+            .Select(plan => plan with
+            {
+                CrossPlanDecisionAnchorPrimaryFieldFocuses = crossPlanDecisionAnchorPrimaryFieldFocuses,
+                CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
+                CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,
+                CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultPrimaryFieldSummary
+            })
+            .ToArray();
+
         return new TestRecordDetailView
         {
             RecordCode = detail.Record.RecordCode,
@@ -70,14 +94,8 @@ public static class TestRecordViewMapper
             LightweightReportFormat = detail.LightweightReport?.Format,
             LightweightReportArtifactFileName = detail.LightweightReport?.ArtifactFileName,
             ItemDetails = detail.ItemDetails,
-            MotorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails),
-            MotorYMethodAdaptationPlans = BuildMotorYMethodDecisions(detail.ItemDetails)
-                .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
-                    snapshot,
-                    MapBuildProfile,
-                    BuildLegacyCodeDistributions(detail.ItemDetails, snapshot.CanonicalCode)))
-                .Select(MapAdaptationPlanSnapshot)
-                .ToArray(),
+            MotorYMethodDecisions = motorYMethodDecisions,
+            MotorYMethodAdaptationPlans = motorYMethodAdaptationPlans,
             ReportSummaries = detail.ReportSummaries
         };
     }
@@ -600,6 +618,34 @@ public static class TestRecordViewMapper
                 Route = x.Profile is null ? null : MotorYLegacyAlgorithmRouteResolver.Resolve(x.Profile.CanonicalCode, x.Profile.MethodValue)
             }).ToArray()
         };
+    }
+
+    private static string BuildCrossPlanDecisionAnchorPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return "cross-plan decision-anchor primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(focus => $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp)");
+
+        return $"cross-plan decision-anchor primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
+    }
+
+    private static string BuildCrossPlanRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return "cross-plan required-result primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(focus => $"{focus.PrimaryField}={focus.Count} ({focus.Share * 100d:0}pp, weighted {focus.WeightedShare * 100d:0}pp)");
+
+        return $"cross-plan required-result primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
     }
 
     private static string BuildProductDisplayName(string? model, string? code, string productKind)
