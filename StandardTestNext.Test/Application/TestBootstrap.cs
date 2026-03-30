@@ -441,9 +441,15 @@ public sealed class TestBootstrap
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
+        var sourceEvidence = plan.SourceEvidences.Count == 0
+            ? "source-evidence=<none>"
+            : "source-evidence=" + string.Join("|", plan.SourceEvidences.Take(3).Select(x => $"{x.SectionKey}:{x.MethodName}:{x.SourceRange}:fields={FormatPreview(x.ReferencedFields, 4)}:summary={x.Summary}"));
+        var formEvidence = plan.FormDependencyEvidences.Count == 0
+            ? "form-evidence=<none>"
+            : "form-evidence=" + string.Join("|", plan.FormDependencyEvidences.Take(3).Select(x => $"{x.FormName}:{x.SourceRange}:upstream={FormatPreview(x.UpstreamCanonicalCodes, 3)}:methods={FormatPreview(x.ReferencedMethods, 3)}:summary={x.Summary}"));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{algorithmFamilyAnchorPrimary};{variantKindAnchorPrimary};{resultFieldPrimary};{crossPlanResultPrimary};{algorithmFamilyResultPrimary};{variantKindResultPrimary};{anchorResolutions};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{algorithmFamilyAnchorPrimary};{variantKindAnchorPrimary};{resultFieldPrimary};{crossPlanResultPrimary};{algorithmFamilyResultPrimary};{variantKindResultPrimary};{anchorResolutions};{sourceEvidence};{formEvidence};{summaries};{distributions}]";
     }
 
     private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)

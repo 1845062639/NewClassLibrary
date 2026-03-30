@@ -17,6 +17,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
         ShouldBuildVariantKindDecisionAnchorPrimaryFieldFocuses();
         ShouldBuildVariantKindRequiredResultPrimaryFieldFocuses();
+        ShouldExposeLegacySourceAndFormEvidenceInCliPlanPreview();
     }
 
     private static void ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview()
@@ -207,6 +208,64 @@ public static class TestBootstrapFormattingSmokeTests
         if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=LoadB:5/NoLoad:0:profiles=:MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldExposeLegacySourceAndFormEvidenceInCliPlanPreview()
+    {
+        var plan = new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = MotorYTestMethodCodes.NoLoad,
+            SelectionStrategy = "baseline",
+            AlgorithmEntry = "Calc_NoLoad",
+            SettingsMethodName = "空载试验",
+            SelectionReason = "smoke",
+            RawSampleCountReady = true,
+            RawDataSampleCount = 3,
+            MinimumRawSampleCount = 1,
+            StructuredPayloadSampleCountReady = true,
+            StructuredPayloadSampleCount = 2,
+            MinimumStructuredPayloadSampleCount = 1,
+            StructuredResultSampleCountReady = true,
+            StructuredResultSampleCount = 1,
+            MinimumStructuredResultSampleCount = 1,
+            SourceEvidences = new[]
+            {
+                new MotorYLegacyAlgorithmSourceEvidenceSnapshot
+                {
+                    SectionKey = "rconverse-branch",
+                    MethodName = "NoLoad",
+                    SourceRange = "L184-L193",
+                    ReferencedFields = new[] { "RConverseType", "R0", "θ0" },
+                    Summary = "空载算法先按 RConverseType 决定是 R0→θ0 还是 θ0→R0 分支。"
+                }
+            },
+            FormDependencyEvidences = new[]
+            {
+                new MotorYLegacyFormDependencyEvidenceSnapshot
+                {
+                    FormName = "FrmMotor_Y_NoLoad",
+                    SourceRange = "L263",
+                    UpstreamCanonicalCodes = new[] { MotorYTestMethodCodes.DcResistance },
+                    ReferencedMethods = new[] { "TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>" },
+                    Summary = "旧 FrmMotor_Y_NoLoad 在进入空载算法前，会先通过 TestRecordHelper 读取直流电阻试验项。"
+                }
+            },
+            LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
+            LegacyAlgorithmInputReadinessSummary = "legacy algorithm inputs ready",
+            SelectedMethodSummary = "推荐方法沿用 baseline",
+            BaselineDominantComparisonSummary = "baseline 与 dominant 一致"
+        };
+
+        var formatter = typeof(TestBootstrap).GetMethod("FormatMethodAdaptationPlanSnapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap formatter not found.");
+        var formatted = formatter.Invoke(null, new object[] { plan }) as string
+            ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
+
+        if (!formatted.Contains("source-evidence=rconverse-branch:NoLoad:L184-L193:fields=RConverseType|R0|θ0:summary=空载算法先按 RConverseType 决定是 R0→θ0 还是 θ0→R0 分支。", StringComparison.Ordinal)
+            || !formatted.Contains("form-evidence=FrmMotor_Y_NoLoad:L263:upstream=MotorY.DcResistance:methods=TestRecordHelper.GetTestRecordItem<TestData_Motor_Y_Direct_Current_Resistance>:summary=旧 FrmMotor_Y_NoLoad 在进入空载算法前，会先通过 TestRecordHelper 读取直流电阻试验项。", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap legacy evidence formatting smoke test failed. actual='{formatted}'");
         }
     }
 
