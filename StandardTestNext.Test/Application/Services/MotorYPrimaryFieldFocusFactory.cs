@@ -81,6 +81,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                     SourceRanges = focus.SourceRanges,
                     FormNames = focus.FormNames,
                     FormSourceRanges = focus.FormSourceRanges,
+                    UpstreamCanonicalCodes = focus.UpstreamCanonicalCodes,
+                    UpstreamSummaryHints = focus.UpstreamSummaryHints,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -128,6 +130,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                     SourceRanges = focus.SourceRanges,
                     FormNames = focus.FormNames,
                     FormSourceRanges = focus.FormSourceRanges,
+                    UpstreamCanonicalCodes = focus.UpstreamCanonicalCodes,
+                    UpstreamSummaryHints = focus.UpstreamSummaryHints,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
@@ -184,6 +188,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var sourceRanges = rows.SelectMany(x => x.Candidate.SourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var formNames = rows.SelectMany(x => x.Candidate.FormNames).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var formSourceRanges = rows.SelectMany(x => x.Candidate.FormSourceRanges).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var upstreamCanonicalCodes = rows.SelectMany(x => x.Candidate.UpstreamCanonicalCodes).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var upstreamSummaryHints = rows.Select(x => x.Candidate.UpstreamSummaryHint).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
@@ -199,7 +205,9 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var sourceRangeSummary = sourceRanges.Length == 0 ? "none" : string.Join(", ", sourceRanges);
                 var formNameSummary = formNames.Length == 0 ? "none" : string.Join(", ", formNames);
                 var formSourceRangeSummary = formSourceRanges.Length == 0 ? "none" : string.Join(", ", formSourceRanges);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; source-sections={sourceSectionSummary}; source-ranges={sourceRangeSummary}; forms={formNameSummary}; form-ranges={formSourceRangeSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var upstreamCanonicalCodeSummary = upstreamCanonicalCodes.Length == 0 ? "none" : string.Join(", ", upstreamCanonicalCodes);
+                var upstreamHintSummary = upstreamSummaryHints.Length == 0 ? "none" : string.Join(" | ", upstreamSummaryHints);
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; source-sections={sourceSectionSummary}; source-ranges={sourceRangeSummary}; forms={formNameSummary}; form-ranges={formSourceRangeSummary}; upstream-codes={upstreamCanonicalCodeSummary}; upstream-hints={upstreamHintSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -221,6 +229,8 @@ internal static class MotorYPrimaryFieldFocusFactory
                     SourceRanges = sourceRanges,
                     FormNames = formNames,
                     FormSourceRanges = formSourceRanges,
+                    UpstreamCanonicalCodes = upstreamCanonicalCodes,
+                    UpstreamSummaryHints = upstreamSummaryHints,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -262,8 +272,14 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topLegacyAlgorithmEntries = top.LegacyAlgorithmEntries.Count == 0
             ? "none"
             : string.Join("/", top.LegacyAlgorithmEntries);
+        var topUpstreamCodes = top.UpstreamCanonicalCodes.Count == 0
+            ? "none"
+            : string.Join("/", top.UpstreamCanonicalCodes);
+        var topUpstreamHints = top.UpstreamSummaryHints.Count == 0
+            ? "none"
+            : string.Join("/", top.UpstreamSummaryHints);
 
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@algo-entries={topLegacyAlgorithmEntries}";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@algo-entries={topLegacyAlgorithmEntries}@upstream={topUpstreamCodes}@upstream-hints={topUpstreamHints}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -422,6 +438,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.UpstreamCanonicalCodes,
+                plan.UpstreamDependencySummary,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -438,6 +461,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.UpstreamCanonicalCodes,
+                plan.UpstreamDependencySummary,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -454,6 +484,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.UpstreamCanonicalCodes,
+                plan.UpstreamDependencySummary,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -470,6 +507,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                plan.AlgorithmEntry,
+                plan.SourceEvidences.Select(x => x.SectionKey).ToArray(),
+                plan.SourceEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.FormName).ToArray(),
+                plan.FormDependencyEvidences.Select(x => x.SourceRange).ToArray(),
+                plan.UpstreamCanonicalCodes,
+                plan.UpstreamDependencySummary,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -488,6 +532,8 @@ internal static class MotorYPrimaryFieldFocusFactory
         IReadOnlyList<string> SourceRanges,
         IReadOnlyList<string> FormNames,
         IReadOnlyList<string> FormSourceRanges,
+        IReadOnlyList<string> UpstreamCanonicalCodes,
+        string UpstreamSummaryHint,
         IReadOnlyList<string> AnchorKeys,
         IReadOnlyList<string> Focuses,
         IReadOnlyList<string> Priorities);
