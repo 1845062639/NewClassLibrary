@@ -171,6 +171,20 @@ public sealed class StpDbSnapshotQueryService
         return MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(LoadMotorYMethodAdaptationPlans(connection));
     }
 
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> ListMotorYVariantKindDecisionAnchorPrimaryFieldFocuses()
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+        return MotorYPrimaryFieldFocusFactory.BuildVariantKindDecisionAnchorPrimaryFieldFocuses(LoadMotorYMethodAdaptationPlans(connection));
+    }
+
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> ListMotorYVariantKindRequiredResultPrimaryFieldFocuses()
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+        return MotorYPrimaryFieldFocusFactory.BuildVariantKindRequiredResultPrimaryFieldFocuses(LoadMotorYMethodAdaptationPlans(connection));
+    }
+
     public IReadOnlyList<MotorYMethodRouteSelectionSnapshot> ListMotorYMethodRouteSelections()
     {
         if (!File.Exists(_dbPath))

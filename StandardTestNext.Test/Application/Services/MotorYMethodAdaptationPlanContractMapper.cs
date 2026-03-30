@@ -285,10 +285,14 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         const string crossPlanDecisionAnchorPrimaryFieldSummary = "cross-plan decision-anchor primary fields: pending cross-plan aggregation";
         var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
         const string algorithmFamilyDecisionAnchorPrimaryFieldSummary = "algorithm-family decision-anchor primary fields: pending family aggregation";
+        var variantKindDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
+        const string variantKindDecisionAnchorPrimaryFieldSummary = "variant-kind decision-anchor primary fields: pending variant aggregation";
         var crossPlanRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
         const string crossPlanRequiredResultPrimaryFieldSummary = "cross-plan required-result primary fields: pending cross-plan aggregation";
         var algorithmFamilyRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
         const string algorithmFamilyRequiredResultPrimaryFieldSummary = "algorithm-family required-result primary fields: pending family aggregation";
+        var variantKindRequiredResultPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>();
+        const string variantKindRequiredResultPrimaryFieldSummary = "variant-kind required-result primary fields: pending variant aggregation";
 
         return new MotorYMethodAdaptationPlanContract
         {
@@ -608,6 +612,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
             AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
             AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+            VariantKindDecisionAnchorPrimaryFieldFocuses = variantKindDecisionAnchorPrimaryFieldFocuses,
+            VariantKindDecisionAnchorPrimaryFieldSummary = variantKindDecisionAnchorPrimaryFieldSummary,
             RequiredResultPrimaryFieldDistributions = requiredResultPrimaryFieldDistributions,
             RequiredResultPrimaryFieldSummary = requiredResultPrimaryFieldSummary,
             CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,

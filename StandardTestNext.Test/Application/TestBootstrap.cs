@@ -138,7 +138,9 @@ public sealed class TestBootstrap
         var stpCrossPlanPrimaryFieldFocuses = BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var stpCrossPlanRequiredResultPrimaryFieldFocuses = BuildCrossPlanRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var stpAlgorithmFamilyAnchorPrimaryFieldFocuses = BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
+        var stpVariantKindAnchorPrimaryFieldFocuses = BuildVariantKindDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses = BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
+        var stpVariantKindRequiredResultPrimaryFieldFocuses = BuildVariantKindRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
         var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
@@ -210,6 +212,14 @@ public sealed class TestBootstrap
         if (stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count > 0)
         {
             Console.WriteLine($"[Test] stp.db Motor_Y algorithm-family required-result primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpAlgorithmFamilyRequiredResultPrimaryFieldFocuses)}");
+        }
+        if (stpVariantKindAnchorPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y variant-kind anchor primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpVariantKindAnchorPrimaryFieldFocuses)}");
+        }
+        if (stpVariantKindRequiredResultPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y variant-kind required-result primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpVariantKindRequiredResultPrimaryFieldFocuses)}");
         }
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
@@ -412,6 +422,9 @@ public sealed class TestBootstrap
         var algorithmFamilyAnchorPrimary = plan.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Count == 0
             ? $"anchor-family={plan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}"
             : "anchor-family=" + string.Join("|", plan.AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:families={string.Join("/", x.AlgorithmFamilies)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}";
+        var variantKindAnchorPrimary = plan.VariantKindDecisionAnchorPrimaryFieldFocuses.Count == 0
+            ? $"anchor-variant={plan.VariantKindDecisionAnchorPrimaryFieldSummary}"
+            : "anchor-variant=" + string.Join("|", plan.VariantKindDecisionAnchorPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:variants={string.Join("/", x.VariantKinds)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.VariantKindDecisionAnchorPrimaryFieldSummary}";
         var resultFieldPrimary = plan.RequiredResultPrimaryFieldDistributions.Count == 0
             ? $"result-primary={plan.RequiredResultPrimaryFieldSummary}"
             : "result-primary=" + string.Join("|", plan.RequiredResultPrimaryFieldDistributions.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}")) + $":summary={plan.RequiredResultPrimaryFieldSummary}";
@@ -421,12 +434,15 @@ public sealed class TestBootstrap
         var algorithmFamilyResultPrimary = plan.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Count == 0
             ? $"result-family={plan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}"
             : "result-family=" + string.Join("|", plan.AlgorithmFamilyRequiredResultPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:families={string.Join("/", x.AlgorithmFamilies)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.AlgorithmFamilyRequiredResultPrimaryFieldSummary}";
+        var variantKindResultPrimary = plan.VariantKindRequiredResultPrimaryFieldFocuses.Count == 0
+            ? $"result-variant={plan.VariantKindRequiredResultPrimaryFieldSummary}"
+            : "result-variant=" + string.Join("|", plan.VariantKindRequiredResultPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:weighted={x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:variants={string.Join("/", x.VariantKinds)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.VariantKindRequiredResultPrimaryFieldSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{algorithmFamilyAnchorPrimary};{resultFieldPrimary};{crossPlanResultPrimary};{algorithmFamilyResultPrimary};{anchorResolutions};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{algorithmFamilyAnchorPrimary};{variantKindAnchorPrimary};{resultFieldPrimary};{crossPlanResultPrimary};{algorithmFamilyResultPrimary};{variantKindResultPrimary};{anchorResolutions};{summaries};{distributions}]";
     }
 
     private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)

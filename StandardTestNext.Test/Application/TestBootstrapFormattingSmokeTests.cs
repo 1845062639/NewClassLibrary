@@ -15,6 +15,8 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldExposeAlgorithmFamilyPrimaryFieldFocusesInCliPlanPreview();
         ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
         ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
+        ShouldBuildVariantKindDecisionAnchorPrimaryFieldFocuses();
+        ShouldBuildVariantKindRequiredResultPrimaryFieldFocuses();
     }
 
     private static void ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview()
@@ -519,4 +521,67 @@ public static class TestBootstrapFormattingSmokeTests
             throw new InvalidOperationException($"TestBootstrap algorithm-family required-result focus smoke test failed. actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.AlgorithmFamilies)}:{x.WeightedCount}:{x.WeightedShare:P1}:{x.Summary}"))}]");
         }
     }
+
+    private static void ShouldBuildVariantKindDecisionAnchorPrimaryFieldFocuses()
+    {
+        var focuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindDecisionAnchorPrimaryFieldFocuses(new[]
+        {
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.NoLoad,
+                SelectedCount = 3,
+                SelectedRoute = new MotorYLegacyAlgorithmRoute { CanonicalCode = MotorYTestMethodCodes.NoLoad, MethodValue = 0, VariantKind = MotorYLegacyVariantKinds.Baseline, AlgorithmFamily = MotorYLegacyAlgorithmFamilies.NoLoad },
+                DecisionAnchorPrimaryFieldDistributions = new[]
+                {
+                    new MotorYDecisionAnchorPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "Pfw",
+                        Count = 1, Share = 1d, AnchorKeys = new[] { "pfw-fit-window" }, SuggestedNextStepFocuses = new[] { "空载风摩耗拟合窗口" }, SuggestedNextStepPriorities = new[] { "blocking" }
+                    }
+                }
+            }
+        });
+
+        var baseline = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        if (focuses.Count != 1
+            || baseline is null
+            || !baseline.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Baseline }, StringComparer.Ordinal)
+            || baseline.WeightedCount != 3
+            || !baseline.Summary.StartsWith("variant=baseline; cross-plan primary field Pfw appears in 1/1 plans (100pp), weighted 3/3 selected samples (100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap variant-kind decision-anchor focus smoke test failed. actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.VariantKinds)}:{x.WeightedCount}:{x.WeightedShare:P1}:{x.Summary}"))}]");
+        }
+    }
+
+    private static void ShouldBuildVariantKindRequiredResultPrimaryFieldFocuses()
+    {
+        var focuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindRequiredResultPrimaryFieldFocuses(new[]
+        {
+            new MotorYMethodAdaptationPlanSnapshot
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadA,
+                SelectedCount = 6,
+                SelectedRoute = new MotorYLegacyAlgorithmRoute { CanonicalCode = MotorYTestMethodCodes.LoadA, MethodValue = 4, VariantKind = MotorYLegacyVariantKinds.Baseline, AlgorithmFamily = MotorYLegacyAlgorithmFamilies.LoadA },
+                RequiredResultPrimaryFieldDistributions = new[]
+                {
+                    new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+                    {
+                        PrimaryField = "Pcu2",
+                        Count = 1, Share = 1d, BucketKeys = new[] { "result-fields" }, DisplayNames = new[] { "结果字段" }
+                    }
+                }
+            }
+        });
+
+        var baseline = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+        if (focuses.Count != 1
+            || baseline is null
+            || !baseline.VariantKinds.SequenceEqual(new[] { MotorYLegacyVariantKinds.Baseline }, StringComparer.Ordinal)
+            || baseline.WeightedCount != 6
+            || !baseline.Summary.StartsWith("variant=baseline; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 6/6 selected samples (100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap variant-kind required-result focus smoke test failed. actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{string.Join("/", x.VariantKinds)}:{x.WeightedCount}:{x.WeightedShare:P1}:{x.Summary}"))}]");
+        }
+    }
+
 }

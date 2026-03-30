@@ -63,10 +63,14 @@ public static class TestRecordViewMapper
         var crossPlanDecisionAnchorPrimaryFieldSummary = BuildCrossPlanDecisionAnchorPrimaryFieldSummary(crossPlanDecisionAnchorPrimaryFieldFocuses);
         var algorithmFamilyDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(basePlans);
         var algorithmFamilyDecisionAnchorPrimaryFieldSummary = BuildAlgorithmFamilyPrimaryFieldSummary("decision-anchor", algorithmFamilyDecisionAnchorPrimaryFieldFocuses);
+        var variantKindDecisionAnchorPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindDecisionAnchorPrimaryFieldFocuses(basePlans);
+        var variantKindDecisionAnchorPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary("decision-anchor", variantKindDecisionAnchorPrimaryFieldFocuses);
         var crossPlanRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(basePlans);
         var crossPlanRequiredResultPrimaryFieldSummary = BuildCrossPlanRequiredResultPrimaryFieldSummary(crossPlanRequiredResultPrimaryFieldFocuses);
         var algorithmFamilyRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses(basePlans);
         var algorithmFamilyRequiredResultPrimaryFieldSummary = BuildAlgorithmFamilyPrimaryFieldSummary("required-result", algorithmFamilyRequiredResultPrimaryFieldFocuses);
+        var variantKindRequiredResultPrimaryFieldFocuses = MotorYPrimaryFieldFocusFactory.BuildVariantKindRequiredResultPrimaryFieldFocuses(basePlans);
+        var variantKindRequiredResultPrimaryFieldSummary = MotorYPrimaryFieldFocusFactory.BuildVariantKindFocusSummary("required-result", variantKindRequiredResultPrimaryFieldFocuses);
 
         var motorYMethodAdaptationPlans = basePlans
             .Select(plan => CloneWithCrossPlanFocuses(
@@ -75,10 +79,14 @@ public static class TestRecordViewMapper
                 crossPlanDecisionAnchorPrimaryFieldSummary,
                 algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
                 algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+                variantKindDecisionAnchorPrimaryFieldFocuses,
+                variantKindDecisionAnchorPrimaryFieldSummary,
                 crossPlanRequiredResultPrimaryFieldFocuses,
                 crossPlanRequiredResultPrimaryFieldSummary,
                 algorithmFamilyRequiredResultPrimaryFieldFocuses,
-                algorithmFamilyRequiredResultPrimaryFieldSummary))
+                algorithmFamilyRequiredResultPrimaryFieldSummary,
+                variantKindRequiredResultPrimaryFieldFocuses,
+                variantKindRequiredResultPrimaryFieldSummary))
             .ToArray();
 
         return new TestRecordDetailView
@@ -113,10 +121,14 @@ public static class TestRecordViewMapper
         string crossPlanDecisionAnchorPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
         string algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> variantKindDecisionAnchorPrimaryFieldFocuses,
+        string variantKindDecisionAnchorPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> crossPlanRequiredResultPrimaryFieldFocuses,
         string crossPlanRequiredResultPrimaryFieldSummary,
         IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> algorithmFamilyRequiredResultPrimaryFieldFocuses,
-        string algorithmFamilyRequiredResultPrimaryFieldSummary)
+        string algorithmFamilyRequiredResultPrimaryFieldSummary,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> variantKindRequiredResultPrimaryFieldFocuses,
+        string variantKindRequiredResultPrimaryFieldSummary)
     {
         return new MotorYMethodAdaptationPlanSnapshot
         {
@@ -323,12 +335,16 @@ public static class TestRecordViewMapper
             CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanDecisionAnchorPrimaryFieldSummary,
             AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = algorithmFamilyDecisionAnchorPrimaryFieldFocuses,
             AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = algorithmFamilyDecisionAnchorPrimaryFieldSummary,
+            VariantKindDecisionAnchorPrimaryFieldFocuses = variantKindDecisionAnchorPrimaryFieldFocuses,
+            VariantKindDecisionAnchorPrimaryFieldSummary = variantKindDecisionAnchorPrimaryFieldSummary,
             RequiredResultPrimaryFieldDistributions = plan.RequiredResultPrimaryFieldDistributions,
             RequiredResultPrimaryFieldSummary = plan.RequiredResultPrimaryFieldSummary,
             CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultPrimaryFieldFocuses,
             CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultPrimaryFieldSummary,
             AlgorithmFamilyRequiredResultPrimaryFieldFocuses = algorithmFamilyRequiredResultPrimaryFieldFocuses,
             AlgorithmFamilyRequiredResultPrimaryFieldSummary = algorithmFamilyRequiredResultPrimaryFieldSummary,
+            VariantKindRequiredResultPrimaryFieldFocuses = variantKindRequiredResultPrimaryFieldFocuses,
+            VariantKindRequiredResultPrimaryFieldSummary = variantKindRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = plan.DecisionAnchorPrioritySummary,
             LegacyDecisionAnchorsObservedPayloadSummary = plan.LegacyDecisionAnchorsObservedPayloadSummary,
             FormulaSignalSummary = plan.FormulaSignalSummary,

@@ -8,6 +8,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -18,6 +19,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan => plan.RequiredResultPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -48,10 +50,48 @@ internal static class MotorYPrimaryFieldFocusFactory
                     WeightedShare = focus.WeightedShare,
                     CanonicalCodes = focus.CanonicalCodes,
                     AlgorithmFamilies = new[] { group.Key },
+                    VariantKinds = focus.VariantKinds,
                     AnchorKeys = focus.AnchorKeys,
                     SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
                     SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
                     Summary = $"family={group.Key}; {focus.Summary}"
+                });
+            })
+            .ToArray();
+    }
+
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildVariantKindPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        Func<MotorYMethodAdaptationPlanSnapshot, IEnumerable<CrossPlanPrimaryFieldCandidate>> candidateSelector)
+    {
+        if (plans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        return plans
+            .Where(plan => !string.IsNullOrWhiteSpace(plan.SelectedRoute?.VariantKind))
+            .GroupBy(plan => plan.SelectedRoute?.VariantKind ?? string.Empty, StringComparer.Ordinal)
+            .OrderBy(group => GetVariantKindSortOrder(group.Key))
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .SelectMany(group =>
+            {
+                var variantPlans = group.ToArray();
+                var variantFocuses = BuildCrossPlanPrimaryFieldFocuses(variantPlans, candidateSelector);
+                return variantFocuses.Select(focus => new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = focus.PrimaryField,
+                    Count = focus.Count,
+                    Share = focus.Share,
+                    WeightedCount = focus.WeightedCount,
+                    WeightedShare = focus.WeightedShare,
+                    CanonicalCodes = focus.CanonicalCodes,
+                    AlgorithmFamilies = focus.AlgorithmFamilies,
+                    VariantKinds = new[] { group.Key },
+                    AnchorKeys = focus.AnchorKeys,
+                    SuggestedNextStepFocuses = focus.SuggestedNextStepFocuses,
+                    SuggestedNextStepPriorities = focus.SuggestedNextStepPriorities,
+                    Summary = $"variant={group.Key}; {focus.Summary}"
                 });
             })
             .ToArray();
@@ -93,12 +133,13 @@ internal static class MotorYPrimaryFieldFocusFactory
                     : Math.Round((double)weightedCount / totalWeighted, 4, MidpointRounding.AwayFromZero);
                 var canonicalCodes = rows.Select(x => x.CanonicalCode).Distinct(StringComparer.Ordinal).ToArray();
                 var algorithmFamilies = rows.Select(x => x.Candidate.AlgorithmFamily).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var variantKinds = rows.Select(x => x.Candidate.VariantKind).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(GetVariantKindSortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
                 var anchorKeys = rows.SelectMany(x => x.Candidate.AnchorKeys).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var focuses = rows.SelectMany(x => x.Candidate.Focuses).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var priorities = rows.SelectMany(x => x.Candidate.Priorities).Distinct(StringComparer.Ordinal).OrderBy(GetPrioritySortOrder).ThenBy(x => x, StringComparer.Ordinal).ToArray();
                 var percentagePoints = (int)Math.Round(share * 100d, MidpointRounding.AwayFromZero);
                 var weightedPercentagePoints = (int)Math.Round(weightedShare * 100d, MidpointRounding.AwayFromZero);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); codes={string.Join(", ", canonicalCodes)}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
                 return new MotorYPrimaryFieldFocusSnapshot
                 {
@@ -109,6 +150,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                     WeightedShare = weightedShare,
                     CanonicalCodes = canonicalCodes,
                     AlgorithmFamilies = algorithmFamilies,
+                    VariantKinds = variantKinds,
                     AnchorKeys = anchorKeys,
                     SuggestedNextStepFocuses = focuses,
                     SuggestedNextStepPriorities = priorities,
@@ -170,6 +212,36 @@ internal static class MotorYPrimaryFieldFocusFactory
         return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}";
     }
 
+    public static string BuildVariantKindFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return $"variant-kind {scope} primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(x =>
+            {
+                var variantLabel = x.VariantKinds.Count == 0
+                    ? "no-variant"
+                    : string.Join("/", x.VariantKinds);
+                return $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp, variants {variantLabel})";
+            })
+            .ToArray();
+
+        var dominantVariant = focuses
+            .SelectMany(focus => focus.VariantKinds)
+            .Where(variant => !string.IsNullOrWhiteSpace(variant))
+            .GroupBy(variant => variant, StringComparer.Ordinal)
+            .OrderByDescending(group => group.Count())
+            .ThenBy(group => GetVariantKindSortOrder(group.Key))
+            .ThenBy(group => group.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? "none";
+
+        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}";
+    }
+
     private static int GetPrioritySortOrder(string priority)
         => priority switch
         {
@@ -181,12 +253,25 @@ internal static class MotorYPrimaryFieldFocusFactory
             _ => 99
         };
 
+    private static int GetVariantKindSortOrder(string variantKind)
+        => variantKind switch
+        {
+            MotorYLegacyVariantKinds.Baseline => 0,
+            MotorYLegacyVariantKinds.Delivery => 1,
+            MotorYLegacyVariantKinds.Companion => 2,
+            MotorYLegacyVariantKinds.DeliveryCompanion => 3,
+            MotorYLegacyVariantKinds.LegacyAlias => 4,
+            MotorYLegacyVariantKinds.OtherVariant => 5,
+            _ => 99
+        };
+
     public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
         => BuildAlgorithmFamilyPrimaryFieldFocuses(
             plans,
             plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
                 distribution.AnchorKeys,
                 distribution.SuggestedNextStepFocuses,
                 distribution.SuggestedNextStepPriorities)));
@@ -197,6 +282,29 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan => plan.RequiredResultPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
                 distribution.PrimaryField,
                 plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
+                Array.Empty<string>(),
+                distribution.DisplayNames,
+                distribution.BucketKeys)));
+
+    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildVariantKindDecisionAnchorPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
+        => BuildVariantKindPrimaryFieldFocuses(
+            plans,
+            plan => plan.DecisionAnchorPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
+                distribution.PrimaryField,
+                plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
+                distribution.AnchorKeys,
+                distribution.SuggestedNextStepFocuses,
+                distribution.SuggestedNextStepPriorities)));
+
+    public static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildVariantKindRequiredResultPrimaryFieldFocuses(IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans)
+        => BuildVariantKindPrimaryFieldFocuses(
+            plans,
+            plan => plan.RequiredResultPrimaryFieldDistributions.Select(distribution => new CrossPlanPrimaryFieldCandidate(
+                distribution.PrimaryField,
+                plan.AlgorithmFamily,
+                plan.SelectedRoute?.VariantKind ?? string.Empty,
                 Array.Empty<string>(),
                 distribution.DisplayNames,
                 distribution.BucketKeys)));
@@ -204,6 +312,7 @@ internal static class MotorYPrimaryFieldFocusFactory
     private sealed record CrossPlanPrimaryFieldCandidate(
         string PrimaryField,
         string AlgorithmFamily,
+        string VariantKind,
         IReadOnlyList<string> AnchorKeys,
         IReadOnlyList<string> Focuses,
         IReadOnlyList<string> Priorities);

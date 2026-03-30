@@ -114,6 +114,7 @@ public sealed class MotorYPrimaryFieldFocusSnapshot
     public double WeightedShare { get; init; }
     public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AlgorithmFamilies { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> VariantKinds { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepPriorities { get; init; } = Array.Empty<string>();
@@ -335,12 +336,16 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string CrossPlanDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
     public string AlgorithmFamilyDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> VariantKindDecisionAnchorPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+    public string VariantKindDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionSnapshot>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> CrossPlanRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
     public string CrossPlanRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> AlgorithmFamilyRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
     public string AlgorithmFamilyRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> VariantKindRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+    public string VariantKindRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
