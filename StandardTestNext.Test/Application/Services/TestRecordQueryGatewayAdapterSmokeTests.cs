@@ -1465,7 +1465,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
 
         if (noLoadCrossPlan.Count != 6
             || loadBCrossPlan.Count != noLoadCrossPlan.Count
-            || !string.Equals(noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, "cross-plan decision-anchor primary fields top 3/6: CoefficientOfPfe=1 (50pp); GB=1 (50pp); Pfw=1 (50pp)", StringComparison.Ordinal)
+            || !string.Equals(noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, "cross-plan decision-anchor primary fields top 3/6: GB=1 (50pp, weighted 50pp); CoefficientOfPfe=1 (50pp, weighted 25pp); Pfw=1 (50pp, weighted 25pp)", StringComparison.Ordinal)
             || !string.Equals(loadBPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, StringComparison.Ordinal)
             || rConverse is null
             || rConverse.Count != 1
@@ -1473,11 +1473,17 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !rConverse.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
             || !rConverse.AnchorKeys.SequenceEqual(new[] { "rconverse-branch" }, StringComparer.Ordinal)
             || !rConverse.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
-            || !string.Equals(rConverse.Summary, "cross-plan decision-anchor primary field RConverseType appears in 1/2 plans (50pp); codes=NoLoad; anchors=rconverse-branch; priorities=blocking", StringComparison.Ordinal)
+            || rConverse.WeightedCount != 1
+            || Math.Abs(rConverse.WeightedShare - 0.25d) > 0.0001d
+            || !string.Equals(rConverse.Summary, "cross-plan decision-anchor primary field RConverseType appears in 1/2 plans (50pp), weighted 1/4 selected samples (25pp); codes=NoLoad; anchors=rconverse-branch; priorities=blocking", StringComparison.Ordinal)
             || pfw is null
+            || pfw.WeightedCount != 1
+            || Math.Abs(pfw.WeightedShare - 0.25d) > 0.0001d
             || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
             || !pfw.AnchorKeys.SequenceEqual(new[] { "pfw-split" }, StringComparer.Ordinal)
             || gb is null
+            || gb.WeightedCount != 2
+            || Math.Abs(gb.WeightedShare - 0.5d) > 0.0001d
             || !gb.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
             || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal))
         {

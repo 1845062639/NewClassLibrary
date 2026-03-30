@@ -107,6 +107,8 @@ public sealed class MotorYPrimaryFieldFocusContract
     public string PrimaryField { get; init; } = string.Empty;
     public int Count { get; init; }
     public double Share { get; init; }
+    public int WeightedCount { get; init; }
+    public double WeightedShare { get; init; }
     public IReadOnlyList<string> CanonicalCodes { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> AnchorKeys { get; init; } = Array.Empty<string>();
     public IReadOnlyList<string> SuggestedNextStepFocuses { get; init; } = Array.Empty<string>();

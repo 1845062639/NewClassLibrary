@@ -448,6 +448,8 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 PrimaryField = x.PrimaryField,
                 Count = x.Count,
                 Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
                 CanonicalCodes = x.CanonicalCodes,
                 AnchorKeys = x.AnchorKeys,
                 SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
