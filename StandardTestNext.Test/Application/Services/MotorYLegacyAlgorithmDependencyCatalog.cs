@@ -12,6 +12,14 @@ public sealed class MotorYLegacyAlgorithmSourceEvidence
     public string SourceFile { get; init; } = string.Empty;
     public int StartLine { get; init; }
     public int EndLine { get; init; }
+    public string SourceRange => StartLine <= 0 || EndLine <= 0
+        ? string.Empty
+        : StartLine == EndLine
+            ? $"L{StartLine}"
+            : $"L{StartLine}-L{EndLine}";
+    public string SourceAnchor => string.IsNullOrWhiteSpace(SectionKey)
+        ? string.Empty
+        : $"{MethodName}:{SectionKey}";
     public IReadOnlyList<string> ReferencedFields { get; init; } = Array.Empty<string>();
     public string Summary { get; init; } = string.Empty;
 }

@@ -99,6 +99,8 @@ public sealed class MotorYLegacyAlgorithmSourceEvidenceSnapshot
     public string SourceFile { get; init; } = string.Empty;
     public int StartLine { get; init; }
     public int EndLine { get; init; }
+    public string SourceRange { get; init; } = string.Empty;
+    public string SourceAnchor { get; init; } = string.Empty;
     public IReadOnlyList<string> ReferencedFields { get; init; } = Array.Empty<string>();
     public string Summary { get; init; } = string.Empty;
 }

@@ -378,6 +378,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                     SourceFile = evidence.SourceFile,
                     StartLine = evidence.StartLine,
                     EndLine = evidence.EndLine,
+                    SourceRange = evidence.SourceRange,
+                    SourceAnchor = evidence.SourceAnchor,
                     ReferencedFields = evidence.ReferencedFields,
                     Summary = evidence.Summary
                 })

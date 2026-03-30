@@ -576,6 +576,8 @@ public static class TestRecordViewMapper
                 SourceFile = x.SourceFile,
                 StartLine = x.StartLine,
                 EndLine = x.EndLine,
+                SourceRange = x.SourceRange,
+                SourceAnchor = x.SourceAnchor,
                 ReferencedFields = x.ReferencedFields,
                 Summary = x.Summary
             }).ToArray(),
