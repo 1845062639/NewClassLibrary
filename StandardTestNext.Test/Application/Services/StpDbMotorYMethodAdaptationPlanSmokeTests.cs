@@ -34,6 +34,12 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
             throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no cross-plan decision-anchor primary-field focuses returned.");
         }
 
+        var crossPlanRequiredResultPrimaryFieldFocuses = service.ListMotorYRequiredResultPrimaryFieldFocuses();
+        if (crossPlanRequiredResultPrimaryFieldFocuses.Count == 0)
+        {
+            throw new InvalidOperationException("stp.db Motor_Y method adaptation plan smoke test failed: no cross-plan required-result primary-field focuses returned.");
+        }
+
         using var connection = new SqliteConnection($"Data Source={DbPath}");
         connection.Open();
 
@@ -48,6 +54,7 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
         };
 
         AssertCrossPlanDecisionAnchorPrimaryFieldFocuses(actual, crossPlanPrimaryFieldFocuses);
+        AssertCrossPlanRequiredResultPrimaryFieldFocuses(actual, crossPlanRequiredResultPrimaryFieldFocuses);
 
         foreach (var row in expected)
         {
@@ -197,6 +204,40 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
+            }
+        }
+    }
+
+    private static void AssertCrossPlanRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> plans,
+        IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        var expected = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(plans);
+
+        if (focuses.Count != expected.Length)
+        {
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus count mismatch. expected={expected.Length}, actual={focuses.Count}");
+        }
+
+        foreach (var row in expected)
+        {
+            var actual = focuses.FirstOrDefault(x => string.Equals(x.PrimaryField, row.PrimaryField, StringComparison.Ordinal));
+            if (actual is null)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: missing cross-plan required-result primary-field focus {row.PrimaryField}.");
+            }
+
+            if (actual.Count != row.Count
+                || Math.Abs(actual.Share - row.Share) > 0.0001d
+                || actual.WeightedCount != row.WeightedCount
+                || Math.Abs(actual.WeightedShare - row.WeightedShare) > 0.0001d
+                || !actual.CanonicalCodes.SequenceEqual(row.CanonicalCodes, StringComparer.Ordinal)
+                || !actual.AnchorKeys.SequenceEqual(row.AnchorKeys, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepFocuses.SequenceEqual(row.SuggestedNextStepFocuses, StringComparer.Ordinal)
+                || !actual.SuggestedNextStepPriorities.SequenceEqual(row.SuggestedNextStepPriorities, StringComparer.Ordinal)
+                || !string.Equals(actual.Summary, row.Summary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: cross-plan required-result primary-field focus mismatch for {row.PrimaryField}. expected={row.Count}/{row.Share}:{row.WeightedCount}/{row.WeightedShare}:{string.Join(',', row.CanonicalCodes)}:'{row.Summary}', actual={actual.Count}/{actual.Share}:{actual.WeightedCount}/{actual.WeightedShare}:{string.Join(',', actual.CanonicalCodes)}:'{actual.Summary}'");
             }
         }
     }

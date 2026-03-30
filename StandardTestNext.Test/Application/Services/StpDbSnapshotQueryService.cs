@@ -150,6 +150,13 @@ public sealed class StpDbSnapshotQueryService
         return MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(LoadMotorYMethodAdaptationPlans(connection));
     }
 
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> ListMotorYRequiredResultPrimaryFieldFocuses()
+    {
+        using var connection = new SqliteConnection($"Data Source={_dbPath}");
+        connection.Open();
+        return MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(LoadMotorYMethodAdaptationPlans(connection));
+    }
+
     public IReadOnlyList<MotorYMethodRouteSelectionSnapshot> ListMotorYMethodRouteSelections()
     {
         if (!File.Exists(_dbPath))

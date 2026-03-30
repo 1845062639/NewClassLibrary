@@ -136,6 +136,7 @@ public sealed class TestBootstrap
         var primaryRecordReport = recordReports.FirstOrDefault(x => x.IsPrimaryEntry);
         var stpMethodAdaptationPlans = LoadStpMethodAdaptationPlans(stpDbSnapshotQueryService);
         var stpCrossPlanPrimaryFieldFocuses = BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
+        var stpCrossPlanRequiredResultPrimaryFieldFocuses = BuildCrossPlanRequiredResultPrimaryFieldFocuses(stpMethodAdaptationPlans, stpDbSnapshotQueryService);
         var noLoadPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.NoLoad")?.DataJson;
         var noLoadLegacyShape = MotorYNoLoadLegacyShape.FromJson(noLoadPayload ?? string.Empty);
         var lockRotorPayload = aggregate.Items.FirstOrDefault(x => x.ItemCode == "MotorY.LockedRotor")?.DataJson;
@@ -196,6 +197,10 @@ public sealed class TestBootstrap
         {
             Console.WriteLine($"[Test] stp.db Motor_Y cross-plan anchor primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpCrossPlanPrimaryFieldFocuses)}");
         }
+        if (stpCrossPlanRequiredResultPrimaryFieldFocuses.Count > 0)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y cross-plan required-result primary fields: {FormatCrossPlanPrimaryFieldFocuses(stpCrossPlanRequiredResultPrimaryFieldFocuses)}");
+        }
         Console.WriteLine($"[Test] Reloaded product definition found: {reloadedProductDefinition is not null}");
         Console.WriteLine($"[Test] Reloaded record found: {reloadedRecord is not null}");
         if (reloadedRecord is not null)
@@ -254,6 +259,26 @@ public sealed class TestBootstrap
         catch (Exception ex)
         {
             Console.WriteLine($"[Test] stp.db Motor_Y cross-plan anchor primary fields unavailable: {ex.Message}");
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+    }
+
+    private static IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> BuildCrossPlanRequiredResultPrimaryFieldFocuses(
+        IReadOnlyList<MotorYMethodAdaptationPlanSnapshot> stpMethodAdaptationPlans,
+        StpDbSnapshotQueryService snapshotQueryService)
+    {
+        if (stpMethodAdaptationPlans.Count == 0)
+        {
+            return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+        }
+
+        try
+        {
+            return snapshotQueryService.ListMotorYRequiredResultPrimaryFieldFocuses();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Test] stp.db Motor_Y cross-plan required-result primary fields unavailable: {ex.Message}");
             return Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
         }
     }

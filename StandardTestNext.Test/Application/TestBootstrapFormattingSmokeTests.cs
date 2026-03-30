@@ -8,6 +8,7 @@ public static class TestBootstrapFormattingSmokeTests
     {
         ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview();
         ShouldExposeDecisionAnchorPriorityAndCoverageInCliPreview();
+        ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses();
     }
 
     private static void ShouldExposeDecisionAnchorSuggestedNextStepInCliPreview()
@@ -56,6 +57,36 @@ public static class TestBootstrapFormattingSmokeTests
         if (!formatted.Contains("anchor-resolutions=rconverse-branch:missing:0pp:obs=none:miss=RConverseType:priority=none:coverage=none:next=先补空载旧算法的 R0/θ0 换算分支标记：RConverseType", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap formatting smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldFormatCrossPlanRequiredResultPrimaryFieldFocuses()
+    {
+        var formatter = typeof(TestBootstrap).GetMethod("FormatCrossPlanPrimaryFieldFocuses", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter not found.");
+
+        var formatted = formatter.Invoke(null, new object[]
+        {
+            new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "Pfw",
+                    Count = 2,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 0.7d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    SuggestedNextStepPriorities = new[] { "intermediate-result-fields", "result-fields" },
+                    SuggestedNextStepFocuses = new[] { "NoLoad result field", "LoadB result field" },
+                    Summary = "cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields"
+                }
+            }
+        }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
+
+        if (!formatted.Contains("Pfw:2:100.0 %:MotorY.LoadB/MotorY.NoLoad:intermediate-result-fields/result-fields", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
     }
 
