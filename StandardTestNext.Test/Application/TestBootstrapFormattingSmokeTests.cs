@@ -12,6 +12,7 @@ public static class TestBootstrapFormattingSmokeTests
         ShouldExposeWeightedCrossPlanDecisionAnchorFieldsInCliPlanPreview();
         ShouldExposeWeightedCrossPlanRequiredResultFieldsInCliPlanPreview();
         ShouldFormatAlgorithmFamilyPrimaryFieldFocuses();
+        ShouldExposeAlgorithmFamilyPrimaryFieldFocusesInCliPlanPreview();
         ShouldBuildAlgorithmFamilyDecisionAnchorPrimaryFieldFocuses();
         ShouldBuildAlgorithmFamilyRequiredResultPrimaryFieldFocuses();
     }
@@ -329,6 +330,77 @@ public static class TestBootstrapFormattingSmokeTests
         if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:MotorY.LoadB:gb-temperature-branch:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
+        }
+    }
+
+    private static void ShouldExposeAlgorithmFamilyPrimaryFieldFocusesInCliPlanPreview()
+    {
+        var plan = new MotorYMethodAdaptationPlanSnapshot
+        {
+            CanonicalCode = MotorYTestMethodCodes.LoadB,
+            SelectionStrategy = "dominant",
+            AlgorithmEntry = "Calc_Load_B",
+            SettingsMethodName = "B法负载试验",
+            SelectionReason = "smoke",
+            RawSampleCountReady = true,
+            RawDataSampleCount = 6,
+            MinimumRawSampleCount = 3,
+            StructuredPayloadSampleCountReady = true,
+            StructuredPayloadSampleCount = 4,
+            MinimumStructuredPayloadSampleCount = 3,
+            StructuredResultSampleCountReady = true,
+            StructuredResultSampleCount = 2,
+            MinimumStructuredResultSampleCount = 1,
+            AlgorithmFamilyDecisionAnchorPrimaryFieldSummary = "algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)",
+            AlgorithmFamilyDecisionAnchorPrimaryFieldFocuses = new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "GB",
+                    Count = 1,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 1d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
+                    AlgorithmFamilies = new[] { "LoadB" },
+                    AnchorKeys = new[] { "gb-temperature-branch" },
+                    SuggestedNextStepPriorities = new[] { "blocking" },
+                    SuggestedNextStepFocuses = new[] { "热态分支" },
+                    Summary = "family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking"
+                }
+            },
+            AlgorithmFamilyRequiredResultPrimaryFieldSummary = "algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)",
+            AlgorithmFamilyRequiredResultPrimaryFieldFocuses = new[]
+            {
+                new MotorYPrimaryFieldFocusSnapshot
+                {
+                    PrimaryField = "Pcu2",
+                    Count = 1,
+                    Share = 1d,
+                    WeightedCount = 7,
+                    WeightedShare = 1d,
+                    CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
+                    AlgorithmFamilies = new[] { "LoadB" },
+                    SuggestedNextStepPriorities = new[] { "result-fields" },
+                    SuggestedNextStepFocuses = new[] { "结果字段" },
+                    Summary = "family=LoadB; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=结果字段; priorities=result-fields"
+                }
+            },
+            LegacyDecisionAnchorResolutionSummary = "decision anchor resolutions resolved 0/0 (100pp)",
+            LegacyAlgorithmInputReadinessSummary = "legacy algorithm inputs ready",
+            SelectedMethodSummary = "推荐方法切到 dominant",
+            BaselineDominantComparisonSummary = "dominant 明显领先 baseline"
+        };
+
+        var formatter = typeof(TestBootstrap).GetMethod("FormatMethodAdaptationPlanSnapshot", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+            ?? throw new InvalidOperationException("TestBootstrap formatter not found.");
+        var formatted = formatter.Invoke(null, new object[] { plan }) as string
+            ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
+
+        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"TestBootstrap algorithm-family plan formatting smoke test failed. actual='{formatted}'");
         }
     }
 
