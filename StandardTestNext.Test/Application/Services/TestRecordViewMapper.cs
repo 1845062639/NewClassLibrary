@@ -531,6 +531,18 @@ public static class TestRecordViewMapper
                 Summary = x.Summary
             }).ToArray(),
             DecisionAnchorPrimaryFieldSummary = contract.DecisionAnchorPrimaryFieldSummary,
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = contract.CrossPlanDecisionAnchorPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                CanonicalCodes = x.CanonicalCodes,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            CrossPlanDecisionAnchorPrimaryFieldSummary = contract.CrossPlanDecisionAnchorPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,

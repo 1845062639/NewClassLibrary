@@ -581,6 +581,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
                 .ToArray(),
             DecisionAnchorPrimaryFieldDistributions = decisionAnchorPrimaryFieldDistributions,
             DecisionAnchorPrimaryFieldSummary = MotorYDecisionAnchorResolutionFactory.BuildPrimaryFieldSummary(decisionAnchorResolutions),
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = Array.Empty<MotorYPrimaryFieldFocusContract>(),
+            CrossPlanDecisionAnchorPrimaryFieldSummary = string.Empty,
             RequiredResultPrimaryFieldDistributions = requiredResultPrimaryFieldDistributions,
             RequiredResultPrimaryFieldSummary = requiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = decisionAnchorPrioritySummary,

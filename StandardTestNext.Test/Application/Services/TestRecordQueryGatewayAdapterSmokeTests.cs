@@ -20,6 +20,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeDcResistanceDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryNextFieldThroughAppQueryGateway();
         ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
+        ShouldExposeCrossPlanDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1397,6 +1398,90 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !thetaW.AnchorKeys.SequenceEqual(new[] { "thermal-carryover" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y decision-anchor primary-field distribution query smoke test mismatch. actual=[{string.Join(" | ", distributions.Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepFocuses)}:{string.Join("/", x.SuggestedNextStepPriorities)}"))}]");
+        }
+    }
+
+    private static void ShouldExposeCrossPlanDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:23:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-CROSS-PLAN-PRIMARY-FIELD-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 190, "I": 6.3, "P": 520, "Cos": 0.81 }
+                      ],
+                      "Un": 380,
+                      "K1": 1,
+                      "R1c": 1.25,
+                      "θ1c": 25
+                    }
+                    """
+                },
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50, "θ1t": 85 }
+                      ]
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y cross-plan decision-anchor primary-field focus smoke test returned null detail.");
+
+        var noLoadPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+
+        var noLoadCrossPlan = noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldFocuses;
+        var loadBCrossPlan = loadBPlan.CrossPlanDecisionAnchorPrimaryFieldFocuses;
+        var rConverse = noLoadCrossPlan.SingleOrDefault(x => string.Equals(x.PrimaryField, "RConverseType", StringComparison.Ordinal));
+        var pfw = noLoadCrossPlan.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var gb = noLoadCrossPlan.SingleOrDefault(x => string.Equals(x.PrimaryField, "GB", StringComparison.Ordinal));
+
+        if (noLoadCrossPlan.Count != 6
+            || loadBCrossPlan.Count != noLoadCrossPlan.Count
+            || !string.Equals(noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, "cross-plan decision-anchor primary fields top 3/6: CoefficientOfPfe=1 (50pp); GB=1 (50pp); Pfw=1 (50pp)", StringComparison.Ordinal)
+            || !string.Equals(loadBPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary, StringComparison.Ordinal)
+            || rConverse is null
+            || rConverse.Count != 1
+            || Math.Abs(rConverse.Share - 0.5d) > 0.0001d
+            || !rConverse.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !rConverse.AnchorKeys.SequenceEqual(new[] { "rconverse-branch" }, StringComparer.Ordinal)
+            || !rConverse.SuggestedNextStepPriorities.SequenceEqual(new[] { "blocking" }, StringComparer.Ordinal)
+            || !string.Equals(rConverse.Summary, "cross-plan decision-anchor primary field RConverseType appears in 1/2 plans (50pp); codes=NoLoad; anchors=rconverse-branch; priorities=blocking", StringComparison.Ordinal)
+            || pfw is null
+            || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !pfw.AnchorKeys.SequenceEqual(new[] { "pfw-split" }, StringComparer.Ordinal)
+            || gb is null
+            || !gb.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !gb.AnchorKeys.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y cross-plan decision-anchor primary-field focus query smoke test mismatch. noLoadSummary='{noLoadPlan.CrossPlanDecisionAnchorPrimaryFieldSummary}', loadBSummary='{loadBPlan.CrossPlanDecisionAnchorPrimaryFieldSummary}', actual=[{string.Join(" | ", noLoadCrossPlan.Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.AnchorKeys)}:{string.Join("/", x.SuggestedNextStepPriorities)}"))}]");
         }
     }
 

@@ -443,6 +443,18 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 CanonicalCodes = x.CanonicalCodes,
                 Summary = x.Summary
             }).ToArray(),
+            CrossPlanDecisionAnchorPrimaryFieldFocuses = snapshot.CrossPlanDecisionAnchorPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                CanonicalCodes = x.CanonicalCodes,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            CrossPlanDecisionAnchorPrimaryFieldSummary = snapshot.CrossPlanDecisionAnchorPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
             EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
             EffectiveLegacyDecisionAnchorGapCount = snapshot.EffectiveLegacyDecisionAnchorGapCount,
