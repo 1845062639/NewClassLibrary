@@ -426,6 +426,38 @@ public static class TestBootstrapFormattingSmokeTests
             AlgorithmEntry = "Calc_Load_B",
             SettingsMethodName = "B法负载试验",
             SelectionReason = "smoke",
+            BaselineRoute = new MotorYLegacyAlgorithmRoute
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadB,
+                MethodValue = 5,
+                MethodKey = "LoadB:5",
+                ProfileKey = "baseline",
+                VariantKind = MotorYLegacyVariantKinds.Baseline,
+                AlgorithmFamily = MotorYLegacyAlgorithmFamilies.LoadB
+            },
+            BaselineCount = 2,
+            DominantRoute = new MotorYLegacyAlgorithmRoute
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadB,
+                MethodValue = 51,
+                MethodKey = "LoadB:51",
+                ProfileKey = "delivery",
+                VariantKind = MotorYLegacyVariantKinds.Delivery,
+                AlgorithmFamily = MotorYLegacyAlgorithmFamilies.LoadB
+            },
+            DominantCount = 7,
+            DominantShare = 0.7778d,
+            SelectedRoute = new MotorYLegacyAlgorithmRoute
+            {
+                CanonicalCode = MotorYTestMethodCodes.LoadB,
+                MethodValue = 51,
+                MethodKey = "LoadB:51",
+                ProfileKey = "delivery",
+                VariantKind = MotorYLegacyVariantKinds.Delivery,
+                AlgorithmFamily = MotorYLegacyAlgorithmFamilies.LoadB
+            },
+            SelectedCount = 7,
+            SelectedShare = 0.7778d,
             RawSampleCountReady = true,
             RawDataSampleCount = 6,
             MinimumRawSampleCount = 3,
@@ -447,12 +479,29 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 1d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
                     AlgorithmFamilies = new[] { "LoadB" },
-                    MethodKeys = new[] { "LoadB:5" },
+                    MethodValues = new[] { 51 },
+                    MethodKeys = new[] { "LoadB:51" },
+                    ProfileKeys = new[] { "delivery" },
                     LegacyMethodNames = new[] { "B法负载试验" },
                     SettingsMethodNames = new[] { "B法负载试验" },
                     AnchorKeys = new[] { "gb-temperature-branch" },
                     SuggestedNextStepPriorities = new[] { "blocking" },
                     SuggestedNextStepFocuses = new[] { "热态分支" },
+                    BaselineMethodValue = 5,
+                    BaselineMethodKey = "LoadB:5",
+                    BaselineProfileKey = "baseline",
+                    DominantMethodValue = 51,
+                    DominantMethodKey = "LoadB:51",
+                    DominantProfileKey = "delivery",
+                    SelectedMethodValue = 51,
+                    SelectedMethodKey = "LoadB:51",
+                    SelectedProfileKey = "delivery",
+                    BaselineCount = 2,
+                    BaselineShare = 0.2222d,
+                    DominantCount = 7,
+                    DominantShare = 0.7778d,
+                    SelectedCount = 7,
+                    SelectedShare = 0.7778d,
                     Summary = "family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking"
                 }
             },
@@ -468,8 +517,28 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedShare = 1d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB },
                     AlgorithmFamilies = new[] { "LoadB" },
+                    MethodValues = new[] { 51 },
+                    MethodKeys = new[] { "LoadB:51" },
+                    ProfileKeys = new[] { "delivery" },
+                    LegacyMethodNames = new[] { "B法负载试验" },
+                    SettingsMethodNames = new[] { "B法负载试验" },
                     SuggestedNextStepPriorities = new[] { "result-fields" },
                     SuggestedNextStepFocuses = new[] { "结果字段" },
+                    BaselineMethodValue = 5,
+                    BaselineMethodKey = "LoadB:5",
+                    BaselineProfileKey = "baseline",
+                    DominantMethodValue = 51,
+                    DominantMethodKey = "LoadB:51",
+                    DominantProfileKey = "delivery",
+                    SelectedMethodValue = 51,
+                    SelectedMethodKey = "LoadB:51",
+                    SelectedProfileKey = "delivery",
+                    BaselineCount = 2,
+                    BaselineShare = 0.2222d,
+                    DominantCount = 7,
+                    DominantShare = 0.7778d,
+                    SelectedCount = 7,
+                    SelectedShare = 0.7778d,
                     Summary = "family=LoadB; cross-plan primary field Pcu2 appears in 1/1 plans (100pp), weighted 7/7 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=结果字段; priorities=result-fields"
                 }
             },
@@ -484,8 +553,11 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=LoadB:5:profiles=:legacy-methods=B法负载试验:settings-methods=B法负载试验:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
-            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=:method-keys=LoadB:5:profiles=:legacy-methods=B法负载试验:settings-methods=B法负载试验:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:algo-entries=:source-sections=:source-ranges=:forms=:form-ranges=:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("baseline=method=5, method-key=LoadB:5, profile=baseline", StringComparison.Ordinal)
+            || !formatted.Contains("dominant=method=51, method-key=LoadB:51, profile=delivery", StringComparison.Ordinal)
+            || !formatted.Contains("selected=method=51, method-key=LoadB:51, profile=delivery", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family plan formatting smoke test failed. actual='{formatted}'");
         }
