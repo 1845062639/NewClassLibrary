@@ -285,7 +285,8 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:baseline=1:50.0 %:dominant=2:100.0 %:selected=2:100.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:baseline=1:50.0 %:dominant=2:100.0 %:selected=2:100.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:algo-entries=Calc_Load_B/Calc_NoLoad:upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("summary=cross-plan decision-anchor primary fields top 1/1: GB=2 (100pp, weighted 70pp); dominant=GB@families=LoadB/NoLoad@codes=MotorY.LoadB/MotorY.NoLoad@method-keys=LoadB:5/NoLoad:0@legacy-methods=B法负载试验/空载试验@settings-methods=B法负载试验/空载试验@algo-entries=Calc_Load_B/Calc_NoLoad@forms=none@form-ranges=none@baseline=1/2@baseline-weighted=0/7@dominant-share=2/2@dominant-weighted=0/7@selected-share=2/2@selected-weighted=0/7@upstream=MotorY.HeatRun/MotorY.NoLoad@upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap route-share focus formatting smoke test failed. actual='{formatted}'");
         }
