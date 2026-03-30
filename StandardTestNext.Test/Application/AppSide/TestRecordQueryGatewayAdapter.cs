@@ -457,6 +457,30 @@ public sealed class TestRecordQueryGatewayAdapter : ITestRecordQueryGateway
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanDecisionAnchorPrimaryFieldSummary = snapshot.CrossPlanDecisionAnchorPrimaryFieldSummary,
+            RequiredResultPrimaryFieldDistributions = snapshot.RequiredResultPrimaryFieldDistributions.Select(x => new MotorYRequiredResultPrimaryFieldDistributionContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                BucketKeys = x.BucketKeys,
+                DisplayNames = x.DisplayNames,
+                Summary = x.Summary
+            }).ToArray(),
+            RequiredResultPrimaryFieldSummary = snapshot.RequiredResultPrimaryFieldSummary,
+            CrossPlanRequiredResultPrimaryFieldFocuses = snapshot.CrossPlanRequiredResultPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusContract
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            CrossPlanRequiredResultPrimaryFieldSummary = snapshot.CrossPlanRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = snapshot.DecisionAnchorPrioritySummary,
             EffectiveLegacyDecisionAnchorCoverageCount = snapshot.EffectiveLegacyDecisionAnchorCoverageCount,
             EffectiveLegacyDecisionAnchorGapCount = snapshot.EffectiveLegacyDecisionAnchorGapCount,

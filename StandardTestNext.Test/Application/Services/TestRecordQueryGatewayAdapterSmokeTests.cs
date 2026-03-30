@@ -22,6 +22,7 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
         ShouldExposeDecisionAnchorPrimaryFieldDistributionsThroughAppQueryGateway();
         ShouldExposeCrossPlanDecisionAnchorPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeRequiredResultPrimaryFieldDistributionsThroughAppQueryGateway();
+        ShouldExposeCrossPlanRequiredResultPrimaryFieldFocusesThroughAppQueryGateway();
         ShouldExposeHeatRunAndLoadADecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLoadBDecisionAnchorSuggestionsThroughAppQueryGateway();
         ShouldExposeLockedRotorDecisionAnchorSuggestionsThroughAppQueryGateway();
@@ -1554,6 +1555,96 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || !string.Equals(noLoadPlan.RequiredResultPrimaryFieldSummary, "required-result primary fields: Pfw:2:intermediate-result-fields/result-fields, CoefficientOfPfe:1:result-fields, I0:1:result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y required-result primary-field distribution query smoke test mismatch. summary='{noLoadPlan.RequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", distributions.Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}"))}]");
+        }
+    }
+
+    private static void ShouldExposeCrossPlanRequiredResultPrimaryFieldFocusesThroughAppQueryGateway()
+    {
+        var sampleTime = DateTimeOffset.Parse("2026-03-30T08:20:00+08:00");
+        var record = new TestRecordAggregate
+        {
+            TestRecordId = Guid.NewGuid(),
+            RecordCode = "REC-SMOKE-MOTORY-CROSS-RESULT-FIELD-001",
+            ProductKind = "Motor_Y",
+            TestKindCode = "Routine",
+            TestTime = sampleTime,
+            Items =
+            {
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.NoLoad,
+                    MethodCode = "NoLoad:0",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 0,
+                      "DataList": [
+                        { "U": 190, "I": 6.3, "P": 520, "Cos": 0.81 }
+                      ],
+                      "Un": 380,
+                      "K1": 1,
+                      "R1c": 1.25,
+                      "θ1c": 25
+                    }
+                    """
+                },
+                new TestRecordItemAggregate
+                {
+                    TestRecordItemId = Guid.NewGuid(),
+                    ItemCode = MotorYTestMethodCodes.LoadB,
+                    MethodCode = "LoadB:5",
+                    IsValid = true,
+                    DataJson = """
+                    {
+                      "Method": 5,
+                      "RawDataList": [
+                        { "U": 380, "I1": 10, "P1t": 500, "Nt": 1450, "Tt": 12, "Frequency": 50 }
+                      ],
+                      "CoefficientOfPfe": 0.97,
+                      "Pfw": 120,
+                      "R1c": 1.25,
+                      "θ1c": 25,
+                      "PolePairs": 2,
+                      "Pn": 5.5,
+                      "Un": 380,
+                      "ΔT": 75
+                    }
+                    """
+                }
+            }
+        };
+
+        var gateway = CreateGateway(record);
+        var detail = gateway.GetDetailAsync(record.RecordCode).GetAwaiter().GetResult()
+            ?? throw new InvalidOperationException("Motor_Y cross-plan required-result primary-field focus smoke test returned null detail.");
+
+        var noLoadPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.NoLoad, StringComparison.Ordinal));
+        var loadBPlan = detail.MotorYMethodAdaptationPlans.Single(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal));
+        var focuses = noLoadPlan.CrossPlanRequiredResultPrimaryFieldFocuses;
+        var pfw = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pfw", StringComparison.Ordinal));
+        var coefficient = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "CoefficientOfPfe", StringComparison.Ordinal));
+        var pcu2 = focuses.SingleOrDefault(x => string.Equals(x.PrimaryField, "Pcu2", StringComparison.Ordinal));
+
+        if (loadBPlan.CrossPlanRequiredResultPrimaryFieldFocuses.Count != focuses.Count
+            || focuses.Count < 3
+            || pfw is null
+            || pfw.Count != 2
+            || Math.Abs(pfw.Share - 1d) > 0.0001d
+            || pfw.WeightedCount != 2
+            || Math.Abs(pfw.WeightedShare - 1d) > 0.0001d
+            || !pfw.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepFocuses.SequenceEqual(new[] { "中间结果锚点", "结果字段" }, StringComparer.Ordinal)
+            || !pfw.SuggestedNextStepPriorities.SequenceEqual(new[] { "intermediate-result-fields", "result-fields" }, StringComparer.Ordinal)
+            || coefficient is null
+            || coefficient.Count != 2
+            || !coefficient.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || pcu2 is null
+            || pcu2.Count != 1
+            || !pcu2.CanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
+            || !string.Equals(noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary, "cross-plan required-result primary fields top 3/18: CoefficientOfPfe=2 (100pp, weighted 100pp); Pfw=2 (100pp, weighted 100pp); Pcu2=2 (100pp, weighted 100pp)", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"Motor_Y cross-plan required-result primary-field focus query smoke test mismatch. summary='{noLoadPlan.CrossPlanRequiredResultPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}:{string.Join("/", x.SuggestedNextStepFocuses)}"))}]");
         }
     }
 

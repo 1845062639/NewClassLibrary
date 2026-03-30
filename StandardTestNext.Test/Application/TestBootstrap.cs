@@ -321,12 +321,15 @@ public sealed class TestBootstrap
         var resultFieldPrimary = plan.RequiredResultPrimaryFieldDistributions.Count == 0
             ? $"result-primary={plan.RequiredResultPrimaryFieldSummary}"
             : "result-primary=" + string.Join("|", plan.RequiredResultPrimaryFieldDistributions.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{string.Join("/", x.BucketKeys)}:{string.Join("/", x.DisplayNames)}")) + $":summary={plan.RequiredResultPrimaryFieldSummary}";
+        var crossPlanResultPrimary = plan.CrossPlanRequiredResultPrimaryFieldFocuses.Count == 0
+            ? $"result-cross-plan={plan.CrossPlanRequiredResultPrimaryFieldSummary}"
+            : "result-cross-plan=" + string.Join("|", plan.CrossPlanRequiredResultPrimaryFieldFocuses.Take(3).Select(x => $"{x.PrimaryField}:{x.Count}:{x.Share:P1}:{string.Join("/", x.CanonicalCodes)}:{string.Join("/", x.SuggestedNextStepPriorities)}")) + $":summary={plan.CrossPlanRequiredResultPrimaryFieldSummary}";
         var anchorResolutions = plan.LegacyDecisionAnchorResolutions.Count == 0
             ? "anchor-resolutions=<none>"
             : "anchor-resolutions=" + string.Join("|", plan.LegacyDecisionAnchorResolutions.Take(3).Select(FormatDecisionAnchorResolutionPreview));
         var summaries = $"summary=selected={plan.SelectedMethodSummary};compare={plan.BaselineDominantComparisonSummary};decision={plan.LegacyDecisionAnchorResolutionSummary};inputs={plan.LegacyAlgorithmInputReadinessSummary}";
 
-        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{resultFieldPrimary};{anchorResolutions};{summaries};{distributions}]";
+        return $"{plan.CanonicalCode}[{baseline};{dominant};{selected};lead={plan.DominantLeadCount}/{plan.DominantLeadPercentagePoints}pp;algo={plan.AlgorithmEntry};settings={plan.SettingsMethodName};reason={plan.SelectionReason};{readiness};{upstream};{sampleGates};{anchors};{coverage};{intermediate};{structuredSignals};{evidence};{bucketSummary};{weakestBuckets};{nextSteps};{anchorNextSteps};{anchorPriorities};{topAnchorPriority};priority-summary={plan.DecisionAnchorPrioritySummary};{anchorGapPreview};{anchorPrimary};{crossPlanAnchorPrimary};{resultFieldPrimary};{crossPlanResultPrimary};{anchorResolutions};{summaries};{distributions}]";
     }
 
     private static string FormatDecisionAnchorResolutionPreview(MotorYDecisionAnchorResolutionSnapshot resolution)

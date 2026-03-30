@@ -1180,12 +1180,16 @@ WHERE COALESCE(curr.Code, '') <> ''
 
         var crossPlanFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanDecisionAnchorPrimaryFieldFocuses(plans);
         var crossPlanSummary = BuildCrossPlanDecisionAnchorPrimaryFieldSummary(crossPlanFocuses);
+        var crossPlanRequiredResultFocuses = MotorYPrimaryFieldFocusFactory.BuildCrossPlanRequiredResultPrimaryFieldFocuses(plans);
+        var crossPlanRequiredResultSummary = BuildCrossPlanRequiredResultPrimaryFieldSummary(crossPlanRequiredResultFocuses);
 
         return plans
             .Select(plan => plan with
             {
                 CrossPlanDecisionAnchorPrimaryFieldFocuses = crossPlanFocuses,
-                CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanSummary
+                CrossPlanDecisionAnchorPrimaryFieldSummary = crossPlanSummary,
+                CrossPlanRequiredResultPrimaryFieldFocuses = crossPlanRequiredResultFocuses,
+                CrossPlanRequiredResultPrimaryFieldSummary = crossPlanRequiredResultSummary
             })
             .ToArray();
     }
@@ -1275,6 +1279,21 @@ WHERE COALESCE(curr.Code, '') <> ''
             .ToArray();
 
         return $"required-result primary fields: {string.Join(", ", preview)}";
+    }
+
+    private static string BuildCrossPlanRequiredResultPrimaryFieldSummary(IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
+    {
+        if (focuses.Count == 0)
+        {
+            return "cross-plan required-result primary fields: none";
+        }
+
+        var preview = focuses
+            .Take(3)
+            .Select(x => $"{x.PrimaryField}={x.Count} ({(int)Math.Round(x.Share * 100d, MidpointRounding.AwayFromZero)}pp, weighted {(int)Math.Round(x.WeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)")
+            .ToArray();
+
+        return $"cross-plan required-result primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}";
     }
 
     private static IReadOnlyList<string> BuildSuggestedNextSteps(

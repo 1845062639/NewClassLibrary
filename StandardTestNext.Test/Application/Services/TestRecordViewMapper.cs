@@ -545,6 +545,30 @@ public static class TestRecordViewMapper
                 Summary = x.Summary
             }).ToArray(),
             CrossPlanDecisionAnchorPrimaryFieldSummary = contract.CrossPlanDecisionAnchorPrimaryFieldSummary,
+            RequiredResultPrimaryFieldDistributions = contract.RequiredResultPrimaryFieldDistributions.Select(x => new MotorYRequiredResultPrimaryFieldDistributionSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                BucketKeys = x.BucketKeys,
+                DisplayNames = x.DisplayNames,
+                Summary = x.Summary
+            }).ToArray(),
+            RequiredResultPrimaryFieldSummary = contract.RequiredResultPrimaryFieldSummary,
+            CrossPlanRequiredResultPrimaryFieldFocuses = contract.CrossPlanRequiredResultPrimaryFieldFocuses.Select(x => new MotorYPrimaryFieldFocusSnapshot
+            {
+                PrimaryField = x.PrimaryField,
+                Count = x.Count,
+                Share = x.Share,
+                WeightedCount = x.WeightedCount,
+                WeightedShare = x.WeightedShare,
+                CanonicalCodes = x.CanonicalCodes,
+                AnchorKeys = x.AnchorKeys,
+                SuggestedNextStepFocuses = x.SuggestedNextStepFocuses,
+                SuggestedNextStepPriorities = x.SuggestedNextStepPriorities,
+                Summary = x.Summary
+            }).ToArray(),
+            CrossPlanRequiredResultPrimaryFieldSummary = contract.CrossPlanRequiredResultPrimaryFieldSummary,
             DecisionAnchorPrioritySummary = contract.DecisionAnchorPrioritySummary,
             SuggestedDecisionAnchorNextSteps = contract.SuggestedDecisionAnchorNextSteps,
             SuggestedDecisionAnchorNextStepSummary = contract.SuggestedDecisionAnchorNextStepSummary,

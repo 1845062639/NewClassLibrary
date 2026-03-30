@@ -319,6 +319,8 @@ public sealed class MotorYMethodAdaptationPlanSnapshot
     public string CrossPlanDecisionAnchorPrimaryFieldSummary { get; init; } = string.Empty;
     public IReadOnlyList<MotorYRequiredResultPrimaryFieldDistributionSnapshot> RequiredResultPrimaryFieldDistributions { get; init; } = Array.Empty<MotorYRequiredResultPrimaryFieldDistributionSnapshot>();
     public string RequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
+    public IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> CrossPlanRequiredResultPrimaryFieldFocuses { get; init; } = Array.Empty<MotorYPrimaryFieldFocusSnapshot>();
+    public string CrossPlanRequiredResultPrimaryFieldSummary { get; init; } = string.Empty;
     public string DecisionAnchorPrioritySummary { get; init; } = string.Empty;
     public string LegacyDecisionAnchorsObservedPayloadSummary { get; init; } = string.Empty;
     public string FormulaSignalSummary { get; init; } = string.Empty;
