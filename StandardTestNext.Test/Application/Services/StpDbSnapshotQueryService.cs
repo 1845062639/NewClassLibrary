@@ -504,13 +504,13 @@ ORDER BY COALESCE(Code, ''), Method;";
 
     private static Dictionary<string, MotorYLegacyCodeSelectionSnapshot> LoadMotorYLegacyCodeSelections(SqliteConnection connection)
     {
-        var distributions = LoadMotorYLegacyCodeDistribution(connection)
+        return LoadMotorYLegacyCodeDistribution(connection)
             .GroupBy(row => row.CanonicalCode, StringComparer.Ordinal)
             .ToDictionary(
                 group => group.Key,
-                group =>
-                {
-                    var items = group
+                group => MotorYLegacyCodeSelectionFactory.Build(
+                    group.Key,
+                    group
                         .GroupBy(row => row.LegacyCode, StringComparer.Ordinal)
                         .Select(codeGroup => new MotorYLegacyCodeDistributionSnapshot
                         {
@@ -519,45 +519,9 @@ ORDER BY COALESCE(Code, ''), Method;";
                             Count = codeGroup.Sum(x => x.Count),
                             Share = Math.Round((double)codeGroup.Sum(x => x.Count) / Math.Max(1, group.Sum(x => x.Count)), 4, MidpointRounding.AwayFromZero)
                         })
-                        .OrderByDescending(x => x.Count)
-                        .ThenBy(x => x.LegacyCode, StringComparer.Ordinal)
-                        .ToArray();
-
-                    var recommended = items.FirstOrDefault();
-                    var totalCount = group.Sum(x => x.Count);
-                    var runnerUp = items.Skip(1).FirstOrDefault();
-                    var dominantLeadCount = recommended is null
-                        ? 0
-                        : Math.Max(0, recommended.Count - (runnerUp?.Count ?? 0));
-                    var dominantLeadPercentagePoints = recommended is null
-                        ? 0
-                        : Math.Max(0, (int)Math.Round(((recommended.Share - (runnerUp?.Share ?? 0d)) * 100d), MidpointRounding.AwayFromZero));
-                    var conflictSummary = recommended is null
-                        ? $"legacy code variants unavailable for {group.Key}"
-                        : items.Length <= 1
-                            ? $"legacy code variants stable for {group.Key}: only '{recommended.LegacyCode}' observed"
-                            : $"legacy code variants for {group.Key}: '{recommended.LegacyCode}' leads runner-up '{runnerUp?.LegacyCode}' by {dominantLeadCount} rows ({dominantLeadPercentagePoints}pp) across {items.Length} aliases";
-
-                    return new MotorYLegacyCodeSelectionSnapshot
-                    {
-                        CanonicalCode = group.Key,
-                        RecommendedLegacyCode = recommended?.LegacyCode ?? string.Empty,
-                        DominantLegacyCode = recommended?.LegacyCode ?? string.Empty,
-                        RecommendedLegacyCodeCount = recommended?.Count ?? 0,
-                        RecommendedLegacyCodeShare = recommended?.Share ?? 0d,
-                        LegacyCodeVariantCount = items.Length,
-                        DominantLeadCount = dominantLeadCount,
-                        DominantLeadPercentagePoints = dominantLeadPercentagePoints,
-                        ConflictSummary = conflictSummary,
-                        Distributions = items,
-                        Summary = recommended is null
-                            ? $"legacy code selection unavailable for {group.Key}"
-                            : $"recommended legacy code '{recommended.LegacyCode}' for {group.Key} ({recommended.Count}/{totalCount}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp); {conflictSummary}"
-                    };
-                },
+                        .ToArray(),
+                    $"legacy code selection unavailable for {group.Key}"),
                 StringComparer.Ordinal);
-
-        return distributions;
     }
 
     private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadMotorRatedParamsValueDistribution(SqliteConnection connection)

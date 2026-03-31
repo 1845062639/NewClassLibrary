@@ -1048,17 +1048,30 @@ GROUP BY COALESCE(Code, '');";
         var expectedShare = total <= 0
             ? 0d
             : Math.Round((double)expected.Count / total, 4, MidpointRounding.AwayFromZero);
+        var runnerUp = ordered.Length > 1
+            ? ordered[1]
+            : ((string LegacyCode, int Count)?)null;
+        var runnerUpShare = runnerUp.HasValue
+            ? Math.Round((double)runnerUp.Value.Count / total, 4, MidpointRounding.AwayFromZero)
+            : 0d;
+        var dominantLeadCount = Math.Max(0, expected.Count - (runnerUp?.Count ?? 0));
+        var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((expectedShare - runnerUpShare) * 100d, MidpointRounding.AwayFromZero));
+        var conflictSummary = ordered.Length <= 1
+            ? $"legacy code variants stable for {canonicalCode}: only '{expected.LegacyCode}' observed"
+            : $"legacy code variants for {canonicalCode}: '{expected.LegacyCode}' leads runner-up '{runnerUp?.LegacyCode}' by {dominantLeadCount} rows ({dominantLeadPercentagePoints}pp) across {ordered.Length} aliases";
         var expectedSummary = expected == default
             ? $"legacy code selection unavailable for {canonicalCode}"
-            : $"recommended legacy code '{expected.LegacyCode}' for {canonicalCode} ({expected.Count}/{total}, {(int)Math.Round(expectedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+            : $"recommended legacy code '{expected.LegacyCode}' for {canonicalCode} ({expected.Count}/{total}, {(int)Math.Round(expectedShare * 100d, MidpointRounding.AwayFromZero)}pp); {conflictSummary}";
 
         if (!string.Equals(snapshot.RecommendedLegacyCode, expected.LegacyCode, StringComparison.Ordinal)
             || !string.Equals(snapshot.DominantLegacyCode, expected.LegacyCode, StringComparison.Ordinal)
             || snapshot.RecommendedLegacyCodeCount != expected.Count
             || Math.Abs(snapshot.RecommendedLegacyCodeShare - expectedShare) > 0.0001d
+            || snapshot.DominantLeadCount != dominantLeadCount
+            || snapshot.DominantLeadPercentagePoints != dominantLeadPercentagePoints
             || !string.Equals(snapshot.LegacyCodeSelectionSummary, expectedSummary, StringComparison.Ordinal))
         {
-            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code selection mismatch for {canonicalCode}. expectedCode={expected.LegacyCode}, actualCode={snapshot.RecommendedLegacyCode}, expectedCount={expected.Count}, actualCount={snapshot.RecommendedLegacyCodeCount}, expectedShare={expectedShare}, actualShare={snapshot.RecommendedLegacyCodeShare}, expectedSummary='{expectedSummary}', actualSummary='{snapshot.LegacyCodeSelectionSummary}'");
+            throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: legacy-code selection mismatch for {canonicalCode}. expectedCode={expected.LegacyCode}, actualCode={snapshot.RecommendedLegacyCode}, expectedCount={expected.Count}, actualCount={snapshot.RecommendedLegacyCodeCount}, expectedShare={expectedShare}, actualShare={snapshot.RecommendedLegacyCodeShare}, expectedLead={dominantLeadCount}/{dominantLeadPercentagePoints}pp, actualLead={snapshot.DominantLeadCount}/{snapshot.DominantLeadPercentagePoints}pp, expectedSummary='{expectedSummary}', actualSummary='{snapshot.LegacyCodeSelectionSummary}'");
         }
 
         if (snapshot.LegacyCodeDistributions.Count != ordered.Length)
