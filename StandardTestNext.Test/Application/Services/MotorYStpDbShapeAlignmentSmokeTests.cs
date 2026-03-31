@@ -133,6 +133,8 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
         if (shape.U0DivideUnIsEquesToOne_Pcu <= 0
             || shape.U0DivideUnIsEquesToOne_Pfe <= 0
             || Math.Abs(shape.U0DivideUnIsEquesToOne_DeltaI0) <= 0
+            || shape.U0DivideUnIsEquesToOne_R0 <= 0
+            || shape.U0DivideUnIsEquesToOne_Theta0 <= 0
             || shape.PfwFitSampleCount <= 0
             || !shape.PfwFitWindowReady)
         {

@@ -120,6 +120,8 @@ public sealed class MotorYTrialRecordBuilder
                 U0DivideUnIsEquesToOne_Pcu = dataList.Length == 0 ? 0 : dataList.Last().P0cu1,
                 U0DivideUnIsEquesToOne_Pfe = dataList.Length == 0 ? 0 : dataList.Last().Pfe,
                 U0DivideUnIsEquesToOne_DeltaI0 = dataList.Length == 0 ? 0 : dataList.Last().ΔI0,
+                U0DivideUnIsEquesToOne_R0 = dataList.Length == 0 ? 0 : dataList.Last().R0,
+                U0DivideUnIsEquesToOne_θ0 = dataList.Length == 0 ? 0 : dataList.Last().θ0,
                 PfwFitSampleCount = dataList.Count(x => x.U0DivideUn < 0.51),
                 PfwFitWindowReady = dataList.Any(x => x.U0DivideUn < 0.51)
             }),

@@ -28,6 +28,8 @@ public sealed class MotorYNoLoadLegacyShape
     public double U0DivideUnIsEquesToOne_Pcu => ReadExtraDouble("U0DivideUnIsEquesToOne_Pcu");
     public double U0DivideUnIsEquesToOne_Pfe => ReadExtraDouble("U0DivideUnIsEquesToOne_Pfe");
     public double U0DivideUnIsEquesToOne_DeltaI0 => ReadExtraDouble("U0DivideUnIsEquesToOne_DeltaI0");
+    public double U0DivideUnIsEquesToOne_R0 => ReadExtraDouble("U0DivideUnIsEquesToOne_R0");
+    public double U0DivideUnIsEquesToOne_Theta0 => ReadExtraDouble("U0DivideUnIsEquesToOne_θ0", "U0DivideUnIsEquesToOne_Theta0");
     public int PfwFitSampleCount => ReadExtraInt("PfwFitSampleCount");
     public bool PfwFitWindowReady => ReadExtraBool("PfwFitWindowReady");
 
@@ -56,13 +58,19 @@ public sealed class MotorYNoLoadLegacyShape
         }
     }
 
-    private double ReadExtraDouble(string fieldName)
+    private double ReadExtraDouble(params string[] fieldNames)
     {
-        return ExtraFields.TryGetValue(fieldName, out var element)
-            && element.ValueKind is JsonValueKind.Number
-            && element.TryGetDouble(out var value)
-            ? value
-            : 0d;
+        foreach (var fieldName in fieldNames)
+        {
+            if (ExtraFields.TryGetValue(fieldName, out var element)
+                && element.ValueKind is JsonValueKind.Number
+                && element.TryGetDouble(out var value))
+            {
+                return value;
+            }
+        }
+
+        return 0d;
     }
 
     private int ReadExtraInt(string fieldName)

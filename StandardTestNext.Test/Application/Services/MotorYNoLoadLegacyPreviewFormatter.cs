@@ -21,6 +21,17 @@ public static class MotorYNoLoadLegacyPreviewFormatter
             sb.Append($", last(U0={last.U0}, I0={last.I0}, P0={last.P0})");
         }
 
+        if (shape.U0DivideUnIsEquesToOne_I0 > 0
+            || shape.U0DivideUnIsEquesToOne_P0 > 0
+            || shape.U0DivideUnIsEquesToOne_Pcu > 0
+            || shape.U0DivideUnIsEquesToOne_Pfe > 0
+            || shape.U0DivideUnIsEquesToOne_R0 > 0
+            || shape.U0DivideUnIsEquesToOne_Theta0 > 0)
+        {
+            sb.Append($", pu1(I0={shape.U0DivideUnIsEquesToOne_I0}, P0={shape.U0DivideUnIsEquesToOne_P0}, Pcu={shape.U0DivideUnIsEquesToOne_Pcu}, Pfe={shape.U0DivideUnIsEquesToOne_Pfe}, R0={shape.U0DivideUnIsEquesToOne_R0}, θ0={shape.U0DivideUnIsEquesToOne_Theta0})");
+        }
+
+        sb.Append($", pfw-fit(samples={shape.PfwFitSampleCount}, ready={shape.PfwFitWindowReady})");
         return sb.ToString();
     }
 }
