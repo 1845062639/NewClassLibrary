@@ -564,10 +564,16 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topLegacyAlgorithmEntries = top.LegacyAlgorithmEntries.Count == 0 ? "none" : string.Join("/", top.LegacyAlgorithmEntries);
         var topFormNames = top.FormNames.Count == 0 ? "none" : string.Join("/", top.FormNames);
         var topFormRanges = top.FormSourceRanges.Count == 0 ? "none" : string.Join("/", top.FormSourceRanges);
+        var topDominantSource = (string.IsNullOrWhiteSpace(top.DominantSourceSection) ? "none" : top.DominantSourceSection)
+            + "@"
+            + (string.IsNullOrWhiteSpace(top.DominantSourceRange) ? "none" : top.DominantSourceRange);
+        var topDominantForm = (string.IsNullOrWhiteSpace(top.DominantFormName) ? "none" : top.DominantFormName)
+            + "@"
+            + (string.IsNullOrWhiteSpace(top.DominantFormSourceRange) ? "none" : top.DominantFormSourceRange);
         var topUpstreamCodes = top.UpstreamCanonicalCodes.Count == 0 ? "none" : string.Join("/", top.UpstreamCanonicalCodes);
         var topUpstreamLegacyCodes = top.UpstreamLegacyCodes.Count == 0 ? "none" : string.Join("/", top.UpstreamLegacyCodes);
         var topUpstreamHints = top.UpstreamSummaryHints.Count == 0 ? "none" : string.Join("/", top.UpstreamSummaryHints);
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@methods={topMethodValues}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@forms={topFormNames}@form-ranges={topFormRanges}@baseline={top.BaselineCount}/{top.Count}@baseline-weighted={top.BaselineWeightedCount}/{top.WeightedCount}@dominant-share={top.DominantCount}/{top.Count}@dominant-weighted={top.DominantWeightedCount}/{top.WeightedCount}@selected-share={top.SelectedCount}/{top.Count}@selected-weighted={top.SelectedWeightedCount}/{top.WeightedCount}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@methods={topMethodValues}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@forms={topFormNames}@form-ranges={topFormRanges}@dominant-source={topDominantSource}@dominant-form={topDominantForm}@baseline={top.BaselineCount}/{top.Count}@baseline-weighted={top.BaselineWeightedCount}/{top.WeightedCount}@dominant-share={top.DominantCount}/{top.Count}@dominant-weighted={top.DominantWeightedCount}/{top.WeightedCount}@selected-share={top.SelectedCount}/{top.Count}@selected-weighted={top.SelectedWeightedCount}/{top.WeightedCount}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
