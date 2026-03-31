@@ -596,7 +596,19 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topUpstreamHints = top.UpstreamSummaryHints.Count == 0 ? "none" : string.Join("/", top.UpstreamSummaryHints);
         var topVariants = top.VariantKinds.Count == 0 ? "none" : string.Join("/", top.VariantKinds);
         var topProfiles = top.ProfileKeys.Count == 0 ? "none" : string.Join("/", top.ProfileKeys);
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@variants={topVariants}@codes={topCodes}@legacy-item-aliases={topLegacyItemAliases}@methods={topMethodValues}@method-keys={topMethodKeys}@profiles={topProfiles}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-business-codes={topLegacyBusinessCodes}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@source-sections={topSourceSections}@source-ranges={topSourceRanges}@forms={topFormNames}@form-ranges={topFormRanges}@dominant-source={topDominantSource}@dominant-form={topDominantForm}@baseline={top.BaselineCount}/{top.Count}@baseline-weighted={top.BaselineWeightedCount}/{top.WeightedCount}@dominant-share={top.DominantCount}/{top.Count}@dominant-weighted={top.DominantWeightedCount}/{top.WeightedCount}@selected-share={top.SelectedCount}/{top.Count}@selected-weighted={top.SelectedWeightedCount}/{top.WeightedCount}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
+        var baselineShare = $"{top.BaselineCount}/{top.Count} ({(int)Math.Round(top.BaselineShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        var baselineWeightedShare = top.WeightedCount <= 0
+            ? "0/0 (0pp)"
+            : $"{top.BaselineWeightedCount}/{top.WeightedCount} ({(int)Math.Round(top.BaselineWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        var dominantShare = $"{top.DominantCount}/{top.Count} ({(int)Math.Round(top.DominantShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        var dominantWeightedShare = top.WeightedCount <= 0
+            ? "0/0 (0pp)"
+            : $"{top.DominantWeightedCount}/{top.WeightedCount} ({(int)Math.Round(top.DominantWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        var selectedShare = $"{top.SelectedCount}/{top.Count} ({(int)Math.Round(top.SelectedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        var selectedWeightedShare = top.WeightedCount <= 0
+            ? "0/0 (0pp)"
+            : $"{top.SelectedWeightedCount}/{top.WeightedCount} ({(int)Math.Round(top.SelectedWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp)";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@variants={topVariants}@codes={topCodes}@legacy-item-aliases={topLegacyItemAliases}@methods={topMethodValues}@method-keys={topMethodKeys}@profiles={topProfiles}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-business-codes={topLegacyBusinessCodes}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@source-sections={topSourceSections}@source-ranges={topSourceRanges}@forms={topFormNames}@form-ranges={topFormRanges}@dominant-source={topDominantSource}@dominant-form={topDominantForm}@baseline={baselineShare}@baseline-weighted={baselineWeightedShare}@dominant-share={dominantShare}@dominant-weighted={dominantWeightedShare}@selected-share={selectedShare}@selected-weighted={selectedWeightedShare}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
