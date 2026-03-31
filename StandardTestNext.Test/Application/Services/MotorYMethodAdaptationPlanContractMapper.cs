@@ -823,6 +823,10 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         public string DominantLegacyCode { get; init; } = string.Empty;
         public int RecommendedLegacyCodeCount { get; init; }
         public double RecommendedLegacyCodeShare { get; init; }
+        public int LegacyCodeVariantCount { get; init; }
+        public int DominantLeadCount { get; init; }
+        public int DominantLeadPercentagePoints { get; init; }
+        public string ConflictSummary { get; init; } = string.Empty;
         public IReadOnlyList<MotorYLegacyCodeDistributionSnapshot> Distributions { get; init; } = Array.Empty<MotorYLegacyCodeDistributionSnapshot>();
         public string Summary { get; init; } = string.Empty;
     }
@@ -842,11 +846,20 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             return new MotorYLegacyCodeSelectionSnapshot
             {
                 CanonicalCode = canonicalCode,
-                Summary = "legacy code selection unavailable in builder-only route planning"
+                Summary = "legacy code selection unavailable in builder-only route planning",
+                ConflictSummary = $"legacy code variants unavailable for {canonicalCode}"
             };
         }
 
         var recommended = distributions[0];
+        var totalCount = distributions.Sum(x => x.Count);
+        var runnerUp = distributions.Skip(1).FirstOrDefault();
+        var dominantLeadCount = Math.Max(0, recommended.Count - (runnerUp?.Count ?? 0));
+        var dominantLeadPercentagePoints = Math.Max(0, (int)Math.Round((recommended.Share - (runnerUp?.Share ?? 0d)) * 100d, MidpointRounding.AwayFromZero));
+        var conflictSummary = distributions.Length <= 1
+            ? $"legacy code variants stable for {canonicalCode}: only '{recommended.LegacyCode}' observed"
+            : $"legacy code variants for {canonicalCode}: '{recommended.LegacyCode}' leads runner-up '{runnerUp?.LegacyCode}' by {dominantLeadCount} rows ({dominantLeadPercentagePoints}pp) across {distributions.Length} aliases";
+
         return new MotorYLegacyCodeSelectionSnapshot
         {
             CanonicalCode = canonicalCode,
@@ -854,8 +867,12 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             DominantLegacyCode = recommended.LegacyCode,
             RecommendedLegacyCodeCount = recommended.Count,
             RecommendedLegacyCodeShare = recommended.Share,
+            LegacyCodeVariantCount = distributions.Length,
+            DominantLeadCount = dominantLeadCount,
+            DominantLeadPercentagePoints = dominantLeadPercentagePoints,
+            ConflictSummary = conflictSummary,
             Distributions = distributions,
-            Summary = $"recommended legacy code '{recommended.LegacyCode}' for {canonicalCode} ({recommended.Count}/{distributions.Sum(x => x.Count)}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp)"
+            Summary = $"recommended legacy code '{recommended.LegacyCode}' for {canonicalCode} ({recommended.Count}/{totalCount}, {(int)Math.Round(recommended.Share * 100d, MidpointRounding.AwayFromZero)}pp); {conflictSummary}"
         };
     }
 
