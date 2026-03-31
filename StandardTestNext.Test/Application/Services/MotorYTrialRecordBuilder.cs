@@ -116,7 +116,12 @@ public sealed class MotorYTrialRecordBuilder
                 RConverseType = 0,
                 IsAnalysis = false,
                 U0DivideUnIsEquesToOne_I0 = dataList.Length == 0 ? 0 : dataList.Last().I0,
-                U0DivideUnIsEquesToOne_P0 = dataList.Length == 0 ? 0 : dataList.Last().P0
+                U0DivideUnIsEquesToOne_P0 = dataList.Length == 0 ? 0 : dataList.Last().P0,
+                U0DivideUnIsEquesToOne_Pcu = dataList.Length == 0 ? 0 : dataList.Last().P0cu1,
+                U0DivideUnIsEquesToOne_Pfe = dataList.Length == 0 ? 0 : dataList.Last().Pfe,
+                U0DivideUnIsEquesToOne_DeltaI0 = dataList.Length == 0 ? 0 : dataList.Last().ΔI0,
+                PfwFitSampleCount = dataList.Count(x => x.U0DivideUn < 0.51),
+                PfwFitWindowReady = dataList.Any(x => x.U0DivideUn < 0.51)
             }),
             Remark = "Motor_Y 空载试验骨架数据（旧 TestData 结构对齐版）。"
         }, MotorYTestMethodCodes.NoLoad);
