@@ -1852,6 +1852,14 @@ ORDER BY tri.rowid DESC;";
                 DominantLegacyAlgorithmEntry = decision.DominantRoute?.LegacyAlgorithmEntry,
                 DominantLegacyMethodName = decision.DominantRoute?.LegacyMethodName,
                 DominantLegacySettingsMethodName = decision.DominantRoute?.LegacySettingsMethodName,
+                DominantSourceSections = GetSourceSections(decision.DominantRoute),
+                DominantSourceRanges = GetSourceRanges(decision.DominantRoute),
+                DominantPrimarySourceSection = GetPrimarySourceSection(decision.DominantRoute),
+                DominantPrimarySourceRange = GetPrimarySourceRange(decision.DominantRoute),
+                DominantFormNames = GetFormNames(decision.DominantRoute),
+                DominantFormSourceRanges = GetFormSourceRanges(decision.DominantRoute),
+                DominantPrimaryFormName = GetPrimaryFormName(decision.DominantRoute),
+                DominantPrimaryFormSourceRange = GetPrimaryFormSourceRange(decision.DominantRoute),
                 DominantIsBaselineMethod = decision.DominantRoute?.IsBaselineMethod == true,
                 ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
                 DominantShare = decision.DominantShare,
@@ -1866,6 +1874,14 @@ ORDER BY tri.rowid DESC;";
                 RecommendedLegacyAlgorithmEntry = decision.RecommendedRoute?.LegacyAlgorithmEntry,
                 RecommendedLegacyMethodName = decision.RecommendedRoute?.LegacyMethodName,
                 RecommendedLegacySettingsMethodName = decision.RecommendedRoute?.LegacySettingsMethodName,
+                RecommendedSourceSections = GetSourceSections(decision.RecommendedRoute),
+                RecommendedSourceRanges = GetSourceRanges(decision.RecommendedRoute),
+                RecommendedPrimarySourceSection = GetPrimarySourceSection(decision.RecommendedRoute),
+                RecommendedPrimarySourceRange = GetPrimarySourceRange(decision.RecommendedRoute),
+                RecommendedFormNames = GetFormNames(decision.RecommendedRoute),
+                RecommendedFormSourceRanges = GetFormSourceRanges(decision.RecommendedRoute),
+                RecommendedPrimaryFormName = GetPrimaryFormName(decision.RecommendedRoute),
+                RecommendedPrimaryFormSourceRange = GetPrimaryFormSourceRange(decision.RecommendedRoute),
                 RecommendedIsBaselineMethod = decision.RecommendedRoute?.IsBaselineMethod == true,
                 RecommendedIsDominantMethod = decision.RecommendedRoute is not null
                     && decision.DominantRoute is not null
@@ -1928,6 +1944,86 @@ ORDER BY tri.rowid DESC;";
             .OrderBy(snapshot => snapshot.CanonicalCode, StringComparer.Ordinal)
             .ToArray();
     }
+
+    private static IReadOnlyList<string> GetSourceSections(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .Select(x => x.SectionKey)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static IReadOnlyList<string> GetSourceRanges(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string GetPrimarySourceSection(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .GroupBy(x => x.SectionKey, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static string GetPrimarySourceRange(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .GroupBy(x => x.SourceRange, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static IReadOnlyList<string> GetFormNames(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .Select(x => x.FormName)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static IReadOnlyList<string> GetFormSourceRanges(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string GetPrimaryFormName(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .GroupBy(x => x.FormName, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static string GetPrimaryFormSourceRange(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .GroupBy(x => x.SourceRange, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
 
     private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadRatedParamsFieldDistribution(
         SqliteConnection connection,

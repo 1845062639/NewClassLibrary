@@ -66,6 +66,14 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 || !string.Equals(snapshot.DominantLegacyAlgorithmEntry, dominantRoute?.LegacyAlgorithmEntry, StringComparison.Ordinal)
                 || !string.Equals(snapshot.DominantLegacyMethodName, dominantRoute?.LegacyMethodName, StringComparison.Ordinal)
                 || !string.Equals(snapshot.DominantLegacySettingsMethodName, dominantRoute?.LegacySettingsMethodName, StringComparison.Ordinal)
+                || !snapshot.DominantSourceSections.SequenceEqual(GetSourceSections(dominantRoute), StringComparer.Ordinal)
+                || !snapshot.DominantSourceRanges.SequenceEqual(GetSourceRanges(dominantRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.DominantPrimarySourceSection, GetPrimarySourceSection(dominantRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.DominantPrimarySourceRange, GetPrimarySourceRange(dominantRoute), StringComparison.Ordinal)
+                || !snapshot.DominantFormNames.SequenceEqual(GetFormNames(dominantRoute), StringComparer.Ordinal)
+                || !snapshot.DominantFormSourceRanges.SequenceEqual(GetFormSourceRanges(dominantRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.DominantPrimaryFormName, GetPrimaryFormName(dominantRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.DominantPrimaryFormSourceRange, GetPrimaryFormSourceRange(dominantRoute), StringComparison.Ordinal)
                 || snapshot.DominantIsBaselineMethod != (dominantRoute?.IsBaselineMethod == true))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: dominant route projection mismatch for {row.CanonicalCode}.");
@@ -106,6 +114,14 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 || !string.Equals(snapshot.RecommendedLegacyAlgorithmEntry, recommendedRoute?.LegacyAlgorithmEntry, StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedLegacyMethodName, recommendedRoute?.LegacyMethodName, StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedLegacySettingsMethodName, recommendedRoute?.LegacySettingsMethodName, StringComparison.Ordinal)
+                || !snapshot.RecommendedSourceSections.SequenceEqual(GetSourceSections(recommendedRoute), StringComparer.Ordinal)
+                || !snapshot.RecommendedSourceRanges.SequenceEqual(GetSourceRanges(recommendedRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.RecommendedPrimarySourceSection, GetPrimarySourceSection(recommendedRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedPrimarySourceRange, GetPrimarySourceRange(recommendedRoute), StringComparison.Ordinal)
+                || !snapshot.RecommendedFormNames.SequenceEqual(GetFormNames(recommendedRoute), StringComparer.Ordinal)
+                || !snapshot.RecommendedFormSourceRanges.SequenceEqual(GetFormSourceRanges(recommendedRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.RecommendedPrimaryFormName, GetPrimaryFormName(recommendedRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedPrimaryFormSourceRange, GetPrimaryFormSourceRange(recommendedRoute), StringComparison.Ordinal)
                 || snapshot.RecommendedIsBaselineMethod != (recommendedRoute?.IsBaselineMethod == true)
                 || snapshot.RecommendedIsDominantMethod != string.Equals(recommendedRoute?.MethodKey, dominantRoute?.MethodKey, StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedStrategy, decision.RecommendedStrategy, StringComparison.Ordinal)
@@ -137,6 +153,86 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
 
         return (canonicalCode, rows.Values.Sum(), baselineMethod, baselineCount, dominant.Key, dominant.Value);
     }
+
+    private static IReadOnlyList<string> GetSourceSections(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .Select(x => x.SectionKey)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static IReadOnlyList<string> GetSourceRanges(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string GetPrimarySourceSection(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .GroupBy(x => x.SectionKey, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static string GetPrimarySourceRange(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .SourceEvidences
+            .Where(x => string.Equals(x.MethodName, route?.LegacyAlgorithmEntry, StringComparison.Ordinal))
+            .GroupBy(x => x.SourceRange, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static IReadOnlyList<string> GetFormNames(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .Select(x => x.FormName)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static IReadOnlyList<string> GetFormSourceRanges(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .Select(x => x.SourceRange)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+
+    private static string GetPrimaryFormName(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .GroupBy(x => x.FormName, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static string GetPrimaryFormSourceRange(MotorYLegacyAlgorithmRoute? route)
+        => MotorYLegacyAlgorithmDependencyCatalog.Get(route?.CanonicalCode ?? string.Empty)
+            .FormDependencyEvidences
+            .Where(x => x.ReferencedMethods.Contains(route?.LegacyMethodName ?? string.Empty, StringComparer.Ordinal)
+                || x.ReferencedMethods.Contains(route?.LegacySettingsMethodName ?? string.Empty, StringComparer.Ordinal))
+            .GroupBy(x => x.SourceRange, StringComparer.Ordinal)
+            .OrderByDescending(x => x.Count())
+            .ThenBy(x => x.Key, StringComparer.Ordinal)
+            .FirstOrDefault()?.Key ?? string.Empty;
 
     private static Dictionary<int, int> LoadCounts(SqliteConnection connection, string canonicalCode)
     {

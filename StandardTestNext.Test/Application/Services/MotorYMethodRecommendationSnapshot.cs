@@ -19,6 +19,14 @@ public sealed class MotorYMethodRecommendationSnapshot
     public string? DominantLegacyAlgorithmEntry { get; init; }
     public string? DominantLegacyMethodName { get; init; }
     public string? DominantLegacySettingsMethodName { get; init; }
+    public IReadOnlyList<string> DominantSourceSections { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> DominantSourceRanges { get; init; } = Array.Empty<string>();
+    public string DominantPrimarySourceSection { get; init; } = string.Empty;
+    public string DominantPrimarySourceRange { get; init; } = string.Empty;
+    public IReadOnlyList<string> DominantFormNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> DominantFormSourceRanges { get; init; } = Array.Empty<string>();
+    public string DominantPrimaryFormName { get; init; } = string.Empty;
+    public string DominantPrimaryFormSourceRange { get; init; } = string.Empty;
     public bool DominantIsBaselineMethod { get; init; }
     public bool ShouldPrioritizeDominantOverBaseline { get; init; }
     public double DominantShare { get; init; }
@@ -33,6 +41,14 @@ public sealed class MotorYMethodRecommendationSnapshot
     public string? RecommendedLegacyAlgorithmEntry { get; init; }
     public string? RecommendedLegacyMethodName { get; init; }
     public string? RecommendedLegacySettingsMethodName { get; init; }
+    public IReadOnlyList<string> RecommendedSourceSections { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RecommendedSourceRanges { get; init; } = Array.Empty<string>();
+    public string RecommendedPrimarySourceSection { get; init; } = string.Empty;
+    public string RecommendedPrimarySourceRange { get; init; } = string.Empty;
+    public IReadOnlyList<string> RecommendedFormNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> RecommendedFormSourceRanges { get; init; } = Array.Empty<string>();
+    public string RecommendedPrimaryFormName { get; init; } = string.Empty;
+    public string RecommendedPrimaryFormSourceRange { get; init; } = string.Empty;
     public bool RecommendedIsBaselineMethod { get; init; }
     public bool RecommendedIsDominantMethod { get; init; }
     public string RecommendedStrategy { get; init; } = string.Empty;
