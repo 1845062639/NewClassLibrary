@@ -87,6 +87,7 @@ public static class TestBootstrapFormattingSmokeTests
                     WeightedCount = 7,
                     WeightedShare = 0.7d,
                     CanonicalCodes = new[] { MotorYTestMethodCodes.LoadB, MotorYTestMethodCodes.NoLoad },
+                    LegacyItemAliases = new[] { "B法负载试验", "空载特性试验", "空载试验" },
                     MethodKeys = new[] { "LoadB:5", "NoLoad:0" },
                     LegacyAlgorithmEntries = new[] { "Calc_Load_B", "Calc_NoLoad" },
                     SourceSections = new[] { "pfw-fit-window", "pfw-iteration" },
@@ -100,7 +101,7 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:legacy-enums=none:legacy-forms=none:algo-entries=Calc_Load_B|Calc_NoLoad:source-sections=pfw-fit-window|pfw-iteration:source-ranges=L120-L150|L300-L320:forms=FrmMotor_Y_LoadB|FrmMotor_Y_NoLoad:form-ranges=L263|L410:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; legacy-enums=none; legacy-forms=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:legacy-item-aliases=B法负载试验|空载特性试验|空载试验:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:legacy-enums=none:legacy-forms=none:algo-entries=Calc_Load_B|Calc_NoLoad:source-sections=pfw-fit-window|pfw-iteration:source-ranges=L120-L150|L300-L320:forms=FrmMotor_Y_LoadB|FrmMotor_Y_NoLoad:form-ranges=L263|L410:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; legacy-item-aliases=B法负载试验, 空载特性试验, 空载试验; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; legacy-enums=none; legacy-forms=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
