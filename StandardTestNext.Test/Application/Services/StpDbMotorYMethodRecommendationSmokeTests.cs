@@ -59,6 +59,28 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: method key mismatch for {row.CanonicalCode}.");
             }
 
+            var baselineRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(row.CanonicalCode, row.BaselineMethod);
+            if (!string.Equals(snapshot.BaselineProfileKey, baselineRoute?.ProfileKey, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineVariantKind, baselineRoute?.VariantKind, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineAlgorithmFamily, baselineRoute?.AlgorithmFamily, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineLegacyEnumName, baselineRoute?.LegacyEnumName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineLegacyFormName, baselineRoute?.LegacyFormName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineLegacyAlgorithmEntry, baselineRoute?.LegacyAlgorithmEntry, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineLegacyMethodName, baselineRoute?.LegacyMethodName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineLegacySettingsMethodName, baselineRoute?.LegacySettingsMethodName, StringComparison.Ordinal)
+                || !snapshot.BaselineSourceSections.SequenceEqual(GetSourceSections(baselineRoute), StringComparer.Ordinal)
+                || !snapshot.BaselineSourceRanges.SequenceEqual(GetSourceRanges(baselineRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.BaselinePrimarySourceSection, GetPrimarySourceSection(baselineRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselinePrimarySourceRange, GetPrimarySourceRange(baselineRoute), StringComparison.Ordinal)
+                || !snapshot.BaselineFormNames.SequenceEqual(GetFormNames(baselineRoute), StringComparer.Ordinal)
+                || !snapshot.BaselineFormSourceRanges.SequenceEqual(GetFormSourceRanges(baselineRoute), StringComparer.Ordinal)
+                || !string.Equals(snapshot.BaselinePrimaryFormName, GetPrimaryFormName(baselineRoute), StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselinePrimaryFormSourceRange, GetPrimaryFormSourceRange(baselineRoute), StringComparison.Ordinal)
+                || snapshot.BaselineIsBaselineMethod != (baselineRoute?.IsBaselineMethod == true))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: baseline route projection mismatch for {row.CanonicalCode}.");
+            }
+
             var dominantRoute = MotorYLegacyAlgorithmRouteResolver.Resolve(row.CanonicalCode, row.DominantMethod);
             if (!string.Equals(snapshot.DominantProfileKey, dominantRoute?.ProfileKey, StringComparison.Ordinal)
                 || !string.Equals(snapshot.DominantVariantKind, dominantRoute?.VariantKind, StringComparison.Ordinal)

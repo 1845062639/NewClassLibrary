@@ -8,6 +8,22 @@ public sealed class MotorYMethodRecommendationSnapshot
     public int BaselineCount { get; init; }
     public string BaselineMethodKey { get; init; } = string.Empty;
     public string? BaselineProfileKey { get; init; }
+    public string? BaselineVariantKind { get; init; }
+    public string? BaselineAlgorithmFamily { get; init; }
+    public string? BaselineLegacyEnumName { get; init; }
+    public string? BaselineLegacyFormName { get; init; }
+    public string? BaselineLegacyAlgorithmEntry { get; init; }
+    public string? BaselineLegacyMethodName { get; init; }
+    public string? BaselineLegacySettingsMethodName { get; init; }
+    public IReadOnlyList<string> BaselineSourceSections { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> BaselineSourceRanges { get; init; } = Array.Empty<string>();
+    public string BaselinePrimarySourceSection { get; init; } = string.Empty;
+    public string BaselinePrimarySourceRange { get; init; } = string.Empty;
+    public IReadOnlyList<string> BaselineFormNames { get; init; } = Array.Empty<string>();
+    public IReadOnlyList<string> BaselineFormSourceRanges { get; init; } = Array.Empty<string>();
+    public string BaselinePrimaryFormName { get; init; } = string.Empty;
+    public string BaselinePrimaryFormSourceRange { get; init; } = string.Empty;
+    public bool BaselineIsBaselineMethod { get; init; }
     public int DominantMethod { get; init; }
     public int DominantCount { get; init; }
     public string DominantMethodKey { get; init; } = string.Empty;
