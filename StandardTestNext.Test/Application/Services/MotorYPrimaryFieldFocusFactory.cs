@@ -16,6 +16,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                GetLegacyBusinessCodes(plan),
                 plan.AlgorithmEntry,
                 GetLegacyEnumNames(plan),
                 GetLegacyFormNames(plan),
@@ -52,6 +53,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 plan.SelectedRoute?.ProfileKey ?? string.Empty,
                 plan.LegacyMethodName,
                 plan.SettingsMethodName,
+                GetLegacyBusinessCodes(plan),
                 plan.AlgorithmEntry,
                 GetLegacyEnumNames(plan),
                 GetLegacyFormNames(plan),
@@ -86,6 +88,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan.SelectedRoute?.ProfileKey ?? string.Empty,
             plan.LegacyMethodName,
             plan.SettingsMethodName,
+            GetLegacyBusinessCodes(plan),
             plan.AlgorithmEntry,
             GetLegacyEnumNames(plan),
             GetLegacyFormNames(plan),
@@ -120,6 +123,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan.SelectedRoute?.ProfileKey ?? string.Empty,
             plan.LegacyMethodName,
             plan.SettingsMethodName,
+            GetLegacyBusinessCodes(plan),
             plan.AlgorithmEntry,
             GetLegacyEnumNames(plan),
             GetLegacyFormNames(plan),
@@ -154,6 +158,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan.SelectedRoute?.ProfileKey ?? string.Empty,
             plan.LegacyMethodName,
             plan.SettingsMethodName,
+            GetLegacyBusinessCodes(plan),
             plan.AlgorithmEntry,
             GetLegacyEnumNames(plan),
             GetLegacyFormNames(plan),
@@ -188,6 +193,7 @@ internal static class MotorYPrimaryFieldFocusFactory
             plan.SelectedRoute?.ProfileKey ?? string.Empty,
             plan.LegacyMethodName,
             plan.SettingsMethodName,
+            GetLegacyBusinessCodes(plan),
             plan.AlgorithmEntry,
             GetLegacyEnumNames(plan),
             GetLegacyFormNames(plan),
@@ -407,6 +413,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var profileKeys = rows.Select(x => x.Candidate.ProfileKey).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyMethodNames = rows.Select(x => x.Candidate.LegacyMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var settingsMethodNames = rows.Select(x => x.Candidate.SettingsMethodName).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
+                var legacyBusinessCodes = rows.SelectMany(x => x.Candidate.LegacyBusinessCodes).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyAlgorithmEntries = rows.Select(x => x.Candidate.AlgorithmEntry).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyEnumNames = rows.SelectMany(x => x.Candidate.LegacyEnumNames).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
                 var legacyFormNames = rows.SelectMany(x => x.Candidate.LegacyFormNames).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct(StringComparer.Ordinal).OrderBy(x => x, StringComparer.Ordinal).ToArray();
@@ -472,6 +479,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var legacyMethodNameSummary = legacyMethodNames.Length == 0 ? "none" : string.Join(", ", legacyMethodNames);
                 var settingsMethodNameSummary = settingsMethodNames.Length == 0 ? "none" : string.Join(", ", settingsMethodNames);
                 var legacyAlgorithmEntrySummary = legacyAlgorithmEntries.Length == 0 ? "none" : string.Join(", ", legacyAlgorithmEntries);
+                var legacyBusinessCodeSummary = legacyBusinessCodes.Length == 0 ? "none" : string.Join(", ", legacyBusinessCodes);
                 var legacyEnumNameSummary = legacyEnumNames.Length == 0 ? "none" : string.Join(", ", legacyEnumNames);
                 var legacyFormNameSummary = legacyFormNames.Length == 0 ? "none" : string.Join(", ", legacyFormNames);
                 var sourceSectionSummary = sourceSections.Length == 0 ? "none" : string.Join(", ", sourceSections);
@@ -481,7 +489,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                 var upstreamCanonicalCodeSummary = upstreamCanonicalCodes.Length == 0 ? "none" : string.Join(", ", upstreamCanonicalCodes);
                 var upstreamHintSummary = upstreamSummaryHints.Length == 0 ? "none" : string.Join(" | ", upstreamSummaryHints);
                 var upstreamLegacyCodeSummary = upstreamLegacyCodes.Length == 0 ? "none" : string.Join(", ", upstreamLegacyCodes);
-                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); baseline={baselineCount}/{rows.Length} ({(int)Math.Round(baselineShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {baselineWeightedCount}/{totalWeighted} => {(int)Math.Round(baselineWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(baselineMethodValue, baselineMethodKey, baselineProfileKey)}; dominant={dominantCount}/{rows.Length} ({(int)Math.Round(dominantShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {dominantWeightedCount}/{totalWeighted} => {(int)Math.Round(dominantWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(dominantMethodValue, dominantMethodKey, dominantProfileKey)}; selected={selectedCount}/{rows.Length} ({(int)Math.Round(selectedShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {selectedWeightedCount}/{totalWeighted} => {(int)Math.Round(selectedWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(selectedMethodValue, selectedMethodKey, selectedProfileKey)}; codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; legacy-enums={legacyEnumNameSummary}; legacy-forms={legacyFormNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; dominant-algo-entry={(string.IsNullOrWhiteSpace(dominantLegacyAlgorithmEntry) ? "none" : dominantLegacyAlgorithmEntry)}; source-sections={sourceSectionSummary}; source-ranges={sourceRangeSummary}; dominant-source={(string.IsNullOrWhiteSpace(dominantSourceSection) ? "none" : dominantSourceSection)}@{(string.IsNullOrWhiteSpace(dominantSourceRange) ? "none" : dominantSourceRange)}; forms={formNameSummary}; form-ranges={formSourceRangeSummary}; dominant-form={(string.IsNullOrWhiteSpace(dominantFormName) ? "none" : dominantFormName)}@{(string.IsNullOrWhiteSpace(dominantFormSourceRange) ? "none" : dominantFormSourceRange)}; form-evidence={formEvidenceSummary}; upstream-codes={upstreamCanonicalCodeSummary}; upstream-hints={upstreamHintSummary}; upstream-legacy={upstreamLegacyCodeSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
+                var summary = $"cross-plan primary field {group.Key} appears in {rows.Length}/{total} plans ({percentagePoints}pp), weighted {weightedCount}/{totalWeighted} selected samples ({weightedPercentagePoints}pp); baseline={baselineCount}/{rows.Length} ({(int)Math.Round(baselineShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {baselineWeightedCount}/{totalWeighted} => {(int)Math.Round(baselineWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(baselineMethodValue, baselineMethodKey, baselineProfileKey)}; dominant={dominantCount}/{rows.Length} ({(int)Math.Round(dominantShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {dominantWeightedCount}/{totalWeighted} => {(int)Math.Round(dominantWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(dominantMethodValue, dominantMethodKey, dominantProfileKey)}; selected={selectedCount}/{rows.Length} ({(int)Math.Round(selectedShare * 100d, MidpointRounding.AwayFromZero)}pp, weighted {selectedWeightedCount}/{totalWeighted} => {(int)Math.Round(selectedWeightedShare * 100d, MidpointRounding.AwayFromZero)}pp) => {FormatRoutePreview(selectedMethodValue, selectedMethodKey, selectedProfileKey)}; codes={string.Join(", ", canonicalCodes)}; methods={methodValueSummary}; method-keys={methodKeySummary}; profiles={profileKeySummary}; legacy-methods={legacyMethodNameSummary}; settings-methods={settingsMethodNameSummary}; legacy-business-codes={legacyBusinessCodeSummary}; legacy-enums={legacyEnumNameSummary}; legacy-forms={legacyFormNameSummary}; algo-entries={legacyAlgorithmEntrySummary}; dominant-algo-entry={(string.IsNullOrWhiteSpace(dominantLegacyAlgorithmEntry) ? "none" : dominantLegacyAlgorithmEntry)}; source-sections={sourceSectionSummary}; source-ranges={sourceRangeSummary}; dominant-source={(string.IsNullOrWhiteSpace(dominantSourceSection) ? "none" : dominantSourceSection)}@{(string.IsNullOrWhiteSpace(dominantSourceRange) ? "none" : dominantSourceRange)}; forms={formNameSummary}; form-ranges={formSourceRangeSummary}; dominant-form={(string.IsNullOrWhiteSpace(dominantFormName) ? "none" : dominantFormName)}@{(string.IsNullOrWhiteSpace(dominantFormSourceRange) ? "none" : dominantFormSourceRange)}; form-evidence={formEvidenceSummary}; upstream-codes={upstreamCanonicalCodeSummary}; upstream-hints={upstreamHintSummary}; upstream-legacy={upstreamLegacyCodeSummary}; families={(algorithmFamilies.Length == 0 ? "none" : string.Join(", ", algorithmFamilies))}; variants={(variantKinds.Length == 0 ? "none" : string.Join(", ", variantKinds))}; focuses={(focuses.Length == 0 ? "none" : string.Join(", ", focuses))}; priorities={(priorities.Length == 0 ? "none" : string.Join(", ", priorities))}";
 
 
                 return new MotorYPrimaryFieldFocusSnapshot
@@ -520,6 +528,7 @@ internal static class MotorYPrimaryFieldFocusFactory
                     ProfileKeys = profileKeys,
                     LegacyMethodNames = legacyMethodNames,
                     SettingsMethodNames = settingsMethodNames,
+                    LegacyBusinessCodes = legacyBusinessCodes,
                     LegacyAlgorithmEntries = legacyAlgorithmEntries,
                     LegacyEnumNames = legacyEnumNames,
                     LegacyFormNames = legacyFormNames,
@@ -559,6 +568,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topMethodKeys = top.MethodKeys.Count == 0 ? "none" : string.Join("/", top.MethodKeys);
         var topLegacyMethods = top.LegacyMethodNames.Count == 0 ? "none" : string.Join("/", top.LegacyMethodNames);
         var topSettingsMethods = top.SettingsMethodNames.Count == 0 ? "none" : string.Join("/", top.SettingsMethodNames);
+        var topLegacyBusinessCodes = top.LegacyBusinessCodes.Count == 0 ? "none" : string.Join("/", top.LegacyBusinessCodes);
         var topLegacyEnums = top.LegacyEnumNames.Count == 0 ? "none" : string.Join("/", top.LegacyEnumNames);
         var topLegacyForms = top.LegacyFormNames.Count == 0 ? "none" : string.Join("/", top.LegacyFormNames);
         var topLegacyAlgorithmEntries = top.LegacyAlgorithmEntries.Count == 0 ? "none" : string.Join("/", top.LegacyAlgorithmEntries);
@@ -573,7 +583,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var topUpstreamCodes = top.UpstreamCanonicalCodes.Count == 0 ? "none" : string.Join("/", top.UpstreamCanonicalCodes);
         var topUpstreamLegacyCodes = top.UpstreamLegacyCodes.Count == 0 ? "none" : string.Join("/", top.UpstreamLegacyCodes);
         var topUpstreamHints = top.UpstreamSummaryHints.Count == 0 ? "none" : string.Join("/", top.UpstreamSummaryHints);
-        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@methods={topMethodValues}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@forms={topFormNames}@form-ranges={topFormRanges}@dominant-source={topDominantSource}@dominant-form={topDominantForm}@baseline={top.BaselineCount}/{top.Count}@baseline-weighted={top.BaselineWeightedCount}/{top.WeightedCount}@dominant-share={top.DominantCount}/{top.Count}@dominant-weighted={top.DominantWeightedCount}/{top.WeightedCount}@selected-share={top.SelectedCount}/{top.Count}@selected-weighted={top.SelectedWeightedCount}/{top.WeightedCount}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
+        return $"cross-plan {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant={top.PrimaryField}@families={topFamilies}@codes={topCodes}@methods={topMethodValues}@method-keys={topMethodKeys}@legacy-methods={topLegacyMethods}@settings-methods={topSettingsMethods}@legacy-business-codes={topLegacyBusinessCodes}@legacy-enums={topLegacyEnums}@legacy-forms={topLegacyForms}@algo-entries={topLegacyAlgorithmEntries}@forms={topFormNames}@form-ranges={topFormRanges}@dominant-source={topDominantSource}@dominant-form={topDominantForm}@baseline={top.BaselineCount}/{top.Count}@baseline-weighted={top.BaselineWeightedCount}/{top.WeightedCount}@dominant-share={top.DominantCount}/{top.Count}@dominant-weighted={top.DominantWeightedCount}/{top.WeightedCount}@selected-share={top.SelectedCount}/{top.Count}@selected-weighted={top.SelectedWeightedCount}/{top.WeightedCount}@upstream={topUpstreamCodes}@upstream-legacy={topUpstreamLegacyCodes}@upstream-hints={topUpstreamHints}";
     }
 
     public static string BuildAlgorithmFamilyFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -594,6 +604,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantMethodKeys = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.MethodKeys).Where(methodKey => !string.IsNullOrWhiteSpace(methodKey)).Distinct(StringComparer.Ordinal).OrderBy(methodKey => methodKey, StringComparer.Ordinal).ToArray();
         var dominantLegacyMethodNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantSettingsMethodNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.SettingsMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantLegacyBusinessCodes = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyBusinessCodes).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyEnumNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyEnumNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyFormNames = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyFormNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyAlgorithmEntries = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyAlgorithmEntries).Where(entry => !string.IsNullOrWhiteSpace(entry)).Distinct(StringComparer.Ordinal).OrderBy(entry => entry, StringComparer.Ordinal).ToArray();
@@ -608,7 +619,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantDominantFormRange = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).Select(focus => focus.DominantFormSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
         var dominantUpstreamLegacyCodes = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamLegacyCodes).Where(code => !string.IsNullOrWhiteSpace(code)).Distinct(StringComparer.Ordinal).OrderBy(code => code, StringComparer.Ordinal).ToArray();
         var dominantUpstreamHints = focuses.Where(focus => focus.AlgorithmFamilies.Contains(dominantFamily, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamSummaryHints).Where(hint => !string.IsNullOrWhiteSpace(hint)).Distinct(StringComparer.Ordinal).OrderBy(hint => hint, StringComparer.Ordinal).ToArray();
-        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@legacy-enums={(dominantLegacyEnumNames.Length == 0 ? "none" : string.Join("/", dominantLegacyEnumNames))}@legacy-forms={(dominantLegacyFormNames.Length == 0 ? "none" : string.Join("/", dominantLegacyFormNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}@upstream-hints={(dominantUpstreamHints.Length == 0 ? "none" : string.Join("/", dominantUpstreamHints))}";
+        return $"algorithm-family {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-family={dominantFamily}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@legacy-business-codes={(dominantLegacyBusinessCodes.Length == 0 ? "none" : string.Join("/", dominantLegacyBusinessCodes))}@legacy-enums={(dominantLegacyEnumNames.Length == 0 ? "none" : string.Join("/", dominantLegacyEnumNames))}@legacy-forms={(dominantLegacyFormNames.Length == 0 ? "none" : string.Join("/", dominantLegacyFormNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}@upstream-hints={(dominantUpstreamHints.Length == 0 ? "none" : string.Join("/", dominantUpstreamHints))}";
     }
 
     public static string BuildVariantKindFocusSummary(string scope, IReadOnlyList<MotorYPrimaryFieldFocusSnapshot> focuses)
@@ -629,6 +640,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantMethodKeys = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.MethodKeys).Where(methodKey => !string.IsNullOrWhiteSpace(methodKey)).Distinct(StringComparer.Ordinal).OrderBy(methodKey => methodKey, StringComparer.Ordinal).ToArray();
         var dominantLegacyMethodNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantSettingsMethodNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.SettingsMethodNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
+        var dominantLegacyBusinessCodes = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyBusinessCodes).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyEnumNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyEnumNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyFormNames = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyFormNames).Where(name => !string.IsNullOrWhiteSpace(name)).Distinct(StringComparer.Ordinal).OrderBy(name => name, StringComparer.Ordinal).ToArray();
         var dominantLegacyAlgorithmEntries = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.LegacyAlgorithmEntries).Where(entry => !string.IsNullOrWhiteSpace(entry)).Distinct(StringComparer.Ordinal).OrderBy(entry => entry, StringComparer.Ordinal).ToArray();
@@ -643,7 +655,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         var dominantDominantFormRange = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).Select(focus => focus.DominantFormSourceRange).Where(range => !string.IsNullOrWhiteSpace(range)).GroupBy(range => range, StringComparer.Ordinal).OrderByDescending(group => group.Count()).ThenBy(group => group.Key, StringComparer.Ordinal).FirstOrDefault()?.Key ?? "none";
         var dominantUpstreamLegacyCodes = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamLegacyCodes).Where(code => !string.IsNullOrWhiteSpace(code)).Distinct(StringComparer.Ordinal).OrderBy(code => code, StringComparer.Ordinal).ToArray();
         var dominantUpstreamHints = focuses.Where(focus => focus.VariantKinds.Contains(dominantVariant, StringComparer.Ordinal)).SelectMany(focus => focus.UpstreamSummaryHints).Where(hint => !string.IsNullOrWhiteSpace(hint)).Distinct(StringComparer.Ordinal).OrderBy(hint => hint, StringComparer.Ordinal).ToArray();
-        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@legacy-enums={(dominantLegacyEnumNames.Length == 0 ? "none" : string.Join("/", dominantLegacyEnumNames))}@legacy-forms={(dominantLegacyFormNames.Length == 0 ? "none" : string.Join("/", dominantLegacyFormNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}@upstream-hints={(dominantUpstreamHints.Length == 0 ? "none" : string.Join("/", dominantUpstreamHints))}";
+        return $"variant-kind {scope} primary fields top {Math.Min(3, focuses.Count)}/{focuses.Count}: {string.Join("; ", preview)}; dominant-variant={dominantVariant}@methods={(dominantMethodValues.Length == 0 ? "none" : string.Join("/", dominantMethodValues))}@method-keys={(dominantMethodKeys.Length == 0 ? "none" : string.Join("/", dominantMethodKeys))}@legacy-methods={(dominantLegacyMethodNames.Length == 0 ? "none" : string.Join("/", dominantLegacyMethodNames))}@settings-methods={(dominantSettingsMethodNames.Length == 0 ? "none" : string.Join("/", dominantSettingsMethodNames))}@legacy-business-codes={(dominantLegacyBusinessCodes.Length == 0 ? "none" : string.Join("/", dominantLegacyBusinessCodes))}@legacy-enums={(dominantLegacyEnumNames.Length == 0 ? "none" : string.Join("/", dominantLegacyEnumNames))}@legacy-forms={(dominantLegacyFormNames.Length == 0 ? "none" : string.Join("/", dominantLegacyFormNames))}@algo-entries={(dominantLegacyAlgorithmEntries.Length == 0 ? "none" : string.Join("/", dominantLegacyAlgorithmEntries))}@dominant-algo={dominantDominantAlgorithmEntry}@source-sections={(dominantSourceSections.Length == 0 ? "none" : string.Join("/", dominantSourceSections))}@source-ranges={(dominantSourceRanges.Length == 0 ? "none" : string.Join("/", dominantSourceRanges))}@dominant-source={dominantDominantSourceSection}@{dominantDominantSourceRange}@forms={(dominantFormNames.Length == 0 ? "none" : string.Join("/", dominantFormNames))}@form-ranges={(dominantFormRanges.Length == 0 ? "none" : string.Join("/", dominantFormRanges))}@dominant-form={dominantDominantFormName}@{dominantDominantFormRange}@upstream-legacy={(dominantUpstreamLegacyCodes.Length == 0 ? "none" : string.Join("/", dominantUpstreamLegacyCodes))}@upstream-hints={(dominantUpstreamHints.Length == 0 ? "none" : string.Join("/", dominantUpstreamHints))}";
     }
 
     private static string FormatRoutePreview(int? methodValue, string methodKey, string profileKey)
@@ -685,6 +697,7 @@ internal static class MotorYPrimaryFieldFocusFactory
         string ProfileKey,
         string LegacyMethodName,
         string SettingsMethodName,
+        IReadOnlyList<string> LegacyBusinessCodes,
         string AlgorithmEntry,
         IReadOnlyList<string> LegacyEnumNames,
         IReadOnlyList<string> LegacyFormNames,
@@ -708,6 +721,15 @@ internal static class MotorYPrimaryFieldFocusFactory
         int? SelectedMethodValue,
         string SelectedMethodKey,
         string SelectedProfileKey);
+
+    private static IReadOnlyList<string> GetLegacyBusinessCodes(MotorYMethodAdaptationPlanSnapshot plan)
+    {
+        return DistinctNonEmpty(
+            plan.LegacyMethodName,
+            plan.DominantRoute?.LegacyMethodName,
+            plan.BaselineRoute?.LegacyMethodName,
+            plan.SelectedRoute?.LegacyMethodName);
+    }
 
     private static IReadOnlyList<string> GetLegacyEnumNames(MotorYMethodAdaptationPlanSnapshot plan)
     {
