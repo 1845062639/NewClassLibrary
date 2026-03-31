@@ -51,6 +51,8 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: numeric mismatch for {row.CanonicalCode}.");
             }
 
+            AssertExplicitMethodDistributionBaseline(snapshot);
+
             if (!string.Equals(snapshot.BaselineMethodKey, $"{row.CanonicalCode}:{row.BaselineMethod}", StringComparison.Ordinal)
                 || !string.Equals(snapshot.DominantMethodKey, $"{row.CanonicalCode}:{row.DominantMethod}", StringComparison.Ordinal))
             {
@@ -130,6 +132,57 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 || !string.Equals(snapshot.BaselineDominantComparisonSummary, decision.BaselineDominantComparisonSummary, StringComparison.Ordinal))
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: recommended route projection mismatch for {row.CanonicalCode}.");
+            }
+        }
+    }
+
+    private static void AssertExplicitMethodDistributionBaseline(MotorYMethodRecommendationSnapshot snapshot)
+    {
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 87
+                || snapshot.BaselineMethod != 4
+                || snapshot.BaselineCount != 24
+                || snapshot.DominantMethod != 60
+                || snapshot.DominantCount != 61
+                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LoadA:60", StringComparison.Ordinal)
+                || !string.Equals(snapshot.DominantVariantKind, "delivery", StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedStrategy, "dominant-threshold-over-baseline", StringComparison.Ordinal)
+                || snapshot.RecommendedMethod != 60)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: explicit LoadA baseline lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineMethod}:{snapshot.BaselineCount}, dominant={snapshot.DominantMethod}:{snapshot.DominantCount}, recommended={snapshot.RecommendedMethod}:{snapshot.RecommendedStrategy}:{snapshot.DominantProfileKey}:{snapshot.DominantVariantKind}");
+            }
+        }
+
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 265
+                || snapshot.BaselineMethod != 5
+                || snapshot.BaselineCount != 233
+                || snapshot.DominantMethod != 5
+                || snapshot.DominantCount != 233
+                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LoadB:5", StringComparison.Ordinal)
+                || !string.Equals(snapshot.DominantVariantKind, "baseline", StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedStrategy, "baseline", StringComparison.Ordinal)
+                || snapshot.RecommendedMethod != 5)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: explicit LoadB baseline lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineMethod}:{snapshot.BaselineCount}, dominant={snapshot.DominantMethod}:{snapshot.DominantCount}, recommended={snapshot.RecommendedMethod}:{snapshot.RecommendedStrategy}:{snapshot.DominantProfileKey}:{snapshot.DominantVariantKind}");
+            }
+        }
+
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 7
+                || snapshot.BaselineMethod != 11
+                || snapshot.BaselineCount != 5
+                || snapshot.DominantMethod != 11
+                || snapshot.DominantCount != 5
+                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LockedRotor:11", StringComparison.Ordinal)
+                || !string.Equals(snapshot.DominantVariantKind, "baseline", StringComparison.Ordinal)
+                || snapshot.RecommendedMethod != 11
+                || !string.Equals(snapshot.RecommendedStrategy, "baseline", StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: explicit LockedRotor baseline lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineMethod}:{snapshot.BaselineCount}, dominant={snapshot.DominantMethod}:{snapshot.DominantCount}, recommended={snapshot.RecommendedMethod}:{snapshot.RecommendedStrategy}:{snapshot.DominantProfileKey}:{snapshot.DominantVariantKind}");
             }
         }
     }

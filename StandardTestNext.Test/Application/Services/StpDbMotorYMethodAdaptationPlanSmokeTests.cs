@@ -137,6 +137,8 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: numeric mismatch for {row.CanonicalCode}.");
             }
 
+            AssertExplicitMethodSelectionBaseline(snapshot);
+
             AssertRoute(snapshot.BaselineRoute, row.CanonicalCode, row.BaselineMethod, $"baseline/{row.CanonicalCode}");
             AssertRoute(snapshot.DominantRoute, row.CanonicalCode, row.DominantMethod, $"dominant/{row.CanonicalCode}");
             AssertRoute(snapshot.SelectedRoute, row.CanonicalCode, row.SelectedMethod, $"selected/{row.CanonicalCode}");
@@ -238,6 +240,69 @@ public static class StpDbMotorYMethodAdaptationPlanSmokeTests
                 }
 
                 AssertRoute(actualDistribution.Route, row.CanonicalCode, distribution.MethodValue, $"distribution/{row.CanonicalCode}:{distribution.MethodValue}");
+            }
+        }
+    }
+
+    private static void AssertExplicitMethodSelectionBaseline(MotorYMethodAdaptationPlanSnapshot snapshot)
+    {
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LoadA, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 87
+                || snapshot.BaselineCount != 24
+                || snapshot.DominantCount != 61
+                || snapshot.SelectedCount != 61
+                || snapshot.BaselineRoute?.MethodValue != 4
+                || snapshot.DominantRoute?.MethodValue != 60
+                || snapshot.SelectedRoute?.MethodValue != 60
+                || !snapshot.ShouldUseDominantRoute
+                || !string.Equals(snapshot.SelectionStrategy, "dominant-threshold-over-baseline", StringComparison.Ordinal)
+                || snapshot.DominantLeadCount != 37
+                || snapshot.DominantLeadPercentagePoints != 42
+                || Math.Abs(snapshot.SelectedLeadCountVsBaseline - 37d) > 0.0001d
+                || snapshot.SelectedLeadPercentagePointsVsBaseline != 42)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit LoadA selection lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineRoute?.MethodValue}:{snapshot.BaselineCount}:{snapshot.BaselineShare:P1}, dominant={snapshot.DominantRoute?.MethodValue}:{snapshot.DominantCount}:{snapshot.DominantShare:P1}, selected={snapshot.SelectedRoute?.MethodValue}:{snapshot.SelectedCount}:{snapshot.SelectedShare:P1}, strategy={snapshot.SelectionStrategy}, shouldDominant={snapshot.ShouldUseDominantRoute}");
+            }
+        }
+
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 265
+                || snapshot.BaselineCount != 233
+                || snapshot.DominantCount != 233
+                || snapshot.SelectedCount != 233
+                || snapshot.BaselineRoute?.MethodValue != 5
+                || snapshot.DominantRoute?.MethodValue != 5
+                || snapshot.SelectedRoute?.MethodValue != 5
+                || snapshot.ShouldUseDominantRoute
+                || !string.Equals(snapshot.SelectionStrategy, "baseline", StringComparison.Ordinal)
+                || snapshot.DominantLeadCount != 0
+                || snapshot.DominantLeadPercentagePoints != 0
+                || Math.Abs(snapshot.SelectedLeadCountVsBaseline) > 0.0001d
+                || snapshot.SelectedLeadPercentagePointsVsBaseline != 0)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit LoadB selection lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineRoute?.MethodValue}:{snapshot.BaselineCount}:{snapshot.BaselineShare:P1}, dominant={snapshot.DominantRoute?.MethodValue}:{snapshot.DominantCount}:{snapshot.DominantShare:P1}, selected={snapshot.SelectedRoute?.MethodValue}:{snapshot.SelectedCount}:{snapshot.SelectedShare:P1}, strategy={snapshot.SelectionStrategy}, shouldDominant={snapshot.ShouldUseDominantRoute}");
+            }
+        }
+
+        if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
+        {
+            if (snapshot.TotalCount != 7
+                || snapshot.BaselineCount != 5
+                || snapshot.DominantCount != 5
+                || snapshot.SelectedCount != 5
+                || snapshot.BaselineRoute?.MethodValue != 11
+                || snapshot.DominantRoute?.MethodValue != 11
+                || snapshot.SelectedRoute?.MethodValue != 11
+                || snapshot.ShouldUseDominantRoute
+                || !string.Equals(snapshot.SelectionStrategy, "baseline", StringComparison.Ordinal)
+                || snapshot.DominantLeadCount != 0
+                || snapshot.DominantLeadPercentagePoints != 0
+                || Math.Abs(snapshot.SelectedLeadCountVsBaseline) > 0.0001d
+                || snapshot.SelectedLeadPercentagePointsVsBaseline != 0)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method adaptation plan smoke test failed: explicit LockedRotor selection lock mismatch. total={snapshot.TotalCount}, baseline={snapshot.BaselineRoute?.MethodValue}:{snapshot.BaselineCount}:{snapshot.BaselineShare:P1}, dominant={snapshot.DominantRoute?.MethodValue}:{snapshot.DominantCount}:{snapshot.DominantShare:P1}, selected={snapshot.SelectedRoute?.MethodValue}:{snapshot.SelectedCount}:{snapshot.SelectedShare:P1}, strategy={snapshot.SelectionStrategy}, shouldDominant={snapshot.ShouldUseDominantRoute}");
             }
         }
     }
