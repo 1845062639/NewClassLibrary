@@ -79,11 +79,41 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: dominant share mismatch for {row.CanonicalCode}. expected={expectedShare}, actual={snapshot.DominantShare}");
             }
 
+            var expectedBaselineShare = row.TotalCount <= 0
+                ? 0d
+                : Math.Round((double)row.BaselineCount / row.TotalCount, 4, MidpointRounding.AwayFromZero);
+            if (Math.Abs(snapshot.BaselineShare - expectedBaselineShare) > 0.0001d)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: baseline share mismatch for {row.CanonicalCode}. expected={expectedBaselineShare}, actual={snapshot.BaselineShare}");
+            }
+
             var shouldPrioritizeDominant = row.BaselineMethod != row.DominantMethod
                 && expectedShare >= DominantOverrideThreshold;
             if (snapshot.ShouldPrioritizeDominantOverBaseline != shouldPrioritizeDominant)
             {
                 throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: prioritize flag mismatch for {row.CanonicalCode}.");
+            }
+
+            var decision = service.ListMotorYMethodDecisions().First(x => string.Equals(x.CanonicalCode, row.CanonicalCode, StringComparison.Ordinal));
+            var recommendedRoute = decision.RecommendedRoute;
+            if ((snapshot.RecommendedMethod != (recommendedRoute?.MethodValue ?? 0))
+                || !string.Equals(snapshot.RecommendedMethodKey, recommendedRoute?.MethodKey ?? string.Empty, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedProfileKey, recommendedRoute?.ProfileKey, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedVariantKind, recommendedRoute?.VariantKind, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedAlgorithmFamily, recommendedRoute?.AlgorithmFamily, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedLegacyEnumName, recommendedRoute?.LegacyEnumName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedLegacyFormName, recommendedRoute?.LegacyFormName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedLegacyAlgorithmEntry, recommendedRoute?.LegacyAlgorithmEntry, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedLegacyMethodName, recommendedRoute?.LegacyMethodName, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedLegacySettingsMethodName, recommendedRoute?.LegacySettingsMethodName, StringComparison.Ordinal)
+                || snapshot.RecommendedIsBaselineMethod != (recommendedRoute?.IsBaselineMethod == true)
+                || snapshot.RecommendedIsDominantMethod != string.Equals(recommendedRoute?.MethodKey, dominantRoute?.MethodKey, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedStrategy, decision.RecommendedStrategy, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendationReason, decision.RecommendationReason, StringComparison.Ordinal)
+                || !string.Equals(snapshot.RecommendedMethodSummary, decision.RecommendedMethodSummary, StringComparison.Ordinal)
+                || !string.Equals(snapshot.BaselineDominantComparisonSummary, decision.BaselineDominantComparisonSummary, StringComparison.Ordinal))
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: recommended route projection mismatch for {row.CanonicalCode}.");
             }
         }
     }

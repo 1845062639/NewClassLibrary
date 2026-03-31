@@ -1854,7 +1854,26 @@ ORDER BY tri.rowid DESC;";
                 DominantLegacySettingsMethodName = decision.DominantRoute?.LegacySettingsMethodName,
                 DominantIsBaselineMethod = decision.DominantRoute?.IsBaselineMethod == true,
                 ShouldPrioritizeDominantOverBaseline = decision.ShouldPrioritizeDominantOverBaseline,
-                DominantShare = decision.DominantShare
+                DominantShare = decision.DominantShare,
+                BaselineShare = decision.BaselineShare,
+                RecommendedMethod = decision.RecommendedRoute?.MethodValue ?? 0,
+                RecommendedMethodKey = decision.RecommendedRoute?.MethodKey ?? string.Empty,
+                RecommendedProfileKey = decision.RecommendedRoute?.ProfileKey,
+                RecommendedVariantKind = decision.RecommendedRoute?.VariantKind,
+                RecommendedAlgorithmFamily = decision.RecommendedRoute?.AlgorithmFamily,
+                RecommendedLegacyEnumName = decision.RecommendedRoute?.LegacyEnumName,
+                RecommendedLegacyFormName = decision.RecommendedRoute?.LegacyFormName,
+                RecommendedLegacyAlgorithmEntry = decision.RecommendedRoute?.LegacyAlgorithmEntry,
+                RecommendedLegacyMethodName = decision.RecommendedRoute?.LegacyMethodName,
+                RecommendedLegacySettingsMethodName = decision.RecommendedRoute?.LegacySettingsMethodName,
+                RecommendedIsBaselineMethod = decision.RecommendedRoute?.IsBaselineMethod == true,
+                RecommendedIsDominantMethod = decision.RecommendedRoute is not null
+                    && decision.DominantRoute is not null
+                    && string.Equals(decision.RecommendedRoute.MethodKey, decision.DominantRoute.MethodKey, StringComparison.Ordinal),
+                RecommendedStrategy = decision.RecommendedStrategy,
+                RecommendationReason = decision.RecommendationReason,
+                RecommendedMethodSummary = decision.RecommendedMethodSummary,
+                BaselineDominantComparisonSummary = decision.BaselineDominantComparisonSummary
             })
             .ToArray();
     }
