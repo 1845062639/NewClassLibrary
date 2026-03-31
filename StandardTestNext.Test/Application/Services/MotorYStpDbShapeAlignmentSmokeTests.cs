@@ -129,6 +129,15 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
         {
             throw new InvalidOperationException("Motor_Y 空载 builder 未覆盖 stp.db 关键字段组。");
         }
+
+        if (shape.U0DivideUnIsEquesToOne_Pcu <= 0
+            || shape.U0DivideUnIsEquesToOne_Pfe <= 0
+            || Math.Abs(shape.U0DivideUnIsEquesToOne_DeltaI0) <= 0
+            || shape.PfwFitSampleCount <= 0
+            || !shape.PfwFitWindowReady)
+        {
+            throw new InvalidOperationException("Motor_Y 空载 builder 未把新增旧分支锚点骨架字段稳定投影到 legacy shape。");
+        }
     }
 
     private static void AssertHeatRun(TestRecordItemAggregate item)

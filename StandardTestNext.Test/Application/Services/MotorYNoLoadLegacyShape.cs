@@ -25,6 +25,11 @@ public sealed class MotorYNoLoadLegacyShape
     public bool IsAnalysis { get; init; }
     public double U0DivideUnIsEquesToOne_I0 { get; init; }
     public double U0DivideUnIsEquesToOne_P0 { get; init; }
+    public double U0DivideUnIsEquesToOne_Pcu => ReadExtraDouble("U0DivideUnIsEquesToOne_Pcu");
+    public double U0DivideUnIsEquesToOne_Pfe => ReadExtraDouble("U0DivideUnIsEquesToOne_Pfe");
+    public double U0DivideUnIsEquesToOne_DeltaI0 => ReadExtraDouble("U0DivideUnIsEquesToOne_DeltaI0");
+    public int PfwFitSampleCount => ReadExtraInt("PfwFitSampleCount");
+    public bool PfwFitWindowReady => ReadExtraBool("PfwFitWindowReady");
 
     [JsonExtensionData]
     public Dictionary<string, JsonElement> ExtraFields { get; init; } = new(StringComparer.Ordinal);
@@ -49,6 +54,31 @@ public sealed class MotorYNoLoadLegacyShape
         {
             return null;
         }
+    }
+
+    private double ReadExtraDouble(string fieldName)
+    {
+        return ExtraFields.TryGetValue(fieldName, out var element)
+            && element.ValueKind is JsonValueKind.Number
+            && element.TryGetDouble(out var value)
+            ? value
+            : 0d;
+    }
+
+    private int ReadExtraInt(string fieldName)
+    {
+        return ExtraFields.TryGetValue(fieldName, out var element)
+            && element.ValueKind is JsonValueKind.Number
+            && element.TryGetInt32(out var value)
+            ? value
+            : 0;
+    }
+
+    private bool ReadExtraBool(string fieldName)
+    {
+        return ExtraFields.TryGetValue(fieldName, out var element)
+            && element.ValueKind is JsonValueKind.True or JsonValueKind.False
+            && element.ValueKind == JsonValueKind.True;
     }
 }
 
