@@ -1876,12 +1876,29 @@ public static class TestRecordQueryGatewayAdapterSmokeTests
             || Math.Abs(gb.WeightedShare - 0.5d) > 0.0001d
             || !gb.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.LoadB }, StringComparer.Ordinal)
             || !gb.LegacyAlgorithmEntries.SequenceEqual(new[] { "GetLoadBData" }, StringComparer.Ordinal)
+            || !string.Equals(gb.DominantLegacyAlgorithmEntry, "GetLoadBData", StringComparison.Ordinal)
             || !gb.SourceSections.SequenceEqual(new[] { "gb-ratios-branch" }, StringComparer.Ordinal)
+            || !string.Equals(gb.DominantSourceSection, "gb-ratios-branch", StringComparison.Ordinal)
+            || !string.Equals(gb.DominantSourceRange, "L702-L736", StringComparison.Ordinal)
             || !gb.FormNames.SequenceEqual(new[] { "FrmMotor_Y_LoadB" }, StringComparer.Ordinal)
+            || !string.Equals(gb.DominantFormName, "FrmMotor_Y_LoadB", StringComparison.Ordinal)
+            || !string.Equals(gb.DominantFormSourceRange, "L361", StringComparison.Ordinal)
+            || !gb.LegacyEnumNames.SequenceEqual(new[] { "B法负载试验" }, StringComparer.Ordinal)
+            || !gb.LegacyFormNames.SequenceEqual(new[] { "FrmMotor_Y_Load_B" }, StringComparer.Ordinal)
+            || !gb.UpstreamCanonicalCodes.SequenceEqual(new[] { MotorYTestMethodCodes.HeatRun, MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || gb.UpstreamSummaryHints.Count == 0
+            || !gb.UpstreamSummaryHints.Any(x => x.Contains("HeatRun", StringComparison.Ordinal))
             || pfw is null
             || pfw.WeightedCount != 1
             || Math.Abs(pfw.WeightedShare - 0.25d) > 0.0001d
-            || !pfw.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal))
+            || !pfw.AlgorithmFamilies.SequenceEqual(new[] { MotorYTestMethodCodes.NoLoad }, StringComparer.Ordinal)
+            || !string.Equals(pfw.DominantLegacyAlgorithmEntry, "GetNoLoadData", StringComparison.Ordinal)
+            || !string.Equals(pfw.DominantSourceSection, "pfw-split", StringComparison.Ordinal)
+            || !string.Equals(pfw.DominantSourceRange, "L194-L208", StringComparison.Ordinal)
+            || !string.Equals(pfw.DominantFormName, "FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !string.Equals(pfw.DominantFormSourceRange, "L263", StringComparison.Ordinal)
+            || !pfw.LegacyEnumNames.SequenceEqual(new[] { "空载试验" }, StringComparer.Ordinal)
+            || !pfw.LegacyFormNames.SequenceEqual(new[] { "FrmMotor_Y_NoLoad" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y algorithm-family decision-anchor primary-field focus query smoke test mismatch. summary='{noLoadPlan.AlgorithmFamilyDecisionAnchorPrimaryFieldSummary}'; actual=[{string.Join(" | ", focuses.Select(x => $"{x.PrimaryField}:{x.Count}:{x.WeightedCount}:{x.WeightedShare:P1}:{string.Join("/", x.AlgorithmFamilies)}"))}]");
         }
