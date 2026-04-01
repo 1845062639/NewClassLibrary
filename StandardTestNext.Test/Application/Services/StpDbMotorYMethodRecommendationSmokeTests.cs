@@ -128,6 +128,22 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
 
             var decision = service.ListMotorYMethodDecisions().First(x => string.Equals(x.CanonicalCode, row.CanonicalCode, StringComparison.Ordinal));
             var recommendedRoute = decision.RecommendedRoute;
+            var expectedLegacyBusinessCodes = new[]
+            {
+                recommendedRoute?.LegacyMethodName,
+                dominantRoute?.LegacyMethodName,
+                baselineRoute?.LegacyMethodName
+            }
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!)
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(x => x, StringComparer.Ordinal)
+            .ToArray();
+            if (!snapshot.LegacyBusinessCodes.SequenceEqual(expectedLegacyBusinessCodes, StringComparer.Ordinal)
+                || snapshot.LegacyBusinessCodes.Count == 0)
+            {
+                throw new InvalidOperationException($"stp.db Motor_Y method recommendation smoke test failed: legacy business code projection mismatch for {row.CanonicalCode}. expected={string.Join('/', expectedLegacyBusinessCodes)}, actual={string.Join('/', snapshot.LegacyBusinessCodes)}");
+            }
             if ((snapshot.RecommendedMethod != (recommendedRoute?.MethodValue ?? 0))
                 || !string.Equals(snapshot.RecommendedMethodKey, recommendedRoute?.MethodKey ?? string.Empty, StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedProfileKey, recommendedRoute?.ProfileKey, StringComparison.Ordinal)

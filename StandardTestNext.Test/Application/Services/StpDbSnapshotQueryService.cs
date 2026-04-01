@@ -1902,6 +1902,10 @@ ORDER BY tri.rowid DESC;";
                 RecommendedIsDominantMethod = decision.RecommendedRoute is not null
                     && decision.DominantRoute is not null
                     && string.Equals(decision.RecommendedRoute.MethodKey, decision.DominantRoute.MethodKey, StringComparison.Ordinal),
+                LegacyBusinessCodes = DistinctNonEmpty(
+                    decision.RecommendedRoute?.LegacyMethodName,
+                    decision.DominantRoute?.LegacyMethodName,
+                    decision.BaselineRoute?.LegacyMethodName),
                 RecommendedStrategy = decision.RecommendedStrategy,
                 RecommendationReason = decision.RecommendationReason,
                 RecommendedMethodSummary = decision.RecommendedMethodSummary,

@@ -67,6 +67,7 @@ public sealed class MotorYMethodRecommendationSnapshot
     public string RecommendedPrimaryFormSourceRange { get; init; } = string.Empty;
     public bool RecommendedIsBaselineMethod { get; init; }
     public bool RecommendedIsDominantMethod { get; init; }
+    public IReadOnlyList<string> LegacyBusinessCodes { get; init; } = Array.Empty<string>();
     public string RecommendedStrategy { get; init; } = string.Empty;
     public string RecommendationReason { get; init; } = string.Empty;
     public string RecommendedMethodSummary { get; init; } = string.Empty;
