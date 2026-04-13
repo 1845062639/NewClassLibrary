@@ -9,7 +9,7 @@ public static class StpDbMotorYMethodMappingSmokeTests
     private static readonly IReadOnlyDictionary<string, int[]> ExpectedMethodsByCanonicalCode =
         new Dictionary<string, int[]>(StringComparer.Ordinal)
         {
-            [MotorYTestMethodCodes.DcResistance] = new[] { 1, 35, 53, 54 },
+            [MotorYTestMethodCodes.DcResistance] = new[] { 1, 35, 53, 54, 93 },
             [MotorYTestMethodCodes.NoLoad] = new[] { 0, 59 },
             [MotorYTestMethodCodes.HeatRun] = new[] { 3, 47, 48 },
             [MotorYTestMethodCodes.LoadA] = new[] { 4, 60, 61 },
@@ -76,9 +76,12 @@ SELECT Code, Method
 FROM TestRecordItems
 WHERE Code IN (
     '直流电阻测定',
+    '陪试直流电阻测定',
     '空载试验',
     '空载特性试验',
+    '陪试空载特性试验',
     '热试验',
+    '陪试热试验',
     'A法负载试验',
     'B法负载试验',
     '堵转试验',

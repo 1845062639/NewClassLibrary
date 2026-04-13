@@ -34,6 +34,7 @@ public static class MotorYMethodProfileCatalog
                 (1, "baseline", MotorYLegacyEnumNames.DcResistance, MotorYLegacyFormNames.DcResistance, "旧 TestMethodEnum.Motor_Y_Direct_Current_Resistance，对应主基线直流电阻测定", true),
                 (35, "delivery", MotorYLegacyEnumNames.DcResistanceDelivery, MotorYLegacyFormNames.DcResistance, "旧现场变体：出厂/交付态直流电阻测定", false),
                 (53, "companion", MotorYLegacyEnumNames.DcResistanceCompanion, MotorYLegacyFormNames.DcResistanceCompanion, "旧现场变体：陪试/伴随机直流电阻测定", false),
+                (93, "companion", MotorYLegacyEnumNames.DcResistanceCompanion, MotorYLegacyFormNames.DcResistanceCompanion, "旧现场别名方法号：陪试/伴随机直流电阻测定", false),
                 (54, "delivery-companion", MotorYLegacyEnumNames.DcResistanceDeliveryCompanion, MotorYLegacyFormNames.DcResistanceCompanion, "旧现场变体：出厂+陪试直流电阻测定", false)),
 
             [MotorYTestMethodCodes.NoLoad] = BuildProfiles(
@@ -43,7 +44,14 @@ public static class MotorYMethodProfileCatalog
                 MotorYSettingsMethodNames.NoLoad,
                 0,
                 (0, "baseline", MotorYLegacyEnumNames.NoLoad, MotorYLegacyFormNames.NoLoad, "旧 TestMethodEnum.Motor_Y_NoLoad，对应空载特性试验基线", true),
-                (59, "delivery", MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery, "旧现场变体：空载试验（出厂/交付态）", false)),
+                (20, "delivery", MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery, "旧现场变体：空载试验（出厂）历史方法号", false),
+                (44, "delivery", MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery, "旧现场少量变体：空载试验（出厂）扩展方法号", false),
+                (48, "other-variant", MotorYLegacyEnumNames.NoLoad, MotorYLegacyFormNames.NoLoad, "旧现场少量变体：空载特性完全试验", false),
+                (49, "other-variant", MotorYLegacyEnumNames.NoLoad, MotorYLegacyFormNames.NoLoad, "旧现场少量变体：空载特性完全试验扩展方法号", false),
+                (59, "delivery", MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery, "旧现场变体：空载试验（出厂/交付态）", false),
+                (89, "other-variant", MotorYLegacyEnumNames.NoLoadMeasure, MotorYLegacyFormNames.NoLoad, "旧现场变体：空载特性测量", false),
+                (90, "other-variant", MotorYLegacyEnumNames.NoLoadMeasure, MotorYLegacyFormNames.NoLoad, "旧现场少量变体：空载特性测量扩展方法号", false),
+                (92, "companion", MotorYLegacyEnumNames.NoLoadCompanion, MotorYLegacyFormNames.NoLoadCompanion, "旧现场变体：陪试空载特性试验", false)),
 
             [MotorYTestMethodCodes.HeatRun] = BuildProfiles(
                 MotorYTestMethodCodes.HeatRun,
@@ -53,7 +61,10 @@ public static class MotorYMethodProfileCatalog
                 3,
                 (3, "baseline", MotorYLegacyEnumNames.Thermal, MotorYLegacyFormNames.Thermal, "旧 TestMethodEnum.Motor_Y_Thermal，对应热试验基线", true),
                 (47, "companion", MotorYLegacyEnumNames.ThermalCompanion, MotorYLegacyFormNames.ThermalCompanion, "旧现场变体：陪试/伴随机热试验", false),
-                (48, "other-variant", MotorYLegacyEnumNames.ThermalCydj, MotorYLegacyFormNames.ThermalCydj, "旧现场少量变体：热试验扩展方法号", false)),
+                (48, "other-variant", MotorYLegacyEnumNames.ThermalCydj, MotorYLegacyFormNames.ThermalCydj, "旧现场少量变体：热试验扩展方法号", false),
+                (94, "companion", MotorYLegacyEnumNames.ThermalCompanion, MotorYLegacyFormNames.ThermalCompanion, "旧现场别名方法号：陪试热试验", false),
+                (103, "other-variant", MotorYLegacyEnumNames.TemperatureGaugeThermal, MotorYLegacyFormNames.ThermalCydj, "旧现场变体：温度计法热试验", false),
+                (144, "other-variant", MotorYLegacyEnumNames.ThermalCydj, MotorYLegacyFormNames.ThermalCydj, "旧现场变体：热试验2", false)),
 
             [MotorYTestMethodCodes.LoadA] = BuildProfiles(
                 MotorYTestMethodCodes.LoadA,
@@ -82,6 +93,7 @@ public static class MotorYMethodProfileCatalog
                 MotorYSettingsMethodNames.LockRotor,
                 11,
                 (11, "baseline", MotorYLegacyEnumNames.LockedRotor, MotorYLegacyFormNames.LockedRotor, "旧 TestMethodEnum.Motor_Y_Lock_Rotor，对应堵转特性试验基线", true),
+                (19, "delivery", MotorYLegacyEnumNames.LockedRotorDelivery, MotorYLegacyFormNames.LockedRotorDelivery, "旧现场变体：堵转试验（出厂）历史方法号", false),
                 (46, "delivery", MotorYLegacyEnumNames.LockedRotorDelivery, MotorYLegacyFormNames.LockedRotorDelivery, "旧现场变体：堵转试验（出厂/交付态）", false),
                 (47, "legacy-alias", MotorYLegacyEnumNames.LockedRotorLegacyAlias, MotorYLegacyFormNames.LockedRotor, "旧现场变体：堵转试验历史方法号，需与热试验 47 结合业务项区分", false))
         };
@@ -204,9 +216,12 @@ public static class MotorYLegacyEnumNames
     public const string DcResistanceDeliveryCompanion = "Motor_Y_Direct_Current_Resistance_DeliveryTest_Companion";
     public const string NoLoad = "Motor_Y_NoLoad";
     public const string NoLoadDelivery = "Motor_Y_NoLoad_DeliveryTest";
+    public const string NoLoadMeasure = "Motor_Y_NoLoad_Measure";
+    public const string NoLoadCompanion = "Motor_Y_NoLoad_Companion";
     public const string Thermal = "Motor_Y_Thermal";
     public const string ThermalCompanion = "Motor_Y_Thermal_Companion";
     public const string ThermalCydj = "Motor_Y_Thermal_CYDJ";
+    public const string TemperatureGaugeThermal = "Motor_Y_TemperatureGauge";
     public const string LoadA = "Motor_Y_Load_A";
     public const string LoadADelivery = "Motor_Y_Load_A_DeliveryTest";
     public const string LoadAOtherVariant = "Motor_Y_Load_A_OtherVariant";
@@ -224,6 +239,7 @@ public static class MotorYLegacyFormNames
     public const string DcResistanceCompanion = "FrmMotor_Y_Direct_Current_Resistance_Companion";
     public const string NoLoad = "FrmMotor_Y_NoLoad";
     public const string NoLoadDelivery = "FrmMotor_Y_NoLoad_DeliveryTest";
+    public const string NoLoadCompanion = "FrmMotor_Y_NoLoad_Companion";
     public const string Thermal = "FrmMotor_Y_Thermal";
     public const string ThermalCompanion = "FrmMotor_Y_Thermal_Companion";
     public const string ThermalCydj = "FrmMotor_Y_Thermal_CYDJ";

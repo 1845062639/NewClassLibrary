@@ -95,6 +95,7 @@ public sealed class TestRecordQueryViewAssembler
             MethodCode = item.MethodCode,
             BuildProfile = item.BuildProfile,
             LegacyAlgorithmRoute = ResolveLegacyAlgorithmRoute(item, payload),
+            DataJson = item.DataJson,
             IsValid = item.IsValid,
             Remark = item.Remark,
             HasRemark = !string.IsNullOrWhiteSpace(item.Remark),

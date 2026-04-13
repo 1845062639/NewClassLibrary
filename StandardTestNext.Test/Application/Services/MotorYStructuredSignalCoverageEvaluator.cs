@@ -55,6 +55,10 @@ internal static class MotorYStructuredSignalCoverageEvaluator
                 .Where(signal => HasSignal(document.RootElement, signal, ref sampleCount))
                 .OrderBy(signal => signal, StringComparer.Ordinal)
                 .ToArray();
+            if (observed.Length > 0)
+            {
+                sampleCount = Math.Max(sampleCount, 1);
+            }
             return Build(required, observed, sampleCount, observed.Length > 0 || sampleCount > 0, summaryLabel);
         }
         catch (JsonException)

@@ -386,7 +386,7 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
                 },
                 RequiredRatedParamFields = new[] { "GB" },
                 RequiredResultFields = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
-                RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl", "A", "B", "R", "Ps", "cuC", "θs" },
+                RequiredIntermediateResultFields = new[] { "R1t", "Pcu1t", "Nst", "St", "Ub", "Pfe", "Pcu2t", "Tx", "P2tx", "Pl", "A", "B", "R", "Ps", "θs" },
                 RequiredStructuredPayloadSignals = new[] { "RawDataList.U", "RawDataList.I1", "RawDataList.P1t", "RawDataList.Nt", "RawDataList.Tt", "RawDataList.Frequency", "RawDataList.θ1t", "RawDataList.θa", "RawDataList.Pl", "ResultDataList.P2", "ResultDataList.Ps" },
                 RequiredStructuredResultSignals = new[] { "A", "B", "R", "Pcu1", "Pcu2", "θs", "ResultDataList" },
                 MinimumRawSampleCount = 3,
@@ -513,5 +513,10 @@ public static class MotorYLegacyAlgorithmDependencyCatalog
         return Profiles.TryGetValue(canonicalCode, out var profile)
             ? profile
             : null;
+    }
+
+    public static MotorYLegacyAlgorithmDependencyProfile Get(string? canonicalCode)
+    {
+        return TryGet(canonicalCode) ?? new MotorYLegacyAlgorithmDependencyProfile();
     }
 }

@@ -188,7 +188,9 @@ public sealed class TestBootstrap
         Console.WriteLine($"[Test] Primary record report: {(primaryRecordReport is null ? "<none>" : $"{primaryRecordReport.Format}:{primaryRecordReport.ArtifactFileName}")}");
         Console.WriteLine($"[Test] Recent report summaries: {string.Join(", ", recentReportSummaries.Select(x => $"{x.RecordCode}:{x.Format}:light={(x.IsLightweightEntry ? "Y" : "N")}:primary={(x.IsPrimaryEntry ? "Y" : "N")}"))}");
         Console.WriteLine($"[Test] Recent products: {string.Join(", ", recentProducts.Select(x => $"{x.ProductKind}:{x.Model}:{x.Code}"))}");
+        var noLoadExecution = MotorYNoLoadExecutionAdapter.Build(noLoadPayload);
         Console.WriteLine($"[Test] NoLoad legacy-shape preview: {MotorYNoLoadLegacyPreviewFormatter.Format(noLoadLegacyShape)}");
+        Console.WriteLine($"[Test] NoLoad execution preview: stage={noLoadExecution.ExecutionStage}, executable={(noLoadExecution.IsExecutable ? "Y" : "N")}, branch={noLoadExecution.RConverseBranch}, θ0={noLoadExecution.ComputedTheta0}, R0={noLoadExecution.ComputedR0}, rated-point={noLoadExecution.RatedVoltagePointVoltage}/{noLoadExecution.RatedVoltagePointCurrent}/{noLoadExecution.RatedVoltagePointPower}, pfw={noLoadExecution.PfwEstimate}, pfe={noLoadExecution.PfeEstimate}, missing={FormatPreview(noLoadExecution.MissingInputs, 4)}");
         Console.WriteLine($"[Test] LockRotor legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLockRotor(lockRotorLegacyShape)}");
         Console.WriteLine($"[Test] Thermal legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatThermal(thermalLegacyShape)}");
         Console.WriteLine($"[Test] LoadA legacy-shape preview: {MotorYLegacyShapePreviewFormatter.FormatLoadA(loadALegacyShape)}");

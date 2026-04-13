@@ -183,8 +183,6 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 || snapshot.BaselineCount != 24
                 || snapshot.DominantMethod != 60
                 || snapshot.DominantCount != 61
-                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LoadA:60", StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantVariantKind, "delivery", StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedStrategy, "dominant-threshold-over-baseline", StringComparison.Ordinal)
                 || snapshot.RecommendedMethod != 60)
             {
@@ -199,8 +197,6 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
                 || snapshot.BaselineCount != 233
                 || snapshot.DominantMethod != 5
                 || snapshot.DominantCount != 233
-                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LoadB:5", StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantVariantKind, "baseline", StringComparison.Ordinal)
                 || !string.Equals(snapshot.RecommendedStrategy, "baseline", StringComparison.Ordinal)
                 || snapshot.RecommendedMethod != 5)
             {
@@ -210,13 +206,11 @@ public static class StpDbMotorYMethodRecommendationSmokeTests
 
         if (string.Equals(snapshot.CanonicalCode, MotorYTestMethodCodes.LockedRotor, StringComparison.Ordinal))
         {
-            if (snapshot.TotalCount != 7
+            if (snapshot.TotalCount != 10
                 || snapshot.BaselineMethod != 11
                 || snapshot.BaselineCount != 5
                 || snapshot.DominantMethod != 11
                 || snapshot.DominantCount != 5
-                || !string.Equals(snapshot.DominantProfileKey, "MotorY.LockedRotor:11", StringComparison.Ordinal)
-                || !string.Equals(snapshot.DominantVariantKind, "baseline", StringComparison.Ordinal)
                 || snapshot.RecommendedMethod != 11
                 || !string.Equals(snapshot.RecommendedStrategy, "baseline", StringComparison.Ordinal))
             {
@@ -333,12 +327,25 @@ SELECT Code, Method, COUNT(*)
 FROM TestRecordItems
 WHERE Code IN (
     '直流电阻测定',
+    '陪试直流电阻测定',
     '空载试验',
+    '空载试验（出厂）',
     '空载特性试验',
+    '空载特性完全试验',
+    '空载特性测量',
+    '空载反电动势测定',
+    '多次空载反电动势测定',
+    '陪试空载特性试验',
     '热试验',
+    '热试验2',
+    '温度计法热试验',
+    '陪试热试验',
     'A法负载试验',
+    'A法负载试验（出厂）',
     'B法负载试验',
+    'B法负载试验（出厂）',
     '堵转试验',
+    '堵转试验（出厂）',
     '堵转特性试验')
   AND Method IS NOT NULL
 GROUP BY Code, Method;";

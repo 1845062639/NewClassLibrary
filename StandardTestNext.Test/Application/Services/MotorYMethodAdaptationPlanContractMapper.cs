@@ -1,3 +1,4 @@
+using System.Text.Json;
 using StandardTestNext.Contracts;
 
 namespace StandardTestNext.Test.Application.Services;
@@ -7,7 +8,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
     public static MotorYMethodAdaptationPlanContract Map(
         MotorYMethodDecisionSnapshot snapshot,
         Func<MotorYLegacyAlgorithmRoute?, MotorYBuildProfileContract?> profileMapper,
-        IReadOnlyList<MotorYLegacyCodeDistributionSnapshot>? legacyCodeDistributions = null)
+        IReadOnlyList<MotorYLegacyCodeDistributionSnapshot>? legacyCodeDistributions = null,
+        string? sampleDataJson = null)
     {
         var selection = MotorYMethodRouteSelectionSnapshotFactory.Create(snapshot);
         var selectedProfile = selection.SelectedRoute;
@@ -39,35 +41,36 @@ internal static class MotorYMethodAdaptationPlanContractMapper
         var coverage = MotorYRequiredPayloadFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             requiredPayloadFields,
-            null);
+            sampleDataJson);
         var ratedCoverage = MotorYRequiredRatedParamFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
             null);
         var rawDataSignalCoverage = MotorYRawDataSignalCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
-            null);
+            sampleDataJson);
         var resultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
-            null);
+            sampleDataJson);
         var intermediateResultCoverage = MotorYRequiredResultFieldCoverageEvaluator.Evaluate(
             selection.CanonicalCode,
             dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
-            null);
+            sampleDataJson);
         var structuredPayloadCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
             dependencyProfile?.RequiredStructuredPayloadSignals,
-            null,
+            sampleDataJson,
             "structured payload signals");
         var structuredResultCoverage = MotorYStructuredSignalCoverageEvaluator.Evaluate(
             dependencyProfile?.RequiredStructuredResultSignals,
-            null,
+            sampleDataJson,
             "structured result signals");
         var observedStructuredSignals = structuredPayloadCoverage.ObservedSignals
             .Concat(structuredResultCoverage.ObservedSignals)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
         var formulaEvidenceObservedFields = resultCoverage.CoveredRequiredResultFields
+            .Concat(intermediateResultCoverage.CoveredRequiredResultFields)
             .Concat(rawDataSignalCoverage.ObservedSignals)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
@@ -75,13 +78,15 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             formulaEvidenceObservedFields,
             observedStructuredSignals);
-        var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-            dependencyProfile?.FormulaSignals,
-            formulaEvidence.ObservedPayloadFields,
+        var formulaCoverage = MotorYStructuredListCoverageEvaluator.EvaluateObservedEvidence(
+            formulaEvidence.SignalOrRuleGaps,
             "formula signals");
+        var observedPayloadFields = ExtractObservedPayloadFields(sampleDataJson);
         var ruleObservedFields = coverage.CoveredRequiredPayloadFields
+            .Concat(observedPayloadFields)
             .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
             .Concat(resultCoverage.CoveredRequiredResultFields)
+            .Concat(intermediateResultCoverage.CoveredRequiredResultFields)
             .Concat(rawDataSignalCoverage.ObservedSignals)
             .Distinct(StringComparer.Ordinal)
             .ToArray();
@@ -89,9 +94,8 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             selection.CanonicalCode,
             ruleObservedFields,
             observedStructuredSignals);
-        var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-            dependencyProfile?.LegacyAlgorithmRules,
-            ruleEvidence.ObservedPayloadFields,
+        var ruleCoverage = MotorYStructuredListCoverageEvaluator.EvaluateObservedEvidence(
+            ruleEvidence.SignalOrRuleGaps,
             "legacy algorithm rules");
         var decisionAnchorObservedFields = ruleObservedFields;
         var decisionAnchorEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyDecisionAnchorEvidence(
@@ -1096,6 +1100,73 @@ internal static class MotorYMethodAdaptationPlanContractMapper
             SelectedCount = contract.SelectedCount,
             SelectedShare = contract.SelectedShare,
             Summary = contract.Summary
+        };
+    }
+
+    private static IReadOnlyList<string> ExtractObservedPayloadFields(string? sampleDataJson)
+    {
+        if (string.IsNullOrWhiteSpace(sampleDataJson))
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(sampleDataJson);
+            var fields = new HashSet<string>(StringComparer.Ordinal);
+            CollectObservedPayloadFields(document.RootElement, prefix: null, fields);
+            return fields.OrderBy(x => x, StringComparer.Ordinal).ToArray();
+        }
+        catch (JsonException)
+        {
+            return Array.Empty<string>();
+        }
+    }
+
+    private static void CollectObservedPayloadFields(JsonElement element, string? prefix, ISet<string> fields)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var property in element.EnumerateObject())
+            {
+                var fieldName = string.IsNullOrWhiteSpace(prefix)
+                    ? property.Name
+                    : $"{prefix}.{property.Name}";
+
+                if (HasObservedValue(property.Value))
+                {
+                    fields.Add(fieldName);
+                }
+
+                if (property.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+                {
+                    CollectObservedPayloadFields(property.Value, fieldName, fields);
+                }
+            }
+
+            return;
+        }
+
+        if (element.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in element.EnumerateArray())
+            {
+                CollectObservedPayloadFields(item, prefix, fields);
+            }
+        }
+    }
+
+    private static bool HasObservedValue(JsonElement value)
+    {
+        return value.ValueKind switch
+        {
+            JsonValueKind.Number => value.TryGetDouble(out _),
+            JsonValueKind.String => !string.IsNullOrWhiteSpace(value.GetString()),
+            JsonValueKind.True => true,
+            JsonValueKind.False => true,
+            JsonValueKind.Array => value.GetArrayLength() > 0,
+            JsonValueKind.Object => value.EnumerateObject().Any(),
+            _ => false
         };
     }
 

@@ -502,7 +502,7 @@ internal static class MotorYDecisionAnchorResolutionFactory
             .Where(x => !string.IsNullOrWhiteSpace(x.SuggestedPrimaryNextField))
             .GroupBy(x => x.SuggestedPrimaryNextField, StringComparer.Ordinal)
             .OrderByDescending(group => group.Count())
-            .ThenBy(group => GetPrioritySortOrder(group.Min(x => x.SuggestedNextStepPriority)))
+            .ThenBy(group => GetPrioritySortOrder(group.Min(x => x.SuggestedNextStepPriority) ?? string.Empty))
             .ThenBy(group => group.Key, StringComparer.Ordinal)
             .Select(group =>
             {
@@ -520,7 +520,7 @@ internal static class MotorYDecisionAnchorResolutionFactory
                     .Select(x => x.SuggestedNextStepPriority)
                     .Where(x => !string.IsNullOrWhiteSpace(x))
                     .Distinct(StringComparer.Ordinal)
-                    .OrderBy(GetPrioritySortOrder)
+                    .OrderBy(priority => GetPrioritySortOrder(priority ?? string.Empty))
                     .ThenBy(x => x, StringComparer.Ordinal)
                     .ToArray();
                 var focusPreview = focuses.Length == 0

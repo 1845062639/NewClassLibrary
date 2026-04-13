@@ -51,11 +51,13 @@ public static class TestRecordViewMapper
     public static TestRecordDetailView ToDetailView(this TestRecordDetail detail)
     {
         var motorYMethodDecisions = BuildMotorYMethodDecisions(detail.ItemDetails);
+        var motorYSamplePayloads = BuildMotorYSamplePayloadByCanonicalCode(detail.ItemDetails);
         var basePlans = motorYMethodDecisions
             .Select(snapshot => MotorYMethodAdaptationPlanContractMapper.Map(
                 snapshot,
                 MapBuildProfile,
-                BuildLegacyCodeDistributions(detail.ItemDetails, snapshot.CanonicalCode)))
+                BuildLegacyCodeDistributions(detail.ItemDetails, snapshot.CanonicalCode),
+                motorYSamplePayloads.TryGetValue(snapshot.CanonicalCode, out var sampleDataJson) ? sampleDataJson : null))
             .Select(MapAdaptationPlanSnapshot)
             .ToArray();
 
@@ -113,6 +115,32 @@ public static class TestRecordViewMapper
             MotorYMethodAdaptationPlans = motorYMethodAdaptationPlans,
             ReportSummaries = detail.ReportSummaries
         };
+    }
+
+    private static Dictionary<string, string> BuildMotorYSamplePayloadByCanonicalCode(IReadOnlyList<TestRecordItemDetail> itemDetails)
+    {
+        var candidates = itemDetails
+            .Where(item => !string.IsNullOrWhiteSpace(item.ItemCode)
+                && !string.IsNullOrWhiteSpace(item.DataJson)
+                && MotorYLegacyItemCodeNormalizer.IsMotorYCoreTrial(item.ItemCode))
+            .GroupBy(item => item.ItemCode, StringComparer.Ordinal);
+
+        var result = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var group in candidates)
+        {
+            var selected = group
+                .OrderByDescending(item => item.SampleCount)
+                .ThenByDescending(item => item.DataJson.Contains("\"BuildProfile\"", StringComparison.Ordinal))
+                .ThenByDescending(item => item.DataJson.Length)
+                .FirstOrDefault();
+
+            if (selected is not null)
+            {
+                result[group.Key] = selected.DataJson;
+            }
+        }
+
+        return result;
     }
 
     private static MotorYMethodAdaptationPlanSnapshot CloneWithCrossPlanFocuses(
@@ -182,6 +210,7 @@ public static class TestRecordViewMapper
             UpstreamDependencySummary = plan.UpstreamDependencySummary,
             RequiredPayloadFields = plan.RequiredPayloadFields,
             SourceEvidences = plan.SourceEvidences,
+            FormDependencyEvidences = plan.FormDependencyEvidences,
             RequiredRatedParamFields = plan.RequiredRatedParamFields,
             RequiredResultFields = plan.RequiredResultFields,
             RequiredIntermediateResultFields = plan.RequiredIntermediateResultFields,
@@ -595,6 +624,17 @@ public static class TestRecordViewMapper
                 SourceRange = x.SourceRange,
                 SourceAnchor = x.SourceAnchor,
                 ReferencedFields = x.ReferencedFields,
+                Summary = x.Summary
+            }).ToArray(),
+            FormDependencyEvidences = contract.FormDependencyEvidences.Select(x => new MotorYLegacyFormDependencyEvidenceSnapshot
+            {
+                FormName = x.FormName,
+                SourceFile = x.SourceFile,
+                Line = x.Line,
+                SourceRange = x.SourceRange,
+                SourceAnchor = x.SourceAnchor,
+                UpstreamCanonicalCodes = x.UpstreamCanonicalCodes,
+                ReferencedMethods = x.ReferencedMethods,
                 Summary = x.Summary
             }).ToArray(),
             RequiredRatedParamFields = contract.RequiredRatedParamFields,

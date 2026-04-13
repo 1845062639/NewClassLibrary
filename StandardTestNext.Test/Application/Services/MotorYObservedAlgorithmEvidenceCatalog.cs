@@ -58,7 +58,8 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             {
                 ["ratios"] = new[] { "ratios", "GB", "θs", "ResultDataList" },
                 ["bad-point-refit"] = new[] { "bad-point-refit", "A", "B", "R" },
-                ["cuC"] = new[] { "cuC", "Ps", "ResultDataList" }
+                ["cuC"] = new[] { "cuC", "Ps", "ResultDataList", "ResultDataList.Ps" },
+                ["Ps"] = new[] { "Ps", "ResultDataList.Ps" }
             },
             [MotorYTestMethodCodes.LockedRotor] = new Dictionary<string, string[]>(StringComparer.Ordinal)
             {
@@ -228,8 +229,11 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             .Where(field => !string.IsNullOrWhiteSpace(field))
             .Distinct(StringComparer.Ordinal)
             .ToArray();
+        var aliases = DecisionAnchorObservedFieldAliasesByCanonicalCode.TryGetValue(canonicalCode, out var aliasMap)
+            ? aliasMap
+            : new Dictionary<string, string[]>(StringComparer.Ordinal);
         var matched = requiredFields
-            .Where(field => observed.Contains(field, StringComparer.Ordinal))
+            .Where(field => IsDecisionAnchorFieldObserved(field, observed, aliases))
             .OrderBy(field => field, StringComparer.Ordinal)
             .ToArray();
         var missing = requiredFields
@@ -239,7 +243,7 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
             ? 1d
             : Math.Round((double)matched.Length / requiredFields.Length, 4, MidpointRounding.AwayFromZero);
         var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
-        var gaps = BuildSignalOrRuleGaps(requiredFields, observed, gapLabelPrefix);
+        var gaps = BuildSignalOrRuleGaps(requiredFields, observed, gapLabelPrefix, aliases);
 
         return new MotorYObservedAlgorithmEvidenceSnapshot
         {
@@ -256,13 +260,14 @@ internal static class MotorYObservedAlgorithmEvidenceCatalog
     private static IReadOnlyList<MotorYObservedAlgorithmEvidenceGap> BuildSignalOrRuleGaps(
         IReadOnlyList<string> requiredFields,
         IReadOnlyList<string> observedFields,
-        string gapLabelPrefix)
+        string gapLabelPrefix,
+        IReadOnlyDictionary<string, string[]> aliases)
     {
         return requiredFields
             .OrderBy(field => field, StringComparer.Ordinal)
             .Select(field =>
             {
-                var isCovered = observedFields.Contains(field, StringComparer.Ordinal);
+                var isCovered = IsDecisionAnchorFieldObserved(field, observedFields, aliases);
                 return new MotorYObservedAlgorithmEvidenceGap
                 {
                     SignalOrRule = $"{gapLabelPrefix}:{field}",

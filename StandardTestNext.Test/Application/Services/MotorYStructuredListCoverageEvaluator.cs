@@ -39,4 +39,42 @@ internal static class MotorYStructuredListCoverageEvaluator
             Summary = $"{summaryLabel} covered {covered.Length}/{required.Length} ({percentagePoints}pp); missing: {(missing.Length == 0 ? "none" : string.Join(", ", missing))}"
         };
     }
+
+    public static MotorYStructuredListCoverageSnapshot EvaluateObservedEvidence(
+        IReadOnlyList<MotorYObservedAlgorithmEvidenceGap>? gaps,
+        string summaryLabel)
+    {
+        var entries = (gaps ?? Array.Empty<MotorYObservedAlgorithmEvidenceGap>())
+            .Where(gap => !string.IsNullOrWhiteSpace(gap.SignalOrRule))
+            .GroupBy(gap => gap.SignalOrRule, StringComparer.Ordinal)
+            .Select(group => group.First())
+            .OrderBy(gap => gap.SignalOrRule, StringComparer.Ordinal)
+            .ToArray();
+        var covered = entries
+            .Where(gap => gap.CoveredByObservedPayload)
+            .Select(gap => gap.SignalOrRule)
+            .ToArray();
+        var missing = entries
+            .Where(gap => !gap.CoveredByObservedPayload)
+            .Select(gap => gap.SignalOrRule)
+            .ToArray();
+        var requiredCount = entries.Length;
+        var coveredCount = covered.Length;
+        var ratio = requiredCount == 0
+            ? 1d
+            : Math.Round((double)coveredCount / requiredCount, 4, MidpointRounding.AwayFromZero);
+        var percentagePoints = (int)Math.Round(ratio * 100d, MidpointRounding.AwayFromZero);
+
+        return new MotorYStructuredListCoverageSnapshot
+        {
+            RequiredCount = requiredCount,
+            CoveredCount = coveredCount,
+            MissingCount = missing.Length,
+            CoveredItems = covered,
+            MissingItems = missing,
+            CoverageRatio = ratio,
+            CoveragePercentagePoints = percentagePoints,
+            Summary = $"{summaryLabel} covered {coveredCount}/{requiredCount} ({percentagePoints}pp); missing: {(missing.Length == 0 ? "none" : string.Join(", ", missing))}"
+        };
+    }
 }

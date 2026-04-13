@@ -111,8 +111,10 @@ internal static class MotorYSamplePayloadCandidateValidator
             && loadB.RawDataList.Count >= 3
             && loadB.ResultDataList.Count >= 6
             && loadB.A > 0
-            && loadB.B > 0
-            && loadB.R > 0;
+            && loadB.R > 0
+            && loadB.RawDataList.Any(x => x.θa > 0)
+            && loadB.ResultDataList.Any(x => x.P2 > 0)
+            && loadB.ResultDataList.Any(x => x.Ps > 0);
     }
 
     private static bool HasPreferredLockedRotorEvidence(string dataJson)

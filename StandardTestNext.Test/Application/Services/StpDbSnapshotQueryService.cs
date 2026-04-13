@@ -9,16 +9,14 @@ public sealed class StpDbSnapshotQueryService
     private const double MotorYDominantOverrideThreshold = 0.7d;
 
     private static readonly string[] MotorYLegacyItemCodes =
-    [
-        "直流电阻测定",
-        "空载试验",
-        "空载特性试验",
-        "热试验",
-        "A法负载试验",
-        "B法负载试验",
-        "堵转试验",
-        "堵转特性试验"
-    ];
+        [
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.DcResistance),
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.NoLoad),
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.HeatRun),
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.LoadA),
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.LoadB),
+            ..MotorYLegacyItemCodeNormalizer.GetLegacyAliases(MotorYTestMethodCodes.LockedRotor)
+        ];
 
     private readonly string _dbPath;
 
@@ -655,6 +653,7 @@ WHERE COALESCE(curr.Code, '') <> ''
                     .Distinct(StringComparer.Ordinal)
                     .ToArray();
                 var formulaEvidenceObservedFields = resultCoverage.CoveredRequiredResultFields
+                    .Concat(intermediateResultCoverage.CoveredRequiredResultFields)
                     .Concat(rawDataSignalCoverage.ObservedSignals)
                     .Distinct(StringComparer.Ordinal)
                     .ToArray();
@@ -662,13 +661,13 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     formulaEvidenceObservedFields,
                     observedStructuredSignals);
-                var formulaCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-                    dependencyProfile?.FormulaSignals,
-                    formulaEvidence.ObservedPayloadFields,
+                var formulaCoverage = MotorYStructuredListCoverageEvaluator.EvaluateObservedEvidence(
+                    formulaEvidence.SignalOrRuleGaps,
                     "formula signals");
                 var ruleObservedFields = coverage.CoveredRequiredPayloadFields
                     .Concat(ratedCoverage.CoveredRequiredRatedParamFields)
                     .Concat(resultCoverage.CoveredRequiredResultFields)
+                    .Concat(intermediateResultCoverage.CoveredRequiredResultFields)
                     .Concat(rawDataSignalCoverage.ObservedSignals)
                     .Distinct(StringComparer.Ordinal)
                     .ToArray();
@@ -676,9 +675,8 @@ WHERE COALESCE(curr.Code, '') <> ''
                     selection.CanonicalCode,
                     ruleObservedFields,
                     observedStructuredSignals);
-                var ruleCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
-                    dependencyProfile?.LegacyAlgorithmRules,
-                    ruleEvidence.ObservedPayloadFields,
+                var ruleCoverage = MotorYStructuredListCoverageEvaluator.EvaluateObservedEvidence(
+                    ruleEvidence.SignalOrRuleGaps,
                     "legacy algorithm rules");
                 var decisionAnchorObservedFields = ruleObservedFields;
                 var decisionAnchorEvidence = MotorYObservedAlgorithmEvidenceCatalog.BuildLegacyDecisionAnchorEvidence(
@@ -700,11 +698,11 @@ WHERE COALESCE(curr.Code, '') <> ''
                         Summary = rule.Summary
                     })
                     .ToArray();
-                var decisionAnchorCoverage = MotorYStructuredListCoverageEvaluator.Evaluate(
+                var selectedCanonicalCode = selectedRoute?.CanonicalCode ?? selection.CanonicalCode;
+                var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(selectedCanonicalCode, decisionAnchorObservationRules);
+                var decisionAnchorCoverage = BuildDecisionAnchorCoverageFromResolutions(
                     dependencyProfile?.LegacyDecisionAnchors,
-                    decisionAnchorEvidence.ObservedPayloadFields,
-                    "legacy decision anchors");
-                var decisionAnchorResolutions = MotorYDecisionAnchorResolutionFactory.Build(selectedRoute.CanonicalCode, decisionAnchorObservationRules);
+                    decisionAnchorResolutions);
                 var resolvedDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.ResolvedByObservedPayload);
                 var partialDecisionAnchorCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload);
                 var missingDecisionAnchorResolutionCount = decisionAnchorResolutions.Count - resolvedDecisionAnchorCount - partialDecisionAnchorCount;
@@ -943,6 +941,20 @@ WHERE COALESCE(curr.Code, '') <> ''
                     UpstreamDependenciesSatisfied = upstream.UpstreamDependenciesSatisfied,
                     UpstreamDependencySummary = upstream.UpstreamDependencySummary,
                     RequiredPayloadFields = requiredPayloadFields,
+                    SourceEvidences = (dependencyProfile?.SourceEvidences ?? Array.Empty<MotorYLegacyAlgorithmSourceEvidence>())
+                        .Select(evidence => new MotorYLegacyAlgorithmSourceEvidenceSnapshot
+                        {
+                            SectionKey = evidence.SectionKey,
+                            MethodName = evidence.MethodName,
+                            SourceFile = evidence.SourceFile,
+                            StartLine = evidence.StartLine,
+                            EndLine = evidence.EndLine,
+                            SourceRange = evidence.SourceRange,
+                            SourceAnchor = evidence.SourceAnchor,
+                            ReferencedFields = evidence.ReferencedFields,
+                            Summary = evidence.Summary
+                        })
+                        .ToArray(),
                     RequiredRatedParamFields = dependencyProfile?.RequiredRatedParamFields ?? Array.Empty<string>(),
                     RequiredResultFields = dependencyProfile?.RequiredResultFields ?? Array.Empty<string>(),
                     RequiredIntermediateResultFields = dependencyProfile?.RequiredIntermediateResultFields ?? Array.Empty<string>(),
@@ -1766,11 +1778,6 @@ ORDER BY rowid DESC;";
                 fallbackCandidates[canonicalCode] = dataJson;
             }
 
-            if (preferredCandidates.ContainsKey(canonicalCode))
-            {
-                continue;
-            }
-
             if (decisionSelections.TryGetValue(canonicalCode, out var selectedMethod)
                 && methodValue == selectedMethod
                 && MotorYSamplePayloadCandidateValidator.IsPreferredMethodCandidate(canonicalCode, methodValue, dataJson))
@@ -2044,6 +2051,14 @@ ORDER BY tri.rowid DESC;";
             .OrderByDescending(x => x.Count())
             .ThenBy(x => x.Key, StringComparer.Ordinal)
             .FirstOrDefault()?.Key ?? string.Empty;
+
+    private static IReadOnlyList<string> DistinctNonEmpty(params string?[] values)
+        => values
+            .Where(value => !string.IsNullOrWhiteSpace(value))
+            .Select(value => value!.Trim())
+            .Distinct(StringComparer.Ordinal)
+            .OrderBy(value => value, StringComparer.Ordinal)
+            .ToArray();
 
     private static IReadOnlyList<StpDbMotorRatedParamsValueDistributionSnapshot> LoadRatedParamsFieldDistribution(
         SqliteConnection connection,
@@ -2388,5 +2403,42 @@ ORDER BY tri.ID, COALESCE(tria.[Order], 0), fa.UploadTime, fa.ID;";
     private static string BuildInlineQuotedList(IEnumerable<string> values)
     {
         return string.Join(", ", values.Select(value => $"'{value.Replace("'", "''")}'"));
+    }
+
+    private static MotorYStructuredListCoverageSnapshot BuildDecisionAnchorCoverageFromResolutions(
+        IReadOnlyList<string>? legacyDecisionAnchors,
+        IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
+    {
+        var requiredItems = (legacyDecisionAnchors ?? Array.Empty<string>())
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var coveredCount = Math.Min(requiredItems.Length, decisionAnchorResolutions.Count(x => x.ResolvedByObservedPayload));
+        var partialCount = decisionAnchorResolutions.Count(x => x.PartiallyResolvedByObservedPayload && !x.ResolvedByObservedPayload);
+        var total = requiredItems.Length;
+        var coveredItems = requiredItems.Take(coveredCount).ToArray();
+        var missingItems = requiredItems.Skip(coveredCount).ToArray();
+        var percentagePoints = total == 0 ? 100 : (int)Math.Round((double)coveredCount / total * 100d, MidpointRounding.AwayFromZero);
+        var ratio = total == 0 ? 1d : Math.Round((double)coveredCount / total, 4, MidpointRounding.AwayFromZero);
+        var unresolvedAnchors = decisionAnchorResolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var summary = total == 0
+            ? "legacy decision anchors covered 0/0 (100pp); missing: none"
+            : $"legacy decision anchors covered {coveredCount}/{total} ({percentagePoints}pp); missing: {(unresolvedAnchors.Length == 0 ? "none" : string.Join(", ", unresolvedAnchors))}";
+
+        return new MotorYStructuredListCoverageSnapshot
+        {
+            RequiredCount = total,
+            CoveredCount = coveredCount,
+            MissingCount = total - coveredCount,
+            CoveredItems = coveredItems,
+            MissingItems = missingItems,
+            CoverageRatio = ratio,
+            CoveragePercentagePoints = percentagePoints,
+            Summary = summary
+        };
     }
 }

@@ -16,7 +16,8 @@ public sealed class TestCommandBuilder
             Parameters = new Dictionary<string, string>
             {
                 ["SamplingIntervalMs"] = "1000",
-                ["RecordPolicy"] = "KeyPointOnly"
+                ["RecordPolicy"] = "KeyPointOnly",
+                ["RConverseType"] = "0"
             }
         };
     }

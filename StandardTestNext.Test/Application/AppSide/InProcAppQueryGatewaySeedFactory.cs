@@ -31,7 +31,7 @@ public static class InProcAppQueryGatewaySeedFactory
         var productDefinition = productDefinitionService.GetOrCreateAsync(rated).GetAwaiter().GetResult();
 
         var builder = new TestRecordAggregateBuilder();
-        var buildResult = builder.BuildDemoRecord(rated, seed.Samples, seed.LegacySamples, productDefinition);
+        var buildResult = builder.BuildDemoRecord(rated, seed.Samples, seed.LegacySamples, productDefinition, seed.NoLoadRConverseType);
         var record = buildResult.Record;
 
         recordRepository.SaveAsync(record).GetAwaiter().GetResult();

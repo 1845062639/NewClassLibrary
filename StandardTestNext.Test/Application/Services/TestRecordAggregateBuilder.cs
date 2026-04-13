@@ -12,7 +12,8 @@ public sealed class TestRecordAggregateBuilder
         MotorRatedParamsContract rated,
         IReadOnlyCollection<MotorRealtimeSampleContract> samples,
         IReadOnlyCollection<LegacyMotorRealtimeEnvelopeContract>? legacySamples = null,
-        ProductDefinition? productDefinition = null)
+        ProductDefinition? productDefinition = null,
+        int noLoadRConverseType = 0)
     {
         var record = new TestRecordAggregate
         {
@@ -28,7 +29,7 @@ public sealed class TestRecordAggregateBuilder
             TestProduct = productDefinition
         };
 
-        foreach (var trialItem in _motorYTrialRecordBuilder.BuildTrialItems(rated, samples))
+        foreach (var trialItem in _motorYTrialRecordBuilder.BuildTrialItems(rated, samples, noLoadRConverseType))
         {
             record.Items.Add(trialItem);
         }

@@ -29,9 +29,33 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
             {
                 SampleTime = baseTime,
                 ProductKind = "Motor_Y",
+                VoltageAverage = 142.6,
+                CurrentAverage = 18.4,
+                Power = 92.8,
+                Frequency = 50,
+                Speed = 1496,
+                Torque = 42.3,
+                IsRecordPoint = true
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(10),
+                ProductKind = "Motor_Y",
+                VoltageAverage = 176.4,
+                CurrentAverage = 24.7,
+                Power = 196.4,
+                Frequency = 50,
+                Speed = 1490,
+                Torque = 58.1,
+                IsRecordPoint = false
+            },
+            new MotorRealtimeSampleContract
+            {
+                SampleTime = baseTime.AddSeconds(20),
+                ProductKind = "Motor_Y",
                 VoltageAverage = 381.2,
                 CurrentAverage = 52.6,
-                Power = 24.8,
+                Power = 968.2,
                 Frequency = 50,
                 Speed = 1492,
                 Torque = 118.2,
@@ -39,11 +63,11 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
             },
             new MotorRealtimeSampleContract
             {
-                SampleTime = baseTime.AddSeconds(10),
+                SampleTime = baseTime.AddSeconds(30),
                 ProductKind = "Motor_Y",
                 VoltageAverage = 379.8,
                 CurrentAverage = 66.4,
-                Power = 31.2,
+                Power = 1486.7,
                 Frequency = 50,
                 Speed = 1476,
                 Torque = 136.5,
@@ -51,11 +75,11 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
             },
             new MotorRealtimeSampleContract
             {
-                SampleTime = baseTime.AddSeconds(20),
+                SampleTime = baseTime.AddSeconds(40),
                 ProductKind = "Motor_Y",
                 VoltageAverage = 382.5,
                 CurrentAverage = 74.1,
-                Power = 36.7,
+                Power = 1814.5,
                 Frequency = 50,
                 Speed = 1468,
                 Torque = 149.3,
@@ -64,9 +88,11 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
         };
 
         var items = builder.BuildTrialItems(rated, samples).ToDictionary(x => x.ItemCode, StringComparer.Ordinal);
+        var r0ToTheta0Items = builder.BuildTrialItems(rated, samples, 1).ToDictionary(x => x.ItemCode, StringComparer.Ordinal);
 
         AssertDcResistance(items[MotorYTestMethodCodes.DcResistance]);
         AssertNoLoad(items[MotorYTestMethodCodes.NoLoad]);
+        AssertNoLoadR0ToTheta0Branch(r0ToTheta0Items[MotorYTestMethodCodes.NoLoad]);
         AssertHeatRun(items[MotorYTestMethodCodes.HeatRun]);
         AssertLoadA(items[MotorYTestMethodCodes.LoadA]);
         AssertLoadB(items[MotorYTestMethodCodes.LoadB]);
@@ -138,7 +164,33 @@ public static class MotorYStpDbShapeAlignmentSmokeTests
             || shape.PfwFitSampleCount <= 0
             || !shape.PfwFitWindowReady)
         {
-            throw new InvalidOperationException("Motor_Y 空载 builder 未把新增旧分支锚点骨架字段稳定投影到 legacy shape。");
+            throw new InvalidOperationException(
+                $"Motor_Y 空载 builder 未把新增旧分支锚点骨架字段稳定投影到 legacy shape。 " +
+                $"Pcu={shape.U0DivideUnIsEquesToOne_Pcu}, Pfe={shape.U0DivideUnIsEquesToOne_Pfe}, ΔI0={shape.U0DivideUnIsEquesToOne_DeltaI0}, R0={shape.U0DivideUnIsEquesToOne_R0}, Theta0={shape.U0DivideUnIsEquesToOne_Theta0}, PfwFitSampleCount={shape.PfwFitSampleCount}, PfwFitWindowReady={shape.PfwFitWindowReady}, payload={item.DataJson}");
+        }
+    }
+
+    private static void AssertNoLoadR0ToTheta0Branch(TestRecordItemAggregate item)
+    {
+        var shape = MotorYNoLoadLegacyShape.FromJson(item.DataJson);
+        if (shape is null)
+        {
+            throw new InvalidOperationException("Motor_Y 空载 builder R0->θ0 smoke test failed: legacy shape parse returned null.");
+        }
+
+        var execution = MotorYNoLoadExecutionAdapter.Build(item.DataJson);
+        var expectedTheta0 = Math.Round(shape.R0 / shape.R1c * (shape.K1 + shape.θ1c) - shape.K1, shape.DecimalPlaces);
+
+        if (shape.RConverseType != 1
+            || !execution.IsExecutable
+            || !string.Equals(execution.RConverseBranch, "R0->θ0", StringComparison.Ordinal)
+            || Math.Abs(shape.θ0 - expectedTheta0) > 0.0001
+            || Math.Abs(shape.U0DivideUnIsEquesToOne_Theta0 - expectedTheta0) > 0.0001
+            || Math.Abs(execution.ComputedTheta0 - expectedTheta0) > 0.0001
+            || Math.Abs(execution.ComputedR0 - shape.R0) > 0.0001)
+        {
+            throw new InvalidOperationException(
+                $"Motor_Y 空载 builder R0->θ0 smoke test failed. payloadRConverseType={shape.RConverseType}, branch={execution.RConverseBranch}, executable={execution.IsExecutable}, payloadθ0={shape.θ0}, pu1θ0={shape.U0DivideUnIsEquesToOne_Theta0}, execθ0={execution.ComputedTheta0}, payloadR0={shape.R0}, execR0={execution.ComputedR0}, expectedθ0={expectedTheta0}.");
         }
     }
 

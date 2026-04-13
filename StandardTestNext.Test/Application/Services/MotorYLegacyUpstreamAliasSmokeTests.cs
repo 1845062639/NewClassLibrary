@@ -19,7 +19,7 @@ public static class MotorYLegacyUpstreamAliasSmokeTests
             ?? throw new InvalidOperationException("Motor_Y legacy upstream alias smoke test failed: Load_B profile missing.");
 
         if (!loadB.UpstreamLegacyAliases.TryGetValue(MotorYTestMethodCodes.NoLoad, out var noLoadAliases)
-            || !noLoadAliases.SequenceEqual(new[] { "空载特性完全试验", "空载特性测量", "空载特性试验", "空载试验", "空载试验（出厂）" }, StringComparer.Ordinal))
+            || !noLoadAliases.SequenceEqual(new[] { "空载特性完全试验", "空载特性测量", "空载特性试验", "空载试验", "空载试验（出厂）", "陪试空载特性试验" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: Load_B NoLoad aliases mismatch. actual=[{string.Join(", ", noLoadAliases ?? Array.Empty<string>())}]");
         }
@@ -43,17 +43,17 @@ public static class MotorYLegacyUpstreamAliasSmokeTests
         var loadBPlan = plans.FirstOrDefault(x => string.Equals(x.CanonicalCode, MotorYTestMethodCodes.LoadB, StringComparison.Ordinal))
             ?? throw new InvalidOperationException("Motor_Y legacy upstream alias smoke test failed: Load_B adaptation plan missing.");
 
-        AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.NoLoad, "空载特性试验", 233, 0.66d, 5);
-        AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.HeatRun, "热试验", 265, 1d, 4);
+        AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.NoLoad, "空载特性试验", 217, 0.7356d, 6);
+        AssertUpstreamDistribution(loadBPlan, MotorYTestMethodCodes.HeatRun, "热试验", 267, 0.9604d, 4);
 
         if (!loadBPlan.ObservedUpstreamLegacyCodes.TryGetValue(MotorYTestMethodCodes.NoLoad, out var observedNoLoadLegacyCodes)
-            || !observedNoLoadLegacyCodes.SequenceEqual(new[] { "空载特性完全试验", "空载特性测量", "空载特性试验", "空载试验", "空载试验（出厂）" }, StringComparer.Ordinal))
+            || !observedNoLoadLegacyCodes.SequenceEqual(new[] { "空载特性完全试验", "空载特性测量", "空载特性试验", "空载试验", "空载试验（出厂）", "陪试空载特性试验" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: observed NoLoad legacy aliases mismatch. actual=[{string.Join(", ", observedNoLoadLegacyCodes ?? Array.Empty<string>())}]");
         }
 
         if (!loadBPlan.ObservedUpstreamLegacyCodes.TryGetValue(MotorYTestMethodCodes.HeatRun, out var observedHeatLegacyCodes)
-            || !observedHeatLegacyCodes.SequenceEqual(new[] { "陪试热试验", "温度计法热试验", "热试验", "热试验2" }, StringComparer.Ordinal))
+            || !observedHeatLegacyCodes.SequenceEqual(new[] { "温度计法热试验", "热试验", "热试验2", "陪试热试验" }, StringComparer.Ordinal))
         {
             throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: observed HeatRun legacy aliases mismatch. actual=[{string.Join(", ", observedHeatLegacyCodes ?? Array.Empty<string>())}]");
         }
@@ -107,9 +107,9 @@ public static class MotorYLegacyUpstreamAliasSmokeTests
                     IsBaselineMethod = route.IsBaselineMethod
                 });
 
-        if (contract.UpstreamLegacyCodeDistributions.Count != 9)
+        if (contract.UpstreamLegacyCodeDistributions.Count != 10)
         {
-            throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: contract upstream legacy-code distribution count mismatch. expected=9, actual={contract.UpstreamLegacyCodeDistributions.Count}");
+            throw new InvalidOperationException($"Motor_Y legacy upstream alias smoke test failed: contract upstream legacy-code distribution count mismatch. expected=10, actual={contract.UpstreamLegacyCodeDistributions.Count}");
         }
 
         if (!contract.UpstreamLegacyCodeDistributions.All(x => x.Count == 0 && Math.Abs(x.Share) < 0.0001d))

@@ -8,6 +8,7 @@ public sealed class TestRecordItemDetail
     public string MethodCode { get; init; } = string.Empty;
     public MotorYTrialItemBuildProfile? BuildProfile { get; init; }
     public MotorYLegacyAlgorithmRoute? LegacyAlgorithmRoute { get; init; }
+    public string DataJson { get; init; } = string.Empty;
     public bool IsValid { get; init; }
     public string? Remark { get; init; }
     public bool HasRemark { get; init; }

@@ -64,7 +64,7 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-resolutions=rconverse-branch:missing:0pp:obs=none:miss=RConverseType:priority=none:coverage=none:next=先补空载旧算法的 R0/θ0 换算分支标记：RConverseType", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-resolutions=rconverse-branch:missing:0pp:obs=none:miss=RConverseType:priority=none:primary=none:coverage=none:next=先补空载旧算法的 R0/θ0 换算分支标记：RConverseType", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap formatting smoke test failed. actual='{formatted}'");
         }
@@ -101,7 +101,16 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("Pfw:2:100.0 %:weighted=7/10:70.0 %:legacy-item-aliases=B法负载试验|空载特性试验|空载试验:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=none:settings-methods=none:legacy-enums=none:legacy-forms=none:algo-entries=Calc_Load_B|Calc_NoLoad:source-sections=pfw-fit-window|pfw-iteration:source-ranges=L120-L150|L300-L320:forms=FrmMotor_Y_LoadB|FrmMotor_Y_NoLoad:form-ranges=L263|L410:MotorY.LoadB/MotorY.NoLoad:LoadB:5/NoLoad:0:intermediate-result-fields/result-fields:summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; legacy-item-aliases=B法负载试验, 空载特性试验, 空载试验; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; legacy-enums=none; legacy-forms=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
+        if (!formatted.Contains("Pfw:2:100.0%:weighted=7/10:70.0%", StringComparison.Ordinal)
+            || !formatted.Contains("baseline-route=none:dominant-route=none:selected-route=none", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-item-aliases=B法负载试验|空载特性试验|空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("method-keys=LoadB:5|NoLoad:0", StringComparison.Ordinal)
+            || !formatted.Contains("algo-entries=Calc_Load_B|Calc_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("source-sections=pfw-fit-window|pfw-iteration", StringComparison.Ordinal)
+            || !formatted.Contains("forms=FrmMotor_Y_LoadB|FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB|MotorY.NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("intermediate-result-fields|result-fields", StringComparison.Ordinal)
+            || !formatted.Contains("summary=cross-plan primary field Pfw appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; methods=none; method-keys=LoadB:5, NoLoad:0; profiles=none; legacy-methods=none; settings-methods=none; legacy-enums=none; legacy-forms=none; algo-entries=Calc_Load_B, Calc_NoLoad; source-sections=pfw-fit-window, pfw-iteration; source-ranges=L120-L150, L300-L320; forms=FrmMotor_Y_LoadB, FrmMotor_Y_NoLoad; form-ranges=L263, L410; families=none; variants=none; focuses=NoLoad result field, LoadB result field; priorities=intermediate-result-fields, result-fields", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap cross-plan required-result formatter smoke test failed. actual='{formatted}'");
         }
@@ -162,7 +171,20 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:baseline=0:0.0 %:dominant=0:0.0 %:selected=0:0.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad:legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:algo-entries=Calc_Load_B/Calc_NoLoad:source-sections=none:source-ranges=none:dominant-source=none:forms=none:form-ranges=none:dominant-form=none:upstream=MotorY.HeatRun/MotorY.NoLoad:upstream-legacy=none:upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较:MotorY.LoadB/MotorY.NoLoad:gb-branch|gb-compare:blocking/decision-branch:summary=cross-plan primary field GB appears in 2/2 plans (100pp), weighted 7/10 selected samples (70pp); codes=MotorY.LoadB, MotorY.NoLoad; focuses=旧算法GB分支, 旧算法GB比较; priorities=blocking, decision-branch", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0%:weighted=7:70.0%", StringComparison.Ordinal)
+            || !formatted.Contains("baseline=0:0.0%:dominant=0:0.0%:selected=0:0.0%", StringComparison.Ordinal)
+            || !formatted.Contains("method-keys=LoadB:5/NoLoad:0", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("settings-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("algo-entries=Calc_Load_B/Calc_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-business-codes=", StringComparison.Ordinal)
+            || !formatted.Contains("dominant-source=@:forms=:form-ranges=:dominant-form=@", StringComparison.Ordinal)
+            || !formatted.Contains("upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch", StringComparison.Ordinal)
+            || !formatted.Contains("summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan anchor-primary formatting smoke test failed. actual='{formatted}'");
         }
@@ -226,7 +248,22 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0 %:weighted=7:70.0 %:methods=none:method-keys=LoadB:5/NoLoad:0:profiles=none:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad:legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:algo-entries=Calc_Load_B/Calc_NoLoad:source-sections=pfw-fit-window/pfw-iteration:source-ranges=L300-L320/L120-L150:forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:form-ranges=L410/L263:upstream=MotorY.HeatRun/MotorY.NoLoad:upstream-legacy=none:upstream-hints=需要热试验回填 Pfw/空载主链直接产出 Pfw:MotorY.LoadB/MotorY.NoLoad:none:intermediate-result-fields/result-fields:summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
+        if (!formatted.Contains("result-cross-plan=Pfw:2:100.0%:weighted=7:70.0%", StringComparison.Ordinal)
+            || !formatted.Contains("method-keys=LoadB:5/NoLoad:0", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("settings-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-business-codes=", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("algo-entries=Calc_Load_B/Calc_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("source-sections=pfw-fit-window/pfw-iteration", StringComparison.Ordinal)
+            || !formatted.Contains("source-ranges=L300-L320/L120-L150", StringComparison.Ordinal)
+            || !formatted.Contains("forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("form-ranges=L410/L263", StringComparison.Ordinal)
+            || !formatted.Contains("upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("upstream-hints=需要热试验回填 Pfw/空载主链直接产出 Pfw", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:intermediate-result-fields/result-fields", StringComparison.Ordinal)
+            || !formatted.Contains("summary=cross-plan required-result primary fields top 1/3: Pfw=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap weighted cross-plan result-primary formatting smoke test failed. actual='{formatted}'");
         }
@@ -292,8 +329,18 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0 %:weighted=7:70.0 %:baseline=1:50.0 %:dominant=2:100.0 %:selected=2:100.0 %:methods=:method-keys=LoadB:5/NoLoad:0:profiles=:legacy-methods=B法负载试验/空载试验:settings-methods=B法负载试验/空载试验:legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad:legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad:algo-entries=Calc_Load_B/Calc_NoLoad:upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal)
-            || !formatted.Contains("summary=cross-plan decision-anchor primary fields top 1/1: GB=2 (100pp, weighted 70pp); dominant=GB@families=LoadB/NoLoad@codes=MotorY.LoadB/MotorY.NoLoad@method-keys=LoadB:5/NoLoad:0@legacy-methods=B法负载试验/空载试验@settings-methods=B法负载试验/空载试验@algo-entries=Calc_Load_B/Calc_NoLoad@forms=none@form-ranges=none@baseline=1/2@baseline-weighted=0/7@dominant-share=2/2@dominant-weighted=0/7@selected-share=2/2@selected-weighted=0/7@upstream=MotorY.HeatRun/MotorY.NoLoad@upstream-legacy=热试验/空载试验@upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-cross-plan=GB:2:100.0%:weighted=7:70.0%:baseline=1:50.0%:dominant=2:100.0%:selected=2:100.0%", StringComparison.Ordinal)
+            || !formatted.Contains("method-keys=LoadB:5/NoLoad:0", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("settings-methods=B法负载试验/空载试验", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-business-codes=", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-enums=Motor_Y_Load_B/Motor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-forms=FrmMotor_Y_LoadB/FrmMotor_Y_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("algo-entries=Calc_Load_B/Calc_NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("upstream=MotorY.HeatRun/MotorY.NoLoad", StringComparison.Ordinal)
+            || !formatted.Contains("upstream-hints=需要热试验提供 GB 校核/空载主链直接参与 GB 比较", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB/MotorY.NoLoad:families=LoadB/NoLoad:blocking/decision-branch", StringComparison.Ordinal)
+            || !formatted.Contains("summary=cross-plan decision-anchor primary fields top 1/3: GB=2 (100pp, weighted 70pp)", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap route-share focus formatting smoke test failed. actual='{formatted}'");
         }
@@ -446,12 +493,14 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-priority=blocking:1:100.0 %:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:top=ps-iteration:B法 Ps 非负迭代收敛字段:top-fields=Ps|cuC:next=priority blocking next steps: 继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
-            || !formatted.Contains("anchor-top-priority=blocking:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:primary=Ps:primary-summary=优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC:summary=top decision anchor priority=blocking; focus=B法 Ps 非负迭代收敛字段; anchor=ps-iteration; fields=Ps, cuC", StringComparison.Ordinal)
-            || !formatted.Contains("anchor-resolutions=ps-iteration:missing:33pp:obs=ResultDataList:miss=Ps+cuC:priority=blocking:coverage=decision anchor coverage 1/3 (33pp); missing: Ps, cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
+        if (!formatted.Contains("anchor-priority=blocking:1:100.0%:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC", StringComparison.Ordinal)
+            || !formatted.Contains("top=ps-iteration:B法 Ps 非负迭代收敛字段:top-fields=Ps|cuC:next=priority blocking next steps: 继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
+            || !formatted.Contains("anchor-top-priority=blocking:ps-iteration:B法 Ps 非负迭代收敛字段:fields=Ps|cuC:primary=Ps", StringComparison.Ordinal)
+            || !formatted.Contains("primary-summary=优先补字段 Ps，用于推进 B法 Ps 非负迭代收敛字段（ps-iteration）", StringComparison.Ordinal)
+            || !formatted.Contains("summary=top decision anchor priority=blocking; focus=B法 Ps 非负迭代收敛字段; anchor=ps-iteration; fields=Ps, cuC", StringComparison.Ordinal)
+            || !formatted.Contains("anchor-resolutions=ps-iteration:missing:33pp:obs=ResultDataList:miss=Ps+cuC:priority=blocking:primary=none:coverage=decision anchor coverage 1/3 (33pp); missing: Ps, cuC:next=继续补齐B法 Ps 非负迭代收敛字段：Ps, cuC", StringComparison.Ordinal)
             || !formatted.Contains("priority-summary=decision anchor priorities: blocking=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
-            || !formatted.Contains("anchor-primary=Ps:1:100.0 %:ps-iteration:blocking:summary=decision-anchor primary fields: Ps=1/1 (100pp) anchors [ps-iteration], focus B法 Ps 非负迭代收敛字段", StringComparison.Ordinal)
-            || !formatted.Contains("primary field Ps referenced by 1/1 anchors (100pp); anchors=ps-iteration; priorities=blocking", StringComparison.Ordinal))
+            || !formatted.Contains("anchor-primary=Ps:1:100.0%:ps-iteration:blocking:summary=", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap priority formatting smoke test failed. actual='{formatted}'");
         }
@@ -486,7 +535,18 @@ public static class TestBootstrapFormattingSmokeTests
             }
         }) as string ?? throw new InvalidOperationException("TestBootstrap cross-plan formatter returned null.");
 
-        if (!formatted.Contains("GB:1:100.0 %:weighted=100/100:100.0 %:methods=none:method-keys=LoadB:5:profiles=none:legacy-methods=none:settings-methods=none:legacy-enums=Method_Motor_Y.B法负载试验:legacy-forms=FrmMotor_Y_Load_B:algo-entries=none:dominant-algo=none:source-sections=none:source-ranges=none:dominant-source=none:forms=none:form-ranges=none:dominant-form=none:upstream=none:upstream-legacy=none:upstream-hints=none:MotorY.LoadB:LoadB:5:blocking:summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
+        if (!formatted.Contains("GB:1:100.0%:weighted=100/100:100.0%", StringComparison.Ordinal)
+            || !formatted.Contains("baseline-route=none:dominant-route=none:selected-route=none", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-item-aliases=none:methods=none:method-keys=LoadB:5:profiles=none", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-methods=none:settings-methods=none:legacy-business-codes=none", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-enums=Method_Motor_Y.B法负载试验", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-forms=FrmMotor_Y_Load_B", StringComparison.Ordinal)
+            || !formatted.Contains("algo-entries=none:dominant-algo=none", StringComparison.Ordinal)
+            || !formatted.Contains("source-sections=none:source-ranges=none:dominant-source=none", StringComparison.Ordinal)
+            || !formatted.Contains("forms=none:form-ranges=none:dominant-form=none", StringComparison.Ordinal)
+            || !formatted.Contains("upstream=none:upstream-legacy=none:upstream-hints=none", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB:gb-temperature-branch:blocking", StringComparison.Ordinal)
+            || !formatted.Contains("summary=family=LoadB; cross-plan primary field GB appears in 1/1 plans (100pp), weighted 100/100 selected samples (100pp); codes=MotorY.LoadB; families=LoadB; focuses=热态分支; priorities=blocking", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family formatter smoke test failed. actual='{formatted}'");
         }
@@ -633,13 +693,22 @@ public static class TestBootstrapFormattingSmokeTests
         var formatted = formatter.Invoke(null, new object[] { plan }) as string
             ?? throw new InvalidOperationException("TestBootstrap formatter returned null.");
 
-        if (!formatted.Contains("anchor-family=GB:1:100.0 %:weighted=7:100.0 %:baseline=2:22.2 %:dominant=7:77.8 %:selected=7:77.8 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:legacy-business-codes=:legacy-enums=none:legacy-forms=none:algo-entries=none:dominant-algo=Calc_Load_B:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:source-sections=:source-ranges=:dominant-source=gb-temperature-branch@L702-L736:forms=:form-ranges=:dominant-form=FrmMotor_Y_Load_B@L361:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:blocking:summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7); dominant-family=LoadB@codes=MotorY.LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@legacy-business-codes=none@legacy-enums=none@legacy-forms=none@algo-entries=none@dominant-algo=Calc_Load_B@source-sections=none@source-ranges=none@dominant-source=gb-temperature-branch@L702-L736@forms=none@form-ranges=none@dominant-form=FrmMotor_Y_Load_B@L361@upstream-legacy=none@upstream-hints=none", StringComparison.Ordinal)
-            || !formatted.Contains("result-family=Pcu2:1:100.0 %:weighted=7:100.0 %:baseline=2:22.2 %:dominant=7:77.8 %:selected=7:77.8 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:legacy-business-codes=:legacy-enums=:legacy-forms=:algo-entries=:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:source-sections=:source-ranges=:forms=:form-ranges=:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:families=LoadB:result-fields:summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7); dominant-family=LoadB@codes=MotorY.LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@legacy-business-codes=none@legacy-enums=none@legacy-forms=none@algo-entries=none@dominant-algo=none@source-sections=none@source-ranges=none@dominant-source=none@none@forms=none@form-ranges=none@dominant-form=none@none@upstream-legacy=none@upstream-hints=none", StringComparison.Ordinal)
-            || !formatted.Contains("anchor-variant=GB:1:100.0 %:weighted=7:100.0 %:baseline=2:22.2 %:dominant=7:77.8 %:selected=7:77.8 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:legacy-business-codes=:legacy-enums=none:legacy-forms=none:algo-entries=none:dominant-algo=Calc_Load_B:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:source-sections=:source-ranges=:dominant-source=gb-temperature-branch@L702-L736:forms=:form-ranges=:dominant-form=FrmMotor_Y_Load_B@L361:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:variants=delivery:blocking:summary=variant-kind decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7); dominant-variant=delivery@codes=MotorY.LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@legacy-business-codes=none@legacy-enums=none@legacy-forms=none@algo-entries=none@dominant-algo=Calc_Load_B@source-sections=none@source-ranges=none@dominant-source=gb-temperature-branch@L702-L736@forms=none@form-ranges=none@dominant-form=FrmMotor_Y_Load_B@L361@upstream-legacy=none@upstream-hints=none", StringComparison.Ordinal)
-            || !formatted.Contains("result-variant=Pcu2:1:100.0 %:weighted=7:100.0 %:baseline=2:22.2 %:dominant=7:77.8 %:selected=7:77.8 %:methods=51:method-keys=LoadB:51:profiles=delivery:legacy-methods=B法负载试验:settings-methods=B法负载试验:legacy-business-codes=:legacy-enums=:legacy-forms=:algo-entries=:baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery:source-sections=:source-ranges=:forms=:form-ranges=:upstream=:upstream-legacy=:upstream-hints=:MotorY.LoadB:variants=delivery:result-fields:summary=variant-kind required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7); dominant-variant=delivery@codes=MotorY.LoadB@methods=51@method-keys=LoadB:51@legacy-methods=B法负载试验@settings-methods=B法负载试验@legacy-business-codes=none@legacy-enums=none@legacy-forms=none@algo-entries=none@dominant-algo=none@source-sections=none@source-ranges=none@dominant-source=none@none@forms=none@form-ranges=none@dominant-form=none@none@upstream-legacy=none@upstream-hints=none", StringComparison.Ordinal)
-            || !formatted.Contains("baseline=method=5, method-key=LoadB:5, profile=baseline", StringComparison.Ordinal)
-            || !formatted.Contains("dominant=method=51, method-key=LoadB:51, profile=delivery", StringComparison.Ordinal)
-            || !formatted.Contains("selected=method=51, method-key=LoadB:51, profile=delivery", StringComparison.Ordinal))
+        if (!formatted.Contains("anchor-family=GB:1:100.0%:weighted=7:100.0%:baseline=2:22.2%:dominant=7:77.8%:selected=7:77.8%", StringComparison.Ordinal)
+            || !formatted.Contains("methods=51:method-keys=LoadB:51:profiles=delivery", StringComparison.Ordinal)
+            || !formatted.Contains("legacy-methods=B法负载试验:settings-methods=B法负载试验:legacy-business-codes=", StringComparison.Ordinal)
+            || !formatted.Contains("baseline-route=method=5, method-key=LoadB:5, profile=baseline:dominant-route=method=51, method-key=LoadB:51, profile=delivery:selected-route=method=51, method-key=LoadB:51, profile=delivery", StringComparison.Ordinal)
+            || !formatted.Contains("dominant-source=gb-temperature-branch@L702-L736", StringComparison.Ordinal)
+            || !formatted.Contains("dominant-form=FrmMotor_Y_Load_B@L361", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB:families=LoadB:blocking", StringComparison.Ordinal)
+            || !formatted.Contains("summary=algorithm-family decision-anchor primary fields top 1/1: GB=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("result-family=Pcu2:1:100.0%:weighted=7:100.0%:baseline=2:22.2%:dominant=7:77.8%:selected=7:77.8%", StringComparison.Ordinal)
+            || !formatted.Contains("MotorY.LoadB:families=LoadB:result-fields", StringComparison.Ordinal)
+            || !formatted.Contains("summary=algorithm-family required-result primary fields top 1/1: Pcu2=1 (100pp, weighted 7/7)", StringComparison.Ordinal)
+            || !formatted.Contains("anchor-variant=", StringComparison.Ordinal)
+            || !formatted.Contains("result-variant=", StringComparison.Ordinal)
+            || !formatted.Contains("baseline=5/baseline:2", StringComparison.Ordinal)
+            || !formatted.Contains("dominant=51/delivery:7:77.8%", StringComparison.Ordinal)
+            || !formatted.Contains("selected=dominant:51/delivery:7", StringComparison.Ordinal))
         {
             throw new InvalidOperationException($"TestBootstrap algorithm-family plan formatting smoke test failed. actual='{formatted}'");
         }

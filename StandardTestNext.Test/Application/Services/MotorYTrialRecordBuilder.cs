@@ -8,7 +8,8 @@ public sealed class MotorYTrialRecordBuilder
 {
     public IReadOnlyList<TestRecordItemAggregate> BuildTrialItems(
         MotorRatedParamsContract rated,
-        IReadOnlyCollection<MotorRealtimeSampleContract> samples)
+        IReadOnlyCollection<MotorRealtimeSampleContract> samples,
+        int noLoadRConverseType = 0)
     {
         var orderedSamples = samples.OrderBy(sample => sample.SampleTime).ToArray();
         var keyPointSamples = orderedSamples.Where(sample => sample.IsRecordPoint).ToArray();
@@ -17,7 +18,7 @@ public sealed class MotorYTrialRecordBuilder
         var items = new List<TestRecordItemAggregate>
         {
             BuildDcResistanceItem(rated),
-            BuildNoLoadItem(rated, orderedSamples),
+            BuildNoLoadItem(rated, orderedSamples, noLoadRConverseType),
             BuildHeatRunItem(rated, orderedSamples),
             BuildLoadAItem(rated, keyPointSamples, orderedSamples),
             BuildLoadBItem(rated, continuousSamples, orderedSamples),
@@ -65,31 +66,113 @@ public sealed class MotorYTrialRecordBuilder
 
     private static TestRecordItemAggregate BuildNoLoadItem(
         MotorRatedParamsContract rated,
-        IReadOnlyList<MotorRealtimeSampleContract> samples)
+        IReadOnlyList<MotorRealtimeSampleContract> samples,
+        int rConverseType)
     {
+        var r1c = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4);
+        const double theta1c = 26.5;
+        const double k1 = 235.0;
+        const int order = 3;
+        const int decimalPlaces = 4;
+
         var dataList = samples
-            .Select(sample => new
+            .Select((sample, index) =>
             {
-                U0 = Math.Round(sample.VoltageAverage, 4),
-                U0DivideUn = rated.RatedVoltage == 0 ? 0 : Math.Round(sample.VoltageAverage / rated.RatedVoltage, 4),
-                U0DivideUnSquare = rated.RatedVoltage == 0 ? 0 : Math.Round(Math.Pow(sample.VoltageAverage / rated.RatedVoltage, 2), 4),
-                I0 = Math.Round(sample.CurrentAverage, 4),
-                I01 = Math.Round(sample.CurrentAverage * 0.995, 4),
-                I02 = Math.Round(sample.CurrentAverage * 1.002, 4),
-                I03 = Math.Round(sample.CurrentAverage * 1.003, 4),
-                P0 = Math.Round(sample.Power, 4),
-                Cosφ = rated.RatedPower == 0 ? 0 : Math.Round(Math.Min(0.98, sample.Power / Math.Max(sample.VoltageAverage * sample.CurrentAverage * 1.732 / 1000.0, 0.0001)), 4),
-                Frequency = Math.Round(sample.Frequency, 4),
-                θ0 = 26.5,
-                R0 = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4),
-                ΔI0 = 0.8,
-                P0cu1 = Math.Round(1.5 * 0.12 * sample.CurrentAverage * sample.CurrentAverage, 4),
-                Pcon = Math.Round(sample.Power * 0.82, 4),
-                Pfe = Math.Round(sample.Power * 0.55, 4),
-                n0 = Math.Round(sample.Speed, 4),
-                T0 = Math.Round(sample.Torque, 4)
+                var theta0 = Math.Round(theta1c + index * 0.6, decimalPlaces);
+                var u0DivideUn = rated.RatedVoltage == 0 ? 0 : sample.VoltageAverage / rated.RatedVoltage;
+                var r0 = Math.Round(r1c * (k1 + theta0) / (k1 + theta1c), decimalPlaces);
+                var p0cu1 = Math.Round(1.5 * r0 * sample.CurrentAverage * sample.CurrentAverage, decimalPlaces);
+                var pcon = Math.Round(sample.Power - p0cu1, decimalPlaces);
+                var i01 = Math.Round(sample.CurrentAverage * 0.995, decimalPlaces);
+                var i02 = Math.Round(sample.CurrentAverage * 1.002, decimalPlaces);
+                var i03 = Math.Round(sample.CurrentAverage * 1.003, decimalPlaces);
+                var i0Average = (i01 + i02 + i03) / 3d;
+                var deltaI0 = i0Average <= 0d
+                    ? 0d
+                    : Math.Round(new[]
+                    {
+                        Math.Abs(i01 - i0Average),
+                        Math.Abs(i02 - i0Average),
+                        Math.Abs(i03 - i0Average)
+                    }.Max() / i0Average * 100d, decimalPlaces);
+                return new
+                {
+                    U0 = Math.Round(sample.VoltageAverage, decimalPlaces),
+                    U0DivideUn = Math.Round(u0DivideUn, decimalPlaces),
+                    U0DivideUnSquare = Math.Round(Math.Pow(u0DivideUn, 2), decimalPlaces),
+                    I0 = Math.Round(sample.CurrentAverage, decimalPlaces),
+                    I01 = i01,
+                    I02 = i02,
+                    I03 = i03,
+                    P0 = Math.Round(sample.Power, decimalPlaces),
+                    Cosφ = rated.RatedPower == 0 ? 0 : Math.Round(Math.Min(0.98, sample.Power / Math.Max(sample.VoltageAverage * sample.CurrentAverage * 1.732 / 1000.0, 0.0001)), decimalPlaces),
+                    Frequency = Math.Round(sample.Frequency, decimalPlaces),
+                    θ0 = theta0,
+                    R0 = r0,
+                    ΔI0 = deltaI0,
+                    P0cu1 = p0cu1,
+                    Pcon = pcon,
+                    Pfe = Math.Round(pcon * 0.82, decimalPlaces),
+                    n0 = Math.Round(sample.Speed, decimalPlaces),
+                    T0 = Math.Round(sample.Torque, decimalPlaces)
+                };
             })
             .ToArray();
+
+        var computation = MotorYNoLoadComputation.Compute(
+            dataList.Select(x => new MotorYNoLoadComputedPoint
+            {
+                U0 = x.U0,
+                U0DivideUn = x.U0DivideUn,
+                U0DivideUnSquare = x.U0DivideUnSquare,
+                I0 = x.I0,
+                P0 = x.P0,
+                Theta0 = x.θ0,
+                R0 = x.R0,
+                DeltaI0 = x.ΔI0,
+                P0cu1 = x.P0cu1,
+                Pcon = x.Pcon
+            }).ToArray(),
+            rated.RatedVoltage,
+            order,
+            decimalPlaces,
+            r1c,
+            theta1c,
+            k1,
+            rConverseType);
+        var adjustedDataList = computation.AdjustedPoints
+            .Select((point, index) => new
+            {
+                U0 = point.U0,
+                U0DivideUn = point.U0DivideUn,
+                U0DivideUnSquare = point.U0DivideUnSquare,
+                I0 = point.I0,
+                I01 = dataList[index].I01,
+                I02 = dataList[index].I02,
+                I03 = dataList[index].I03,
+                P0 = point.P0,
+                Cosφ = dataList[index].Cosφ,
+                Frequency = dataList[index].Frequency,
+                θ0 = point.Theta0,
+                R0 = point.R0,
+                ΔI0 = point.DeltaI0,
+                P0cu1 = point.P0cu1,
+                Pcon = point.Pcon,
+                Pfe = Math.Round(Math.Max(0d, point.Pcon - computation.Pfw), decimalPlaces),
+                n0 = dataList[index].n0,
+                T0 = dataList[index].T0
+            })
+            .ToArray();
+        var ratedPoint = computation.RatedPoint;
+        var pfwFitSamples = computation.PfwFitSamples;
+        var pfwFitWindowReady = computation.PfwFitWindowReady;
+        var pfw = computation.Pfw;
+        var coefficientOfPfe = computation.CoefficientOfPfe;
+        var pfe = computation.Pfe;
+        var fittedI0AtRated = computation.FittedI0AtRated;
+        var fittedDeltaI0AtRated = computation.FittedDeltaI0AtRated;
+        var fittedP0AtRated = computation.FittedP0AtRated;
+        var fittedPcuAtRated = computation.FittedPcuAtRated;
 
         return ApplyBaselineProfile(new TestRecordItemAggregate
         {
@@ -98,34 +181,34 @@ public sealed class MotorYTrialRecordBuilder
             DataJson = JsonSerializer.Serialize(new
             {
                 Un = rated.RatedVoltage,
-                R1c = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4),
-                θ1c = 26.5,
-                K1 = 235.0,
-                Order = 3,
-                DecimalPlaces = 4,
-                DataList = dataList,
-                P0 = dataList.Length == 0 ? 0 : dataList.Last().P0,
-                I0 = dataList.Length == 0 ? 0 : dataList.Last().I0,
-                ΔI0 = dataList.Length == 0 ? 0 : dataList.Last().ΔI0,
-                Pcu = dataList.Length == 0 ? 0 : dataList.Last().P0cu1,
-                Pfw = dataList.Length == 0 ? 0 : Math.Round(dataList.Last().P0 * 0.18, 4),
-                Pfe = dataList.Length == 0 ? 0 : dataList.Last().Pfe,
-                θ0 = 26.5,
-                R0 = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4),
-                CoefficientOfPfe = new[] { 0.0, 0.12, 0.03, 0.005 },
-                RConverseType = 0,
+                R1c = r1c,
+                θ1c = theta1c,
+                K1 = k1,
+                Order = order,
+                DecimalPlaces = decimalPlaces,
+                DataList = adjustedDataList,
+                P0 = fittedP0AtRated,
+                I0 = fittedI0AtRated,
+                ΔI0 = fittedDeltaI0AtRated,
+                Pcu = fittedPcuAtRated,
+                Pfw = pfw,
+                Pfe = pfe,
+                θ0 = computation.ComputedTheta0,
+                R0 = computation.ComputedR0,
+                CoefficientOfPfe = coefficientOfPfe,
+                RConverseType = rConverseType,
                 IsAnalysis = false,
-                U0DivideUnIsEquesToOne_I0 = dataList.Length == 0 ? 0 : dataList.Last().I0,
-                U0DivideUnIsEquesToOne_P0 = dataList.Length == 0 ? 0 : dataList.Last().P0,
-                U0DivideUnIsEquesToOne_Pcu = dataList.Length == 0 ? 0 : dataList.Last().P0cu1,
-                U0DivideUnIsEquesToOne_Pfe = dataList.Length == 0 ? 0 : dataList.Last().Pfe,
-                U0DivideUnIsEquesToOne_DeltaI0 = dataList.Length == 0 ? 0 : dataList.Last().ΔI0,
-                U0DivideUnIsEquesToOne_R0 = dataList.Length == 0 ? 0 : dataList.Last().R0,
-                U0DivideUnIsEquesToOne_θ0 = dataList.Length == 0 ? 0 : dataList.Last().θ0,
-                PfwFitSampleCount = dataList.Count(x => x.U0DivideUn < 0.51),
-                PfwFitWindowReady = dataList.Any(x => x.U0DivideUn < 0.51)
+                U0DivideUnIsEquesToOne_I0 = fittedI0AtRated,
+                U0DivideUnIsEquesToOne_P0 = fittedP0AtRated,
+                U0DivideUnIsEquesToOne_Pcu = fittedPcuAtRated,
+                U0DivideUnIsEquesToOne_Pfe = pfe,
+                U0DivideUnIsEquesToOne_DeltaI0 = fittedDeltaI0AtRated,
+                U0DivideUnIsEquesToOne_R0 = computation.ComputedR0,
+                U0DivideUnIsEquesToOne_θ0 = computation.ComputedTheta0,
+                PfwFitSampleCount = pfwFitSamples.Count,
+                PfwFitWindowReady = pfwFitWindowReady
             }),
-            Remark = "Motor_Y 空载试验骨架数据（旧 TestData 结构对齐版）。"
+            Remark = $"Motor_Y 空载试验骨架数据（旧 TestData 结构对齐版；RConverseType 当前由上游 seed/aggregate 输入，当前值={rConverseType}）。"
         }, MotorYTestMethodCodes.NoLoad);
     }
 
@@ -373,41 +456,51 @@ public sealed class MotorYTrialRecordBuilder
             })
             .ToArray();
 
+        var loadBPayload = JsonSerializer.Serialize(new
+        {
+            Un = rated.RatedVoltage,
+            Pn = rated.RatedPower,
+            K1 = 235.0,
+            K2 = 225.0,
+            PolePairs = rated.PolePairs,
+            Order = 3,
+            DecimalPlaces = 2,
+            TorqueCorrection = false,
+            R1c = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4),
+            θ1c = 26.5,
+            θw = 88.6,
+            θb = 26.5,
+            θs = 92.5,
+            ΔT = 0.35,
+            A = 1.12,
+            B = 0.08,
+            R = 0.97,
+            Pfw = 35.0,
+            Pcu1 = 1.8,
+            Pcu2 = 1.4,
+            Ps = 0.6,
+            CoefficientOfPfe = new[] { 0.0, 0.12, 0.03, 0.005 },
+            RawDataList = rawDataList,
+            ResultDataList = resultDataList,
+            IsAnalysis = false,
+            IsTorqueModify = false,
+            θ1tChanelSelect = 15,
+            θaChanelSelect = 0
+        });
+
+        using var loadBPayloadDocument = JsonDocument.Parse(loadBPayload);
+        var loadBPayloadMap = loadBPayloadDocument.RootElement
+            .EnumerateObject()
+            .ToDictionary(property => property.Name, property => property.Value.Clone());
+        loadBPayloadMap["bad-point-refit"] = JsonSerializer.SerializeToElement(true);
+        loadBPayloadMap["ratios"] = JsonSerializer.SerializeToElement(new[] { 0.25, 0.5, 0.75, 1.0 });
+        loadBPayloadMap["cuC"] = JsonSerializer.SerializeToElement(0.84);
+
         return ApplyBaselineProfile(new TestRecordItemAggregate
         {
             ItemCode = "MotorY.LoadB",
             MethodCode = MotorYTestMethodCodes.LoadB,
-            DataJson = JsonSerializer.Serialize(new
-            {
-                Un = rated.RatedVoltage,
-                Pn = rated.RatedPower,
-                K1 = 235.0,
-                K2 = 225.0,
-                PolePairs = rated.PolePairs,
-                Order = 3,
-                DecimalPlaces = 2,
-                TorqueCorrection = false,
-                R1c = Math.Round((rated.RatedVoltage / Math.Max(rated.RatedCurrent, 1)) * 0.12, 4),
-                θ1c = 26.5,
-                θw = 88.6,
-                θb = 26.5,
-                θs = 92.5,
-                ΔT = 0.35,
-                A = 1.12,
-                B = 0.08,
-                R = 0.97,
-                Pfw = 35.0,
-                Pcu1 = 1.8,
-                Pcu2 = 1.4,
-                Ps = 0.6,
-                CoefficientOfPfe = new[] { 0.0, 0.12, 0.03, 0.005 },
-                RawDataList = rawDataList,
-                ResultDataList = resultDataList,
-                IsAnalysis = false,
-                IsTorqueModify = false,
-                θ1tChanelSelect = 15,
-                θaChanelSelect = 0
-            }),
+            DataJson = JsonSerializer.Serialize(loadBPayloadMap),
             Remark = "Motor_Y B法负载试验骨架数据（旧 TestData 结构对齐版）。"
         }, MotorYTestMethodCodes.LoadB);
     }

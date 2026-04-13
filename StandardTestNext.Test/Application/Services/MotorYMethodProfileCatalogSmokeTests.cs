@@ -153,6 +153,7 @@ WHERE Code IN (
         {
             (MotorYTestMethodCodes.DcResistance, 1, MotorYLegacyEnumNames.DcResistance, MotorYLegacyFormNames.DcResistance),
             (MotorYTestMethodCodes.DcResistance, 53, MotorYLegacyEnumNames.DcResistanceCompanion, MotorYLegacyFormNames.DcResistanceCompanion),
+            (MotorYTestMethodCodes.DcResistance, 93, MotorYLegacyEnumNames.DcResistanceCompanion, MotorYLegacyFormNames.DcResistanceCompanion),
             (MotorYTestMethodCodes.NoLoad, 0, MotorYLegacyEnumNames.NoLoad, MotorYLegacyFormNames.NoLoad),
             (MotorYTestMethodCodes.NoLoad, 59, MotorYLegacyEnumNames.NoLoadDelivery, MotorYLegacyFormNames.NoLoadDelivery),
             (MotorYTestMethodCodes.HeatRun, 3, MotorYLegacyEnumNames.Thermal, MotorYLegacyFormNames.Thermal),
@@ -183,6 +184,7 @@ WHERE Code IN (
         {
             (MotorYTestMethodCodes.DcResistance, 1, MotorYLegacyVariantKinds.Baseline, MotorYLegacyAlgorithmFamilies.DirectCurrentResistance),
             (MotorYTestMethodCodes.DcResistance, 54, MotorYLegacyVariantKinds.DeliveryCompanion, MotorYLegacyAlgorithmFamilies.DirectCurrentResistance),
+            (MotorYTestMethodCodes.DcResistance, 93, MotorYLegacyVariantKinds.Companion, MotorYLegacyAlgorithmFamilies.DirectCurrentResistance),
             (MotorYTestMethodCodes.NoLoad, 59, MotorYLegacyVariantKinds.Delivery, MotorYLegacyAlgorithmFamilies.NoLoad),
             (MotorYTestMethodCodes.HeatRun, 48, MotorYLegacyVariantKinds.OtherVariant, MotorYLegacyAlgorithmFamilies.Thermal),
             (MotorYTestMethodCodes.LoadA, 60, MotorYLegacyVariantKinds.Delivery, MotorYLegacyAlgorithmFamilies.LoadA),
@@ -229,6 +231,7 @@ WHERE Code IN (
         {
             (MotorYTestMethodCodes.DcResistance, 1, "baseline", true),
             (MotorYTestMethodCodes.DcResistance, 53, "companion", false),
+            (MotorYTestMethodCodes.DcResistance, 93, "companion", false),
             (MotorYTestMethodCodes.NoLoad, 59, "delivery", false),
             (MotorYTestMethodCodes.HeatRun, 47, "companion", false),
             (MotorYTestMethodCodes.LoadA, 60, "delivery", false),

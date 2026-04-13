@@ -176,22 +176,40 @@ internal static class MotorYDependencyBucketSummaryFactory
                 MissingItems = ruleCoverage.MissingItems,
                 Summary = ruleCoverage.Summary
             },
-            new()
-            {
-                BucketKey = "legacy-decision-anchors",
-                DisplayName = "旧算法决策锚点",
-                RequiredCount = decisionAnchorCoverage.RequiredCount,
-                CoveredCount = decisionAnchorCoverage.CoveredCount,
-                MissingCount = decisionAnchorCoverage.MissingCount,
-                CoverageRatio = decisionAnchorCoverage.CoverageRatio,
-                CoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
-                RequiredItems = decisionAnchorCoverage.CoveredItems.Concat(decisionAnchorCoverage.MissingItems).ToArray(),
-                CoveredItems = decisionAnchorCoverage.CoveredItems,
-                MissingItems = decisionAnchorCoverage.MissingItems,
-                Summary = decisionAnchorCoverage.Summary
-            },
+            CreateDecisionAnchorCoverageBucket(decisionAnchorCoverage, decisionAnchorResolutions),
             decisionAnchorResolutionBucket,
             decisionAnchorFieldBucket
+        };
+    }
+
+    private static MotorYDependencyBucketSummarySnapshot CreateDecisionAnchorCoverageBucket(
+        MotorYStructuredListCoverageSnapshot decisionAnchorCoverage,
+        IReadOnlyList<MotorYDecisionAnchorResolution> decisionAnchorResolutions)
+    {
+        var covered = decisionAnchorResolutions
+            .Where(x => x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+        var missing = decisionAnchorResolutions
+            .Where(x => !x.ResolvedByObservedPayload)
+            .Select(x => x.AnchorKey)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return new MotorYDependencyBucketSummarySnapshot
+        {
+            BucketKey = "legacy-decision-anchors",
+            DisplayName = "旧算法决策锚点",
+            RequiredCount = decisionAnchorCoverage.RequiredCount,
+            CoveredCount = decisionAnchorCoverage.CoveredCount,
+            MissingCount = decisionAnchorCoverage.MissingCount,
+            CoverageRatio = decisionAnchorCoverage.CoverageRatio,
+            CoveragePercentagePoints = decisionAnchorCoverage.CoveragePercentagePoints,
+            RequiredItems = covered.Concat(missing).ToArray(),
+            CoveredItems = covered,
+            MissingItems = missing,
+            Summary = decisionAnchorCoverage.Summary
         };
     }
 

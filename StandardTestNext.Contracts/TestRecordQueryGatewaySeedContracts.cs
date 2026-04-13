@@ -5,6 +5,7 @@ public sealed class TestRecordQuerySeedContract
     public MotorRatedParamsContract RatedParams { get; init; } = new();
     public IReadOnlyList<MotorRealtimeSampleContract> Samples { get; init; } = Array.Empty<MotorRealtimeSampleContract>();
     public IReadOnlyList<LegacyMotorRealtimeEnvelopeContract> LegacySamples { get; init; } = Array.Empty<LegacyMotorRealtimeEnvelopeContract>();
+    public int NoLoadRConverseType { get; init; }
 }
 
 public static class TestRecordQuerySeedFactory
@@ -229,7 +230,8 @@ public static class TestRecordQuerySeedFactory
         {
             RatedParams = rated,
             LegacySamples = legacySamples,
-            Samples = legacySamples.Select(sample => sample.CoreSample).ToArray()
+            Samples = legacySamples.Select(sample => sample.CoreSample).ToArray(),
+            NoLoadRConverseType = 0
         };
     }
 }
